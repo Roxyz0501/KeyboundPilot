@@ -199,6 +199,74 @@ try {
  using(var store=new ConfigurationStore(file)) {Check(store.Configuration.AutoStart,"old configuration inherits authorized auto start");Check(store.Configuration.BetweenWordsMs==0,"old configuration defaults to zero answer delay");store.Configuration.BetweenWordsMs=1750;store.Configuration.AutoStart=false;store.Update(store.Configuration);store.Flush();}
  using(var store=new ConfigurationStore(file)){Check(!store.Configuration.AutoStart,"auto-start setting survives save/reload");Check(store.Configuration.BetweenWordsMs==1750,"answer delay survives save/reload");}
 } finally {Directory.Delete(migrationRoot,true);}
+
+var lobby=new LoopSnapshot(true,true,false,false,false,false,false,false,false,false);
+var playing=lobby with {Lobby=false,InGame=true};
+var result=playing with {Result=true,LeaveReady=true};
+var rounds=new RoundLoop();rounds.Start(0,2,false);
+Check(rounds.Current==1 && rounds.Total==2,"loop starts at run one");
+Check(rounds.Tick(0,lobby)==LoopAction.Queue,"loop requests once");
+Check(rounds.Tick(200,lobby)==LoopAction.None,"uncertain request not repeated");
+var popped=lobby with {Queued=true,EntryReady=true};
+Check(rounds.Tick(400,popped)==LoopAction.Accept,"matching pop accepted");
+Check(rounds.Tick(600,popped)==LoopAction.None,"pop accepted at most once");
+Check(rounds.Tick(800,playing)==LoopAction.StartTyping,"entry starts typing");
+Check(rounds.Tick(1000,playing)==LoopAction.None,"phase changes preserve playing");
+Check(rounds.Tick(1200,result)==LoopAction.Leave && rounds.Completed==1,"result counts once and leaves");
+Check(rounds.Tick(1400,result)==LoopAction.None && rounds.Completed==1,"persistent result does not recount or reclick");
+Check(rounds.Tick(1600,result with {ExitConfirm=true})==LoopAction.ConfirmExit,"result exit confirmation once");
+Check(rounds.Tick(1800,result with {ExitConfirm=true})==LoopAction.None,"persistent confirmation not repeated");
+rounds.Tick(2000,lobby with {Queued=true});Check(rounds.Phase==LoopPhase.Leaving,"wait for departed queue state to clear");
+rounds.Tick(2200,lobby);Check(rounds.Phase==LoopPhase.Requesting && rounds.Current==2,"next round prepared after return");
+Check(rounds.Tick(2400,lobby)==LoopAction.Queue,"second request issued after return");
+rounds.Tick(2600,playing);rounds.Tick(2800,result);rounds.Tick(3000,lobby);
+Check(!rounds.Active && rounds.Phase==LoopPhase.Complete && rounds.Completed==2 && rounds.Current==2,"configured two runs completed");
+Check(rounds.Tick(3200,lobby)==LoopAction.None,"no extra queue after completion");
+rounds.Start(0,1,true);Check(rounds.Phase==LoopPhase.Playing,"loop can include current game");
+Check(rounds.Tick(1,result with {LeaveReady=false})==LoopAction.None && rounds.Completed==1,"count result while exit button unavailable");
+Check(rounds.Tick(2,result)==LoopAction.Leave,"leave once result button ready");
+rounds.Start(0,1,false);rounds.Pause();Check(rounds.Tick(1,lobby)==LoopAction.None,"paused loop never queues");
+rounds.Resume();Check(rounds.Tick(100000,lobby)==LoopAction.Queue,"resume queues exactly once");
+rounds.Pause();rounds.Tick(100001,lobby);rounds.Resume();rounds.Tick(200000,lobby);
+Check(rounds.Active,"manual pause freezes request timeout");
+rounds.Tick(215001,lobby);Check(rounds.Phase==LoopPhase.Error,"missing queue times out");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Tick(100,lobby with {Loading=true});rounds.Tick(100000,lobby);
+Check(rounds.Active,"loading freezes timeout");
+rounds.Start(0,1,false);Check(rounds.Tick(0,lobby with {OtherQueue=true})==LoopAction.None && !rounds.Active,"unrelated queue blocks all actions");
+rounds.Start(0,1,false);rounds.Tick(0,lobby with {Queued=true});Check(rounds.Phase==LoopPhase.Error,"do not take over preexisting queue");
+rounds.Start(0,1,true);rounds.Tick(0,lobby);Check(rounds.Phase==LoopPhase.Error && rounds.Completed==0,"early departure is not completion");
+rounds.Start(0,1,false);rounds.Tick(0,lobby with {LoggedIn=false});Check(!rounds.Active,"logout stops loop");
+rounds.Start(0,1,false);rounds.Stop();Check(rounds.Tick(0,lobby)==LoopAction.None,"stop cancels pending loop work");
+rounds.Start(0,1,false);Check(rounds.Tick(0,lobby,true)==LoopAction.None,"foreground or UI capture blocks queue");
+rounds.Start(0,1,true);rounds.Tick(1,result);rounds.Tick(120002,result);Check(rounds.Phase==LoopPhase.Error,"departure timeout stops without duplicate exit");
+var keeper=new ActivityKeeper();var touches=0;bool Touch(){touches++;return true;}
+keeper.Tick(0,false,Touch);Check(touches==0,"inactive content has no activity writes");
+keeper.Tick(0,true,Touch);keeper.Tick(9999,true,Touch);Check(touches==1,"activity write limited to once per ten seconds");
+keeper.Tick(10000,true,Touch);Check(touches==2,"active content refreshes on schedule");
+keeper.Tick(20000,false,Touch);Check(touches==2,"paused or stopped typing never refreshes activity");
+keeper.Tick(20001,true,Touch);Check(touches==3,"resumed typing refreshes activity");
+keeper.Reset();var attempts=0;for(var i=0;i<10;i++)keeper.Tick(i*10000,true,()=>{attempts++;return false;});
+Check(attempts==3 && keeper.Failed,"activity failures bounded to three attempts");
+keeper.Reset();keeper.Tick(0,true,Touch);Check(!keeper.Failed,"explicit start permits activity retry");
+var logOffRoot=Path.Combine(AppContext.BaseDirectory,"logs-off-"+Guid.NewGuid().ToString("N"));
+using(var inactiveLog=new DiagnosticRecorder(logOffRoot)){
+ inactiveLog.Observe("{}");inactiveLog.Event("test",new{});inactiveLog.Mark("cast");inactiveLog.Tick();inactiveLog.Stop();
+ Check(inactiveLog.Records==0 && inactiveLog.BytesWritten==0 && !Directory.Exists(logOffRoot),"disabled recorder creates no files or directories");
+}
+var newConfigRoot=Path.Combine(AppContext.BaseDirectory,"loop-config-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(newConfigRoot);
+try {
+ var file=Path.Combine(newConfigRoot,"config.json");File.WriteAllText(file,"{\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");
+ using(var store=new ConfigurationStore(file)) {
+  Check(!store.Configuration.RecordDiagnostics && store.Configuration.LoopCount==1,"old config migrates logging off and one run");
+  store.Configuration.RecordDiagnostics=true;store.Configuration.LoopCount=12;store.Update(store.Configuration);store.Flush();
+ }
+ using(var store=new ConfigurationStore(file)) {
+  Check(store.Configuration.RecordDiagnostics && store.Configuration.LoopCount==12,"loop and log settings survive save/reload");
+  store.Configuration.RecordDiagnostics=false;store.Update(store.Configuration);store.Flush();
+ }
+ using(var store=new ConfigurationStore(file))Check(!store.Configuration.RecordDiagnostics,"disabled logging survives restart");
+} finally {Directory.Delete(newConfigRoot,true);}
+
 if(args.Length>0)
 {
     var numbers=new int[261];var inputEnabled=false;var replayLifecycle=new AutomationLifecycle();var started=0;var premature=false;var stopped=false;

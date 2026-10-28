@@ -11,6 +11,19 @@ internal static class PlaybackControls
         ImGui.SameLine();Button("Pause",1,!running||paused,text("Pause"),pause);
         ImGui.SameLine();Button("Stop",2,!running,text("Stop"),stop);
     }
+    public static void DrawLoop(bool enabled,string tooltip,Action action)
+    {
+        ImGui.BeginDisabled(!enabled);var pressed=ImGui.Button("###LoopStart",new Vector2(36,30));
+        var p=ImGui.GetItemRectMin();var draw=ImGui.GetWindowDrawList();var color=ImGui.GetColorU32(ImGuiCol.Text);
+        draw.AddLine(p+new Vector2(8,9),p+new Vector2(27,9),color,2);
+        draw.AddLine(p+new Vector2(27,9),p+new Vector2(27,16),color,2);
+        draw.AddTriangleFilled(p+new Vector2(22,12),p+new Vector2(27,17),p+new Vector2(31,12),color);
+        draw.AddLine(p+new Vector2(28,22),p+new Vector2(9,22),color,2);
+        draw.AddLine(p+new Vector2(9,22),p+new Vector2(9,15),color,2);
+        draw.AddTriangleFilled(p+new Vector2(4,18),p+new Vector2(9,13),p+new Vector2(14,18),color);
+        ImGui.EndDisabled();if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(tooltip);
+        if(pressed)action();
+    }
     private static void Button(string id,int symbol,bool disabled,string tooltip,Action action)
     {
         ImGui.BeginDisabled(disabled);
