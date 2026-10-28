@@ -1,3 +1,15 @@
+## 2026-10-28 — Keybound Pilot 1.0.4.0 phase continuity and input corrections
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.4.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.4.0/KeyboundPilot-1.0.4.0.zip
+- Source/tag `8943197248e0cbaf6d7cac152ec88e9de7093b72`; ZIP 116,336 bytes; SHA-256 `89dc57713caaa0ff75250754d31829780c0a627c6c63069c19ea253672e64b12`.
+- Preserve automation across phase/focus transitions; rate-limit focus reacquisition and stop at results/exit. Immediate Start/Resume, geometric Play/Pause/Stop controls and window retention. Support-kind prompts precede casting enemies. Disappearing targets trigger physical Backspace cleanup before the next answer.
+- For hiragana vu, request physical F6 once before IME commit and compare vu script/Unicode variants without accepting unrelated readings. Record answer-check categories only. Dynamic glyph coverage, batched four-face font replacement and loading/error handling added.
+- Clean Release zero warnings/errors; 114 offline checks plus 3 local replay checks pass. Native background ImGui rendering: 764 characters on four fonts, seven languages, production symbol controls. 61 localization keys x 7 languages; canonical trailing tabs retained. Updated live gameplay and exact reported glyph appearance remain unverified; the specific IME text difference was not captured.
+- Anonymous public repository/icon/ZIP HTTP 200; image/png icon; downloaded ZIP SHA/CRC/eight files/manifest/version/URLs verified. Release prerelease=true, draft=false.
+- Shared index `89cf20b8bf88f6d20c2c6a24917249d3e879cffa`: pinned public index and connected main version/URLs verified (raw main cache may lag), 15 entries; all 14 unrelated entries preserved.
+- Source/index/records via GitHub connector; Release/assets via authenticated standard Roxyz0501 CLI. Installed DLL/configuration and modified local shared repo.json preserved. Captured logs, input strings and detailed per-game records are excluded from publication.
+
 ## 2026-10-28 — Keybound Pilot 1.0.3.0 startup focus and resume
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.3.0
