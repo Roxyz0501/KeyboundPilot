@@ -1,3 +1,12 @@
+## 2026-10-29 — Keybound Pilot 1.0.11.0 reception NPC loop
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.11.0
+- Source/tag: bcc289b77cc7d57ff3365be1b035f86d16058753. Shared index: e029515b071d7b038ae2dd4462c100c8bc6d4729.
+- Identify reception NPC 1058751 in the Square, approach and interact once, then use dedicated KTGEnterDialogue entry button. Remove regular Duty Finder selection. No direct queue fallback.
+- vnavmesh is OPTIONAL: within three-unit range, interact without IPC; farther away, loaded vnavmesh supplies walking, otherwise stop with loop error. No required dependency in packaged manifest or index. Cancellable pathfinding, owned movement, pause/stop/logout/unload cleanup and bounded preparation retained.
+- Clean Release, 198 offline checks and four-font/821-glyph coverage pass. 79 keys in seven languages. Live walking, interaction and registration remain unverified; public prerelease.
+- Public repository/icon/ZIP and pinned index retrieved; ZIP hash/CRC/manifest verified. SHA-256: 2ffe74890eda01fc840585f3854fabade1f71643bc3b0f80b9f7f86d5cb4bc11.
+
 ## 2026-10-28 — Keybound Pilot 1.0.10.0 UI queue preparation
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.10.0
