@@ -1,3 +1,15 @@
+## 2026-10-28 — Keybound Pilot 1.0.7.0 counted loops, optional logs and usage help
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.7.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.7.0/KeyboundPilot-1.0.7.0.zip
+- Source/tag `abd6b6d67e045dc2362d37949ea8ea98b9b6e2e7`; ZIP 132308 bytes; SHA-256 `d52e7d88084d36af744568c2e0bec8b3146dbad54550be035c15b40d0b79af1c`.
+- Add a separately started, counted queue/play/leave loop with progress, pause/resume and stop controls. Requests and confirmation clicks are bounded and are not replayed on uncertain outcomes. Unrelated queues are not taken over; stopping does not cancel an existing queue.
+- Diagnostic logging is configurable and defaults off, including old-config migration. Disabled diagnostics skip capture and create no files. Active automatic typing refreshes target-content client activity timers at most once per ten seconds, without sending movement or extra keys. Manual pause/stop/departure disables this refresh.
+- Installer description and README now explain purpose and simple normal/loop usage. Remove the gameplay-log development banner from UI; retain operational guidance and separate validation documentation.
+- Clean Release: zero warnings/errors; 181 offline checks pass. Native background rendering verifies 810 glyphs on four CJK faces, all seven languages and production controls. 78 localization keys and byte-identical canonical tabs verified. Actual repeated games, native result/entry actions and idle-ejection prevention remain unverified; public prerelease, draft=false.
+- Public repository and icon HTTP 200 (image/png); downloaded ZIP SHA/CRC/eight files/manifest/version/URLs verified. Shared index commit `292825760b326fc647a0fe1548a09c7e92831fdd`; anonymous main and pinned index both serve 1.0.7.0. All 14 unrelated entries preserved (15 total).
+- Source/index/state via GitHub connector; unsupported Release/assets via authenticated standard Roxyz0501 CLI. Installed DLL/configuration and modified local shared repo.json preserved. No captured logs, input strings, game binaries, native inspection artifacts or personal paths published.
+
 ## 2026-10-28 — Keybound Pilot 1.0.6.0 nearest moving target and post-submit delay
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.6.0
