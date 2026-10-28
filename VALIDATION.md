@@ -1,3 +1,7 @@
+# Validation — 1.0.13.1 / 2026-10-29
+
+Documentation-only follow-up: English-first/Japanese-second README with equivalent usage, settings and limitations; remove obsolete development history and internal implementation/build details from README. Keep usage, settings, limitations and concise author/license attribution. Historical conceptual references moved to NOTICE. Runtime behavior is unchanged from 1.0.13.0.
+
 # Validation — 1.0.13.0 / 2026-10-29
 
 - Separate normal transport from loop controls. Hide the run-count label and place the labeled loop button below its numeric field. Move instructions to the information-icon tooltip. Show current target only while running and not manually paused.

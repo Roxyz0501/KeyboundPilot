@@ -1,8 +1,74 @@
 # Keybound Pilot
 
+[日本語](#日本語)
+
+Keybound Pilot is a Dalamud plugin that reads Keybound Brawler prompts and answers them using keyboard input. It can automate a single game or repeat registration, play and exit for a set number of runs. Created by Roxyz0501.
+
+## Installation and updates
+
+Add this URL to Dalamud's custom plugin repositories, then install Keybound Pilot. If you already have it installed, use the plugin updater.
+
+`https://raw.githubusercontent.com/Roxyz0501/DalamudPluginRepo/main/repo.json`
+
+Individual downloads are available on [GitHub Releases](https://github.com/Roxyz0501/KeyboundPilot/releases).
+
+## Auto typing
+
+1. Make sure a Japanese IME is available. Open the plugin with `/keyboundpilot`.
+2. In Settings, set the minimum and maximum key intervals and the delay after submitting an answer. Drag a numeric field left or right to adjust it, or double-click to type a value.
+3. Press Play inside the content to start. “Start automatically when the game begins” is enabled by default.
+4. Press Pause to wait and Play to resume. Use Stop, Esc or `/keyboundpilot stop` to end the session.
+
+The plugin window stays open after starting. Hover over the information icon to the right of Stop for instructions.
+
+## Looping
+
+In the Square, choose 1–9999 runs and press “▶ Loop” below the numeric field. The plugin approaches the reception NPC, talks to them, registers, plays and exits, then repeats until the selected number of runs is complete. Loop status shows the current run and completed count. If you start looping during a game, that game counts as the first run.
+
+Automatic travel to reception requires [vnavmesh](https://github.com/awgil/ffxiv_navmesh). Without it, the plugin can still register if you are close enough to talk to reception; otherwise, it stops with an error. If reception has not loaded yet, it waits for up to 120 seconds. It does not travel or teleport from another area.
+
+The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. It does not confirm other dialogs or act while paused or stopped.
+
+## Input behavior
+
+- Answers prioritize barrier reinforcement, then casting enemies, then the nearest moving enemy, then other targets. Distance is approximated from screen position. Prompts whose text has never been seen are excluded.
+- Phase transitions from 1 through 3 and temporary loss of input focus put typing on hold. Typing stops at the result screen or on leaving. It also waits while you use another application or text field.
+- If a target disappears during typing, the plugin clears the remaining text with Backspace, checks that the field is empty and moves to the next target. It supports “ゔ” and the wave characters “~”, “～” and “〜”.
+- For the Japanese-named abilities “動体感知ジャマー” and “呪いの視線”, it estimates activation from the cast display and pauses input for four seconds. It keeps waiting if the input field is still disabled. Other ability names and other input-prohibition mechanics are not supported.
+- While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. It sends no extra keystrokes or movement for this purpose and stops those updates after manual pause, stop or exit.
+
+Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text with Backspace, checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
+
+The four-second pause for “呪いの視線” is a precautionary waiting period, not a measured effect duration.
+
+## Settings
+
+| Setting | Behavior |
+| --- | --- |
+| Key interval | Set minimum and maximum values from 20–5000 ms. An interval is chosen for each character. Equal values give a fixed interval. |
+| Delay after submission | Time before typing the next target, from 0–60000 ms. |
+| Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
+| Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. |
+
+Input preparation and frame delays can make actual key intervals longer than configured.
+
+Change the display language in Language settings. Japanese, English, German, French, Korean, Simplified Chinese and Traditional Chinese are supported. Changed settings are saved every 60 seconds and on logout, normal exit or plugin disable. Three valid backup generations are retained.
+
+## Author and license
+
+Author: Roxyz0501. License: [Apache-2.0](LICENSE).
+
+Parts of configuration saving and font support use code from [BaitBeacon](https://github.com/Roxyz0501/BaitBeacon) by Roxyz0501, licensed under Apache-2.0. Automatic travel to reception integrates with [vnavmesh](https://github.com/awgil/ffxiv_navmesh) by awgil and contributors.
+
+Optional support: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
+
+---
+
+## 日本語
+
 キーバウンド・ブロウラーの出題を読み取り、キーボード操作で回答する Dalamud プラグインです。1ゲームの自動入力に加え、回数を決めて参加申請から退出まで繰り返す周回機能があります。作者は Roxyz0501 です。
 
-## インストール・更新
+### インストール・更新
 
 Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot をインストールしてください。導入済みの場合はプラグイン更新から更新できます。
 
@@ -10,7 +76,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 個別の配布ファイルは [GitHub Releases](https://github.com/Roxyz0501/KeyboundPilot/releases) にあります。
 
-## 自動入力の使い方
+### 自動入力の使い方
 
 1. 日本語IMEを使用できる状態にしてください。`/keyboundpilot` でプラグインを開きます。
 2. 「設定」でキー入力間隔の下限・上限と、送信後の待ち時間を指定します。数値は左右へのドラッグで調整でき、ダブルクリックすると直接入力できます。
@@ -19,15 +85,15 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 開始後もプラグイン画面は開いたままです。停止ボタンの右にある情報アイコンにマウスを合わせると、操作説明を読めます。
 
-## 周回の使い方
+### 周回の使い方
 
 キーバウンドスクウェアで回数を1〜9999回に設定し、数値欄の下の「▶ 周回」を押してください。「参加受付」への移動・会話・申請・プレイ・退出を繰り返し、指定回数で終了します。現在の周回と完了回数は「周回ステータス」に表示します。プレイ中に周回を開始した場合は、そのゲームを1周目に数えます。
 
 受付への自動移動には [vnavmesh](https://github.com/awgil/ffxiv_navmesh) が必要です。入れていなくても受付に話しかけられる距離なら申請でき、離れている場合はエラーで停止します。受付がまだ読み込まれていない場合は最大120秒待機します。別エリアからの移動やテレポートはしません。
 
-周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、ゲームの確認文との一致・スクウェア内・周回の参加待ちを条件に、1周につき1回だけ自動で「はい」を押します。一時停止・停止中や別の確認画面では押しません。
+周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。一時停止・停止中や別の確認画面では押しません。
 
-## 入力中の動作
+### 入力中の動作
 
 - バリア強化、詠唱中、最も手前の移動中の敵、その他の順に回答します。近さは画面上の位置による近似です。一度も文字の表示を確認していない出題は選びません。
 - フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。別アプリや他の入力欄を操作している間もキー送信を待ちます。
@@ -37,9 +103,9 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 読み仮名はローマ字キーで入力し、ひらがなの確定と回答の送信を分けて行います。IMEの状態や確定した読みを確認できない場合は、入力済みの文字をBackspaceで消し、空欄を確認してから再開します。削除中も入力禁止・フォーカス待ち・手動停止を優先します。
 
-入力禁止技の判定には、詠唱が90%以上まで進んだ後に表示が消える変化を使います。「呪いの視線」の4秒は予防のための待機時間で、効果時間の実測値ではありません。
+「呪いの視線」の4秒は予防のための待機時間で、効果時間の実測値ではありません。
 
-## 設定
+### 設定
 
 | 項目 | 内容 |
 | --- | --- |
@@ -52,16 +118,10 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 表示言語は「言語設定」で変更できます。日本語・English・Deutsch・Français・한국어・简体中文・繁體中文に対応しています。設定は変更時のみ60秒ごとに保存し、ログアウト・通常終了・無効化時にも保存します。正常なバックアップを3世代残します。
 
-## 開発・検証・帰属
+### 作者・ライセンス
 
-`tools/Build-Release.ps1` でReleaseビルド・テスト・パッケージ作成を実行します。確認済みの範囲と実機検証が必要な項目は [VALIDATION.md](VALIDATION.md) に記載しています。ゲームデータ・実プレイログ・ホストDLLは同梱しません。
+作者: Roxyz0501。ライセンス: [Apache-2.0](LICENSE)。
 
-入力はWindowsのキー送信を使います。周回では受付との会話と専用申請画面を操作し、無操作対策では対象コンテンツのクライアント操作タイマーを更新します。サーバーパケットを直接送信する処理はありません。
-
-vnavmesh（awgil と各コントリビューター）とは公開IPCで取消可能な経路探索・移動・停止を連携しています。コードのコピーはしていません。停止・一時停止・画面操作・エリア移動・ログアウト・アンロード時には、このプラグインが開始した移動と経路探索を終了します。他の実行中の経路は引き継ぎません。会話や専用画面を開けない場合は時間制限で停止し、操作を連打しません。
-
-旧版で参考にした [AutoDuty](https://github.com/ffxivcode/AutoDuty/blob/53f4e7400f9791f4534f803a2ec2d2ff709375ba/AutoDuty/Helpers/QueueHelper.cs)（ffxivcode と各コントリビューター）の通常申請画面方式は現在使用していません。AutoDutyのコードはコピーしていません。
-
-設定保存・フォント補助の一部は [Roxyz0501/BaitBeacon](https://github.com/Roxyz0501/BaitBeacon)（Roxyz0501、Apache-2.0）を参照・再利用しています。共有タブは同一作者の共通テンプレートです。512×512のアイコンはオリジナルで、生成元は `tools/Create-Icon.py` です。
+設定保存とフォント表示の一部に [BaitBeacon](https://github.com/Roxyz0501/BaitBeacon)（Roxyz0501、Apache-2.0）のコードを使用しています。受付への自動移動は [vnavmesh](https://github.com/awgil/ffxiv_navmesh)（awgil と各コントリビューター）と連携します。
 
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
