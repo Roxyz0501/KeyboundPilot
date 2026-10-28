@@ -1,3 +1,16 @@
+## 2026-10-28 — Keybound Pilot 1.0.3.0 startup focus and resume
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.3.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.3.0/KeyboundPilot-1.0.3.0.zip
+- Source/tag `8481e4cbe36f245e45a5eb1fa97c424aca17dc95`; ZIP 111,804 bytes; SHA-256 `a8b48bb665613863bc16d17ef5a75f70d1e8082c42ec38ae4553ed8734e5e16c`.
+- Correct startup focus gating: honor arming before UI-capture checks, wait for disabled input, protect another active text editor, activate the dedicated addon and focus its edit node, and observe the last focus attempt before failure.
+- User-requested AutoStart defaults true and is configurable/persisted. One automatic start per content entry when input and words are ready. Manual/error stops do not auto-restart; the Resume button re-arms and reacquires focus. Existing hiragana IME mode is preserved.
+- Existing wave support, cast priority, user-selected four-second jammer wait and expanded diagnostics remain. Added control-gate/focus-request diagnostics without saving input text. Revised native input/IME/focus success remains unverified in live gameplay.
+- Clean Release zero warnings/errors; 89 offline checks and 3 local replay checks passed. 55 UI keys x 7 languages; canonical trailing tabs retained.
+- Public repo/icon/ZIP HTTP 200; icon image/png; downloaded ZIP SHA/CRC/manifest/version/URLs verified. Release prerelease=true, draft=false.
+- Shared index `6c787c7680b4a2381b2707357305d6449df102ae`: public main/pinned both 1.0.3.0, 15 entries; all 14 unrelated entries preserved.
+- Source/index/records via GitHub connector; Release/assets via authenticated standard Roxyz0501 CLI. Installed DLL/configuration and modified local shared repo.json not replaced. Captured logs and detailed per-game statistics are excluded from new publication records.
+
 ## 2026-10-28 — Keybound Pilot 1.0.2.0
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.2.0
