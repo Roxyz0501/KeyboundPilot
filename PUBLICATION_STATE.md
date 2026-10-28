@@ -1,3 +1,11 @@
+## 2026-10-28 — Keybound Pilot 1.0.10.0 UI queue preparation
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.10.0
+- Source/tag: f4c0b592742c763b8c9ebf6da21e59163bc25739. Shared index: a4ee37c1d1009a41d91e2d4ee10ed3df8a6ae60a.
+- Remove direct QueueDuties request after reported immediate 90002. Use an independently implemented UI preparation/selection/join sequence conceptually referenced from ffxivcode/AutoDuty; attribution and no-code-copy scope in README. No root license found in inspected reference repository.
+- Verify target ID, single selected duty and displayed name before joining. Latch selection/join attempts; pause/loading/foreground/stop gates and timeout remain. No direct-request fallback. Special-duty UI support and successful elimination of 90002 remain unverified.
+- Clean Release, 194 offline checks pass. Public repository/icon/ZIP and pinned index retrieved; ZIP hash/CRC/manifest verified. SHA-256: 0d7722c3c842635ab127a59b870eb42d4ec6c113e26dc49a93481fdcda6ecdfb.
+
 ## 2026-10-28 — Keybound Pilot 1.0.9.0 cursed gaze
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.9.0
