@@ -1,3 +1,7 @@
+# Validation — 1.0.13.2 / 2026-10-29
+
+Interval endpoints are edited independently. Editing maximum clamps only maximum to the existing minimum; editing minimum clamps only minimum to the existing maximum. The other endpoint is never changed by the UI. Six regression checks cover crossing endpoints and global bounds (214 total). Existing delayed changed-only persistence is retained.
+
 # Validation — 1.0.13.1 / 2026-10-29
 
 Documentation-only follow-up: English-first/Japanese-second README with equivalent usage, settings and limitations; remove obsolete development history and internal implementation/build details from README. Keep usage, settings, limitations and concise author/license attribution. Historical conceptual references moved to NOTICE. Runtime behavior is unchanged from 1.0.13.0.

@@ -28,6 +28,13 @@ var fixedBefore=sent.Count;fixedSession.Tick(3099,true,"AB",true,100,100,Send);C
 fixedSession.Tick(3100,true,"AB",true,100,100,Send);Check(sent.Count==fixedBefore+1,"fixed exactly due");
 fixedSession.Stop();fixedSession.Tick(9999,true,"AB",true,100,100,Send);Check(sent.Count==fixedBefore+1,"stop cancels pending");
 var c=new Configuration(); c.SetRange(99999,-1); Check(c.MinimumMs==5000 && c.MaximumMs==5000,"clamp invalid range");
+var independent=new Configuration();
+independent.SetMaximum(40);Check(independent.MinimumMs==80 && independent.MaximumMs==80,"maximum cannot pull minimum down");
+independent.SetMaximum(300);Check(independent.MinimumMs==80 && independent.MaximumMs==300,"raising maximum preserves minimum");
+independent.SetMinimum(400);Check(independent.MinimumMs==300 && independent.MaximumMs==300,"minimum cannot push maximum up");
+independent.SetMinimum(20);Check(independent.MinimumMs==20 && independent.MaximumMs==300,"lowering minimum preserves maximum");
+independent.SetMaximum(99999);Check(independent.MinimumMs==20 && independent.MaximumMs==5000,"maximum global bound preserves minimum");
+independent.SetMinimum(-1);Check(independent.MinimumMs==20 && independent.MaximumMs==5000,"minimum global bound preserves maximum");
 c.SetRange(-50,100); Check(c.MinimumMs==20 && c.MaximumMs==100,"minimum clamp");
 Check(Keyboard.InputSize==40,"Win32 x64 INPUT ABI");
 var root=Path.Combine(AppContext.BaseDirectory,"KeyboundPilot-tests-"+Guid.NewGuid().ToString("N"));

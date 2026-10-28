@@ -310,11 +310,10 @@ public sealed class Plugin : IDalamudPlugin
         var min = config.MinimumMs; var max = config.MaximumMs;
         ImGui.SetNextItemWidth(200);
         var changed = PlaybackControls.Number(T("Min") + "###Minimum", ref min,20,5000,5,T("NumberHelp"));
-        if (changed) { min = Math.Clamp(min, 20, 5000); max = Math.Max(min, max); }
+        if (changed) { config.SetMinimum(min); settings.Update(config); }
         ImGui.SetNextItemWidth(200);
         var maxChanged = PlaybackControls.Number(T("Max") + "###Maximum", ref max,20,5000,5,T("NumberHelp"));
-        if (maxChanged) { max = Math.Clamp(max, 20, 5000); min = Math.Min(min, max); }
-        if (changed || maxChanged) { config.SetRange(min, max); settings.Update(config); }
+        if (maxChanged) { config.SetMaximum(max); settings.Update(config); }
         ImGui.TextWrapped(T("RangeHelp"));
         var between=config.BetweenWordsMs;
         ImGui.SetNextItemWidth(200);
