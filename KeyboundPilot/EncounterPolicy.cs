@@ -1,6 +1,6 @@
 namespace KeyboundPilot;
 
-public sealed record KtgWord(uint EntityId,string Word,int Slot,string Cast,int Progress,int Special);
+public sealed record KtgWord(uint EntityId,string Word,int Slot,string Cast,int Progress,int Special,int Kind=0,bool Visible=true);
 
 /// <summary>Only the observed Japanese jammer is recognized. Cast end is a sampled inference, not a server action event.</summary>
 public sealed class EncounterPolicy
@@ -25,5 +25,5 @@ public sealed class EncounterPolicy
     public bool Paused(long now)=>now<PauseUntil;
     public void Reset() {jammerProgress.Clear();PauseUntil=0;}
     public static IEnumerable<KtgWord> Prioritize(IEnumerable<KtgWord> enemies)=>enemies
-        .OrderByDescending(x=>x.Cast.Length>0).ThenByDescending(x=>x.Cast.Length>0?x.Progress:0).ThenBy(x=>x.Slot);
+        .OrderByDescending(x=>x.Kind==2).ThenByDescending(x=>x.Cast.Length>0).ThenByDescending(x=>x.Cast.Length>0?x.Progress:0).ThenBy(x=>x.Slot);
 }

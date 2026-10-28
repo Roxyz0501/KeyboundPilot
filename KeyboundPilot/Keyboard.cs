@@ -37,6 +37,8 @@ internal static class Keyboard
     {
         scan = 0;shift=false;
         if (!ForegroundGame) return false;
+        if(c=='\b') {scan=0x0E;return true;}
+        if(c==TypingSession.HiraganaKey) {scan=0x40;return true;} // F6: IME hiragana conversion
         if (c == '\r') { scan = 0x1C; return true; } // physical Enter
         if (c is < ' ' or > '~') return false;
         var thread = GetWindowThreadProcessId(GetForegroundWindow(), out _);

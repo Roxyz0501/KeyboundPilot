@@ -14,9 +14,11 @@ internal sealed unsafe class GameReader(IGameGui gui)
     public bool InputFocused {get;private set;}
     public bool InputEnabled {get;private set;}
     public bool Available {get;private set;}
+    public bool ContentComplete {get;private set;}
+    public void ResetFocus() {focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     public IReadOnlyList<string> Words {get;private set;}=[];
     public IReadOnlyList<KtgWord> Enemies {get;private set;}=[];
-    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=false;Words=[];Enemies=[];sources.Clear();focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
+    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=ContentComplete=false;Words=[];Enemies=[];sources.Clear();focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     private AtkComponentTextInput* Input(out AtkUnitBase* addon)
     {
         addon=gui.GetAddonByName<AtkUnitBase>("KTGInput");
@@ -55,6 +57,8 @@ internal sealed unsafe class GameReader(IGameGui gui)
     }
     public void Refresh()
     {
+        var result=gui.GetAddonByName<AtkUnitBase>("KTGResult");
+        ContentComplete=result!=null && result->IsVisible && Visible(result->RootNode);
         var input=Input(out _);InputVisible=input!=null;InputEnabled=input!=null && input->Enabled;InputFocused=input!=null && input->IsActive;
         var wordAddon=gui.GetAddonByName<AtkUnitBase>("KTGEWord");
         Available=InputVisible && wordAddon!=null && wordAddon->IsVisible ;
@@ -63,7 +67,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
         // Keep the entity identity of an in-flight word, even if array slots reorder.
         foreach(var entry in sources.ToArray())if(!enemies.Any(x=>x.EntityId==entry.Value && x.Word==entry.Key))sources.Remove(entry.Key);
         var words=new List<string>();
-        foreach(var candidate in EncounterPolicy.Prioritize(enemies).Where(x=>x.Word.Length>0))
+        foreach(var candidate in EncounterPolicy.Prioritize(enemies).Where(x=>x.Visible && x.Word.Length>0))
         {sources.TryAdd(candidate.Word,candidate.EntityId);if(!words.Contains(candidate.Word))words.Add(candidate.Word);}
         Words=words;
     }
@@ -71,7 +75,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
     {
         if(entityId==0 && !sources.TryGetValue(word,out entityId))return false;
         var addon=gui.GetAddonByName<AtkUnitBase>("KTGEWord");
-        return addon!=null && addon->IsVisible && KtgArrayReader.TryRead(out var words) && words.Any(x=>x.EntityId==entityId && x.Word==word);
+        return addon!=null && addon->IsVisible && KtgArrayReader.TryRead(out var words) && words.Any(x=>x.Visible && x.EntityId==entityId && x.Word==word);
     }
     public uint Source(string word)=>sources.GetValueOrDefault(word);
     private static bool Visible(AtkResNode* node)

@@ -37,7 +37,7 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
         }
         var ui=new Dictionary<string,object> {
             ["control"]=control,["input"]=inputState,["word"]=Probe("KTGEWord"),["cast"]=Probe("KTGEnemyCastBar"),["hp"]=Probe("KTGHudGaugeHp"),
-            ["typing"]=new {typing.Running,typing.Status,typing.Position,typing.Sent,paused},["ime"]=ime,
+            ["typing"]=new {typing.Running,typing.ManualPaused,typing.Status,typing.Position,typing.Sent,typing.AnswerCheck,paused},["ime"]=ime,
             ["inputHints"]=new {label=ReadNode(input,3),hint=ReadNode(input,6)}
         };
         return delta.Capture(numbers,strings,ui);

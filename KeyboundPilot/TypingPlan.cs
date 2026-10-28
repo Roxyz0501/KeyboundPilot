@@ -16,7 +16,8 @@ public sealed record TypingPlan(string Expected, string Keys, bool Japanese)
         Add("ぁぃぅぇぉゃゅょっゎゔ","xa xi xu xe xo xya xyu xyo xtsu xwa vu");Add("ー","-");Add("～〜","~ ~");
         return result;
     }
-    public static string NormalizeAnswer(string text)=>text.Replace('〜','～').Normalize(NormalizationForm.FormKC);
+    // Some IMEs keep vu as katakana even in hiragana mode; the reading is identical.
+    public static string NormalizeAnswer(string text)=>text.Replace('〜','～').Normalize(NormalizationForm.FormKC).Replace('ヴ','ゔ');
     public static TypingPlan? Create(string text)
     {
         text=text.Trim();if(text.Length is 0 or >96)return null;

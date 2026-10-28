@@ -6,10 +6,10 @@ var sent = new List<char>();
 var s = new TypingSession((a,b) => { samples.Add((a,b)); return b-1; });
 bool Send(char c) { sent.Add(c); return true; }
 s.Start(0);
-s.Tick(2999, true, "ABC", false, 80, 150, Send); Check(sent.Count == 0, "3s arming");
-s.Tick(3000, true, "ABC", false, 80, 150, Send); Check(sent.Count == 0, "first delay");
-s.Tick(3149, true, "ABC", true, 80, 150, Send); Check(sent.Count == 0, "upper boundary");
-s.Tick(3150, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("A"), "first character");
+Check(s.Running && s.Status=="Waiting","start has no arming delay");
+s.Tick(0, true, "ABC", false, 80, 150, Send); Check(sent.Count == 0, "first delay");
+s.Tick(149, true, "ABC", true, 80, 150, Send); Check(sent.Count == 0, "upper boundary");
+s.Tick(150, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("A"), "first character");
 s.Tick(9000, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("AB"), "no catch-up burst");
 s.Tick(9001, true, "ABC", true, 80, 150, Send); Check(sent.Count == 2, "next deadline from actual send");
 s.Tick(9150, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("ABC"), "character order");
@@ -17,7 +17,7 @@ s.Tick(9300,true,"ABC",true,80,150,Send);Check(sent.SequenceEqual("ABC\r"),"phys
 s.Tick(10000, true, "ABC", true, 80, 150, Send); Check(sent.Count == 4, "do not retype or submit stale word twice");
 s.Tick(13001, true, "ABC", true, 80, 150, Send); Check(!s.Running && s.Status == "NoProgress", "stale word timeout");
 Check(samples.All(x => x == (80,151)), "inclusive bounds");
-s.Start(0); s.Tick(3000,false,"ABC",false,80,150,Send); Check(!s.Running,"focus gate");
+s.Start(0); s.Tick(3000,false,"ABC",false,80,150,Send); Check(s.Running && s.Status=="Paused","focus loss waits without stopping");
 s.Start(0); s.Tick(3000,true,"漢字",false,80,150,Send); Check(!s.Running && s.Status=="Unsupported","reject unsupported");
 s.Start(0); s.Tick(3000,true,"AB",false,80,150,Send); s.Tick(3150,true,"AB",true,80,150,_=>false); Check(!s.Running,"failed send never retries");
 s.Start(0); s.Tick(3000,true,"AB",false,80,150,Send); var before=sent.Count;
@@ -88,8 +88,8 @@ var pause=new TypingSession((a,b)=>a);pause.Start(0);pause.Tick(3000,true,"ABC",
 pause.Tick(3100,false,"ABC",true,100,100,Send,paused:true);pause.Tick(7099,false,"ABC",true,100,100,Send,paused:true);
 Check(pause.Running && sent.Count==sentBefore,"no input throughout four-second pause");
 pause.Tick(7100,true,"ABC",true,100,100,Send);Check(sent.Count==sentBefore+1,"resume existing sequence without burst");
-var partial=new TypingSession((a,b)=>a);partial.Start(0);partial.Tick(3000,true,"AB",false,100,100,Send);partial.Tick(3100,true,"AB",true,100,100,Send);partial.Tick(3200,true,"CD",false,100,100,Send);
-Check(partial.Status=="TargetChanged","never mix partially typed words");
+var partial=new TypingSession((a,b)=>a);partial.Start(0);partial.Tick(3000,true,"AB",false,100,100,Send);partial.Tick(3100,true,"AB",true,100,100,Send);partial.Tick(3200,true,"CD",false,100,100,Send,evaluated:"");
+Check(partial.Running && partial.CurrentWord=="","cleared input after phase change abandons old word without stopping");
 var policy=new EncounterPolicy();
 KtgWord Enemy(uint id,string cast,int percent)=>new(id,"word",0,cast,percent,0);
 policy.Update(100,[Enemy(1,"動体感知ジャマー",98)]);Check(!policy.Paused(100),"do not pause at cast start");
@@ -99,6 +99,40 @@ policy.Update(300,[Enemy(1,"",0)]);Check(policy.PauseUntil==4200,"no repeated ti
 policy.Reset();policy.Update(100,[Enemy(1,"動体感知ジャマー",40)]);policy.Update(200,[Enemy(1,"",0)]);Check(!policy.Paused(200),"early interrupt is not activation");
 policy.Update(300,[Enemy(1,"動体感知ジャマー",99)]);policy.Update(400,[]);Check(!policy.Paused(400),"enemy despawn is not activation");
 var ordered=EncounterPolicy.Prioritize([Enemy(1,"",0),Enemy(2,"cast",40),Enemy(3,"cast",80)]).ToArray();Check(ordered.Select(x=>x.EntityId).SequenceEqual(new uint[]{3,2,1}),"cast priority then progress");
+var barrier=new KtgWord(9,"support prompt",3,"",0,0,2);
+ordered=EncounterPolicy.Prioritize([Enemy(1,"cast",99),new KtgWord(2,"longer ordinary enemy text",0,"",0,0),barrier]).ToArray();
+Check(ordered[0].EntityId==9 && ordered[1].EntityId==1,"support-kind prompt above casting enemy, independent of text length");
+var phase=new TypingSession((a,b)=>a);phase.Start(0);sent.Clear();phase.Tick(0,true,"AB",false,100,100,Send);phase.Tick(100,true,"AB",true,100,100,Send);
+phase.PauseByUser();phase.Tick(200,true,"AB",true,100,100,Send);Check(phase.Running && phase.ManualPaused && sent.Count==1,"pause retains session and sends no key");
+phase.Tick(5000,true,"AB",true,100,100,Send);phase.ResumeByUser();phase.Tick(5100,true,"AB",true,100,100,Send);Check(phase.Running && sent.Count==2,"play resumes paused word without reset");
+phase.Tick(5200,false,null,false,100,100,Send);phase.Tick(9000,true,"CD",false,100,100,Send,evaluated:"");
+Check(phase.Running && phase.CurrentWord=="","phase transition keeps automation running");
+var clearing=new TypingSession((a,b)=>a);clearing.Start(0);clearing.Tick(0,true,"AB",false,100,100,Send);clearing.Tick(100,true,"AB",true,100,100,Send);
+clearing.Tick(200,true,"CD",false,100,100,Send,composing:true,evaluated:"a");Check(clearing.Status=="Clearing" && sent.Last()=='\b',"clear stale partial text with physical Backspace");
+clearing.Tick(300,true,"CD",false,100,100,Send,evaluated:"");Check(clearing.Running && clearing.CurrentWord=="","continue after old text clears");
+// Regression: vu may be rendered as katakana by the IME; never accept unrelated text.
+Check(TypingPlan.Create("ゔぁ")?.Keys=="vuxa","vu plus explicit small vowel");
+Check(TypingPlan.NormalizeAnswer("ヴぁ")==TypingPlan.NormalizeAnswer("ゔぁ"),"vu script variant compares by reading");
+Check(TypingPlan.NormalizeAnswer("う\u3099ぁ")==TypingPlan.NormalizeAnswer("ゔぁ"),"decomposed voiced vowel normalizes");
+Check(TypingPlan.NormalizeAnswer("ぶぁ")!=TypingPlan.NormalizeAnswer("ゔぁ"),"different kana remains a mismatch");
+foreach(var answer in new[]{"ゔぁ","ヴぁ","う\u3099ぁ"})
+{
+ var vu=new TypingSession((a,b)=>a);sent.Clear();vu.Start(0);vu.Tick(0,true,"ゔぁ",false,100,100,Send);
+ for(var t=100;t<=400;t+=100)vu.Tick(t,true,"ゔぁ",true,100,100,Send,composing:true);
+ vu.Tick(500,true,"ゔぁ",true,100,100,Send,composing:true);
+ Check(sent.Last()==TypingSession.HiraganaKey && !vu.Submitted,"convert to hiragana before commit");
+ vu.Tick(650,true,"ゔぁ",true,100,100,Send,composing:true);
+ Check(sent.Last()=='\r' && sent.Count(c=>c==TypingSession.HiraganaKey)==1,"F6 once then IME Enter");
+ vu.Tick(800,true,"ゔぁ",true,100,100,Send,evaluated:answer);
+ Check(vu.Running && vu.Submitted && sent.Count(c=>c=='\r')==2,"verified vu variant is submitted");
+}
+var stale=new TypingSession((a,b)=>a);sent.Clear();stale.Start(0);stale.Tick(0,true,"AB",false,100,100,Send);stale.Tick(100,true,"AB",true,100,100,Send);
+stale.Tick(200,true,"CD",false,100,100,Send,evaluated:"a");
+stale.Tick(300,true,"AB",true,100,100,Send,evaluated:"a");Check(sent.SequenceEqual(new[]{'A','\b','\b'}),"target reappearance cannot cancel clearing");
+stale.Tick(400,true,"CD",false,100,100,Send,evaluated:null);Check(stale.CurrentWord=="AB" && sent.Count==3,"unknown input state is not treated as empty");
+stale.Tick(500,true,"CD",false,100,100,Send,evaluated:"");stale.Tick(600,true,"CD",false,100,100,Send,evaluated:"");stale.Tick(700,true,"CD",true,100,100,Send,evaluated:"");
+Check(stale.Running && stale.CurrentWord=="CD" && sent.Last()=='C',"next word only after confirmed empty input");
+stale.Stop("Completed");stale.Tick(900,true,"CD",true,100,100,Send);Check(!stale.Running && stale.Status=="Completed" && sent.Last()=='C',"completion cancels future input");
 var delta=new DiagnosticDelta();var nums=new[]{0,1};var txt=new[]{"word"};var ui=new Dictionary<string,object>{{"input",new{enabled=true}},{"cast",new{visible=true}}};
 var first=delta.Capture(nums,txt,ui);Check(first!=null && delta.Capture(nums,txt,ui)==null,"identical frame has zero record");
 nums[1]=2;var changed=System.Text.Json.JsonDocument.Parse(delta.Capture(nums,txt,ui)!);
@@ -111,14 +145,14 @@ Check(!lifecycle.TryAutoStart(true,true,false,true),"auto start waits for playab
 Check(!lifecycle.TryAutoStart(true,true,true,false),"auto start does not steal another input");
 Check(lifecycle.TryAutoStart(true,true,true,true),"auto start at first playable frame");
 lifecycle.Start(100);
-Check(lifecycle.Evaluate(101,true,false,true,false,false,true,true)==RunGate.Arming,"start-click capture does not stop arming");
+Check(lifecycle.Evaluate(101,true,false,true,false,false,true,true)==RunGate.InputUnavailable,"start with disabled input waits");
 Check(lifecycle.Evaluate(3100,true,false,true,false,false,true,true)==RunGate.InputUnavailable,"disabled pre-game input waits before focus checks");
 Check(lifecycle.Evaluate(3101,true,false,true,false,true,false,false)==RunGate.Run,"proceed when input becomes usable");
 Check(lifecycle.Evaluate(3101,true,false,true,false,true,false,true)==RunGate.OtherTextInput,"protect another text editor");
-Check(lifecycle.Evaluate(101,true,false,false,false,false,false,false)==RunGate.ForegroundLost,"foreground stop also during arming");
+Check(lifecycle.Evaluate(101,true,false,false,false,false,false,false)==RunGate.ForegroundLost,"foreground gate blocks key delivery");
 Check(!lifecycle.TryAutoStart(true,true,true,true),"one auto start per content entry");
 lifecycle.Suppress();Check(!lifecycle.TryAutoStart(true,true,true,true),"manual stop cannot auto-resume");
-lifecycle.Start(5000);Check(lifecycle.Evaluate(7999,true,false,true,false,true,false,false)==RunGate.Arming,"resume button re-arms");
+lifecycle.Start(5000);Check(lifecycle.Evaluate(7999,true,false,true,false,true,false,false)==RunGate.Run,"resume has no arming delay");
 Check(lifecycle.Evaluate(8000,true,false,true,false,true,false,false)==RunGate.Run,"resume button reaches run");
 lifecycle.TryAutoStart(false,true,false,false);Check(lifecycle.TryAutoStart(true,true,true,true),"next entry can auto start");
 var focus=new FocusAcquisition();var requests=0;
@@ -128,6 +162,8 @@ Check(focus.Step(501,false,()=>requests++)==FocusResult.Waiting,"observe third r
 Check(focus.Step(749,true,()=>requests++)==FocusResult.Ready && focus.Attempts==0,"third focus request may succeed");
 focus.Step(1000,false,()=>requests++);focus.Step(1250,false,()=>requests++);focus.Step(1500,false,()=>requests++);
 Check(focus.Step(1750,false,()=>requests++)==FocusResult.Exhausted && requests==6,"bounded focus failure after last observation window");
+Check(focus.Step(3749,false,()=>requests++)==FocusResult.Exhausted && requests==6,"focus retry cooldown has no extra requests");
+Check(focus.Step(3750,false,()=>requests++)==FocusResult.Requested && requests==7,"focus reacquisition resumes after bounded cooldown");
 var migrationRoot=Path.Combine(AppContext.BaseDirectory,"auto-config-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(migrationRoot);
 try {
  var file=Path.Combine(migrationRoot,"config.json");File.WriteAllText(file,"{\"Version\":1,\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");

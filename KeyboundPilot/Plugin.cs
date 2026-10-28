@@ -57,10 +57,10 @@ public sealed class Plugin : IDalamudPlugin
             config.Language = Loc.FromGame(client.ClientLanguage) ?? Loc.Normalize(pi.UiLanguage) ?? "en";
             settings.Update(config);
         }
-        fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas, []);
         reader = new GameReader(gui);
         diagnostics = new DiagnosticRecorder(Path.Combine(pi.GetPluginConfigDirectory(),"diagnostics"));
         diagnosticReader = new DiagnosticReader(gui);
+        fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas,log,[diagnostics.DirectoryPath]);
         open = settings.Recovered || settings.LoadWarning != null;
         command = new CommandInfo((_, args) =>
         {
@@ -100,8 +100,10 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void StartTyping(long now,string source)
     {
-        automation.Start(now);failures=0;scanned=0;reader.Clear();preparedWord="";currentEntity=0;
-        typing.Start(now);open=false;controlGate="Arming";
+        automation.Start(now);failures=0;scanned=0;reader.ResetFocus();
+        if(typing.Running && typing.ManualPaused)typing.ResumeByUser();
+        else {reader.Clear();preparedWord="";currentEntity=0;typing.Start(now);}
+        controlGate="Starting";
         diagnostics.Event("typing_start",new {source});
     }
     private void StopByUser()
@@ -118,9 +120,11 @@ public sealed class Plugin : IDalamudPlugin
             var now=Environment.TickCount64;
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";return;}
             var inGame=IsContent();
-            if(!inGame) {automation.Reset();if(typing.Running){typing.Stop("FocusLost");controlGate="OutsideContent";}return;}
+            if(!inGame) {automation.Reset();reader.Clear();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
             var needsRead=inGame && (typing.Running || (config.AutoStart && !automation.Consumed));
             if(needsRead && now-scanned>=50) {reader.Refresh();scanned=now;}
+            if(reader.ContentComplete) {automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
+            if(encounter.Update(now,reader.Enemies))diagnostics.Event("jammer_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
             if(!typing.Running)
             {
                 ime.Restore();preparedWord="";currentEntity=0;
@@ -128,23 +132,22 @@ public sealed class Plugin : IDalamudPlugin
                 if(!config.AutoStart || automation.Consumed)return;
                 var playable=reader.Available && reader.InputEnabled && reader.Words.Count>0;
                 if(automation.TryAutoStart(inGame,config.AutoStart,playable,
-                    !open && !uiCaptures && Keyboard.ForegroundGame && !Keyboard.Modifier && !Keyboard.Escape && !reader.CompetingFocus()))
+                    !uiCaptures && Keyboard.ForegroundGame && !Keyboard.Modifier && !Keyboard.Escape && !reader.CompetingFocus()))
                     StartTyping(now,"game_started");
                 else return;
             }
             var gate=automation.Evaluate(now,inGame,Keyboard.Escape,Keyboard.ForegroundGame,Keyboard.Modifier,
                 reader.InputEnabled && reader.Available,uiCaptures,reader.CompetingFocus());
             controlGate=gate.ToString();
-            if(gate==RunGate.Arming)return;
-            if(gate==RunGate.InputUnavailable)
+            if(gate==RunGate.Escape) {StopByUser();return;}
+            if(gate!=RunGate.Run)
             {
+                reader.ResetFocus();
+                Keyboard.Release(true);
                 typing.Tick(now,true,null,false,config.MinimumMs,config.MaximumMs,_=>false,paused:true);return;
             }
-            if(gate!=RunGate.Run) {typing.Stop("FocusLost");Keyboard.Release(true);return;}
-            if(encounter.Update(now,reader.Enemies))diagnostics.Event("jammer_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
-            var paused=encounter.Paused(now);
+            var paused=encounter.Paused(now) || typing.ManualPaused;
             var focused=typing.Submitted || (!paused && reader.EnsureFocus(now));
-            if(!paused && reader.FocusFailed) {controlGate="FocusRequestFailed";typing.Stop("FocusLost");return;}
             if(typing.CurrentWord.Length==0) {preparedWord="";currentEntity=0;}
             if(!paused && focused && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
             {
@@ -156,10 +159,10 @@ public sealed class Plugin : IDalamudPlugin
             if(!paused && focused && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
             {controlGate="ImeState";typing.Stop("ImeFailed");return;}
             var previousWord=typing.CurrentWord;
-            controlGate=paused?"JammerWait":!focused?"FocusWait":"Typing";
+            controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
                 config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !uiCaptures && !encounter.Paused(Environment.TickCount64)
-                    && reader.FocusedNow() && reader.StillVisible(typing.CurrentWord,currentEntity) && Keyboard.Send(c),
+                    && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && Keyboard.Send(c),
                 paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText());
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
@@ -208,12 +211,18 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void Draw()
     {
-        uiCaptures = ImGui.GetIO().WantCaptureKeyboard || ImGui.GetIO().WantTextInput;
+        uiCaptures = ImGui.GetIO().WantTextInput || ImGui.IsAnyItemActive();
         if (stopping || !open) return;
+        fonts.Ensure(reader.Words.Append(typing.CurrentWord));
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(650, 440), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Keybound Pilot###KeyboundPilot", ref open))
         {
+            if(!fonts.Available)
+            {
+                ImGui.TextWrapped(Loc.Get("en",fonts.Failed?"FontFailed":"FontLoading"));
+                ImGui.End();return;
+            }
             ImGui.TextWrapped(T("Preview"));
             if (ImGui.BeginTabBar("Tabs"))
             {
@@ -225,14 +234,9 @@ public sealed class Plugin : IDalamudPlugin
                     ImGui.TextUnformatted(T("InputFocused") + ": " + T(reader.InputFocused ? "Yes" : "No"));
                     ImGui.TextUnformatted(T("Sent") + ": " + typing.Sent);
                     ImGui.TextWrapped(T("Current") + ": " + typing.CurrentWord);
-                    if (typing.Running)
-                    {
-                        if (ImGui.Button(T("Stop") + "###Stop")) StopByUser();
-                    }
-                    else if (ImGui.Button(T(automation.Consumed?"Resume":"Start") + "###Start"))
-                    {
-                        StartTyping(Environment.TickCount64,"button");
-                    }
+                    PlaybackControls.Draw(typing.Running,typing.ManualPaused,T,
+                        ()=>StartTyping(Environment.TickCount64,"button"),
+                        ()=>{typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
                     ImGui.SameLine();
                     if (ImGui.Button(T("Refresh") + "###Inspect"))
                     {
@@ -263,7 +267,7 @@ public sealed class Plugin : IDalamudPlugin
         ImGui.SetNextItemWidth(200);
         var maxChanged = ImGui.InputInt(T("Max") + "###Maximum", ref max, 5, 20);
         if (maxChanged) { max = Math.Clamp(max, 20, 5000); min = Math.Min(min, max); }
-        if (changed || maxChanged) { config.SetRange(min, max); settings.Update(config); StopByUser(); }
+        if (changed || maxChanged) { config.SetRange(min, max); settings.Update(config); }
         ImGui.TextWrapped(T("RangeHelp"));
         if (settings.Recovered) ImGui.TextWrapped(T("Recovered"));
         if (settings.LoadWarning != null || settings.LastError != null || settings.Stopped)
