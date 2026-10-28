@@ -4,7 +4,7 @@ r=Path(__file__).resolve().parents[1]
 p=r/"KeyboundPilot"
 out=p/"bin/Release"
 m=json.loads((out/"KeyboundPilot.json").read_text(encoding="utf-8-sig"))
-assert m["Author"]=="Roxyz0501" and m["AssemblyVersion"]=="1.0.4.0"
+assert m["Author"]=="Roxyz0501" and m["AssemblyVersion"]=="1.0.5.0"
 assert m["RepoUrl"]=="https://github.com/Roxyz0501/KeyboundPilot"
 assert m["IconUrl"]=="https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png"
 loc=(p/"Loc.cs").read_text(encoding="utf-8")
@@ -28,6 +28,6 @@ with zipfile.ZipFile(z) as archive:
     assert archive.read("KeyboundPilot.dll")==files.keys().__iter__().__next__().read_bytes()
 digest=hashlib.sha256(z.read_bytes()).hexdigest()
 (a/(z.name+".sha256")).write_text(digest+"  "+z.name+"\n",encoding="utf-8")
-metadata={"version":m["AssemblyVersion"],"asset":z.name,"bytes":z.stat().st_size,"sha256":digest,"RepoUrl":m["RepoUrl"],"IconUrl":m["IconUrl"],"prerelease":True,"live_game_verified":False,"tests":114,"localization_keys":61,"languages":7}
+metadata={"version":m["AssemblyVersion"],"asset":z.name,"bytes":z.stat().st_size,"sha256":digest,"RepoUrl":m["RepoUrl"],"IconUrl":m["IconUrl"],"prerelease":True,"live_game_verified":False,"tests":126,"localization_keys":61,"languages":7}
 (r/"release-metadata.json").write_text(json.dumps(metadata,indent=2)+"\n",encoding="utf-8")
 print(json.dumps(metadata))

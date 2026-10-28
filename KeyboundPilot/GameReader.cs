@@ -7,6 +7,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
 {
     private readonly Dictionary<string,uint> sources=new(StringComparer.Ordinal);
     private readonly FocusAcquisition focus=new();
+    private readonly SeenPrompts seen=new();
     public string FocusState {get;private set;}="Idle";
     public bool? FocusRequestAccepted {get;private set;}
     public int FocusAttempts=>focus.Attempts;
@@ -18,7 +19,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
     public void ResetFocus() {focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     public IReadOnlyList<string> Words {get;private set;}=[];
     public IReadOnlyList<KtgWord> Enemies {get;private set;}=[];
-    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=ContentComplete=false;Words=[];Enemies=[];sources.Clear();focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
+    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=ContentComplete=false;Words=[];Enemies=[];sources.Clear();seen.Clear();focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     private AtkComponentTextInput* Input(out AtkUnitBase* addon)
     {
         addon=gui.GetAddonByName<AtkUnitBase>("KTGInput");
@@ -62,12 +63,13 @@ internal sealed unsafe class GameReader(IGameGui gui)
         var input=Input(out _);InputVisible=input!=null;InputEnabled=input!=null && input->Enabled;InputFocused=input!=null && input->IsActive;
         var wordAddon=gui.GetAddonByName<AtkUnitBase>("KTGEWord");
         Available=InputVisible && wordAddon!=null && wordAddon->IsVisible ;
-        if(!Available || !KtgArrayReader.TryRead(out var enemies)) {Available=false;Words=[];Enemies=[];return;}
+        if(wordAddon==null || !wordAddon->IsVisible || !KtgArrayReader.TryRead(out var enemies)) {Available=false;Words=[];Enemies=[];seen.Clear();return;}
         Enemies=enemies;
-        // Keep the entity identity of an in-flight word, even if array slots reorder.
-        foreach(var entry in sources.ToArray())if(!enemies.Any(x=>x.EntityId==entry.Value && x.Word==entry.Key))sources.Remove(entry.Key);
+        seen.Update(enemies,PromptDisplayReader.Read(wordAddon,enemies));
+        // In-flight identity is held by Plugin; rebuild candidate sources in priority order.
+        sources.Clear();
         var words=new List<string>();
-        foreach(var candidate in EncounterPolicy.Prioritize(enemies).Where(x=>x.Visible && x.Word.Length>0))
+        foreach(var candidate in EncounterPolicy.Prioritize(enemies).Where(x=>x.Visible && x.Word.Length>0 && seen.Contains(x)))
         {sources.TryAdd(candidate.Word,candidate.EntityId);if(!words.Contains(candidate.Word))words.Add(candidate.Word);}
         Words=words;
     }

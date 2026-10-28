@@ -102,7 +102,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         automation.Start(now);failures=0;scanned=0;reader.ResetFocus();
         if(typing.Running && typing.ManualPaused)typing.ResumeByUser();
-        else {reader.Clear();preparedWord="";currentEntity=0;typing.Start(now);}
+        else {preparedWord="";currentEntity=0;typing.Start(now);}
         controlGate="Starting";
         diagnostics.Event("typing_start",new {source});
     }

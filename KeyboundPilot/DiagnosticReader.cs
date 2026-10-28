@@ -40,6 +40,9 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
             ["typing"]=new {typing.Running,typing.ManualPaused,typing.Status,typing.Position,typing.Sent,typing.AnswerCheck,paused},["ime"]=ime,
             ["inputHints"]=new {label=ReadNode(input,3),hint=ReadNode(input,6)}
         };
+        if(KtgArrayReader.TryRead(out var prompts))
+            ui["promptDisplay"]=PromptDisplayReader.Read(gui.GetAddonByName<AtkUnitBase>("KTGEWord"),prompts)
+                .Select(x=>new {x.EntityId,x.TextVisible}).ToArray();
         return delta.Capture(numbers,strings,ui);
     }
     private static string ReadNode(AtkUnitBase* addon,uint id)
