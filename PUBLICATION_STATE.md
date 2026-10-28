@@ -1,3 +1,10 @@
+## 2026-10-29 — Keybound Pilot 1.0.12.0 keyboard entry confirmation
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.12.0
+- Source/tag: 95bfead55a4272047589581d43da84649e7e94f8. Shared index: fef607e07dbc91af4d46abe415fee43603a9192a.
+- Match localized Addon 17826 keyboard warning in SelectYesno and click ready Yes once per round, only during active loop entry wait in the Square. Respect pause/loading/foreground/unrelated queue gates; no arbitrary dialog confirmation.
+- Clean Release, 205 offline checks pass; native live confirmation unverified. Public repository/icon/ZIP and pinned index retrieved; ZIP hash/CRC/manifest verified. SHA-256: b2d79375c70b46dd9a09a027602886d4c2d3bd85311167893f470da7fe27b537.
+
 ## 2026-10-29 — Keybound Pilot 1.0.11.0 reception NPC loop
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.11.0
