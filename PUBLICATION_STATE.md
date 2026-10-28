@@ -1,3 +1,13 @@
+## 2026-10-29 — Keybound Pilot 1.0.13.1 UI and bilingual README
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.13.1
+- Source/tag: 7b57095bd9169edcf16e7780b97679c6637ccd42. Shared index: bb44862a47cb4bfe2a196992b389307f33176987.
+- Separate normal transport and loop controls; hide run-count label, place labeled Loop below numeric field, hover help next to Stop, optional persisted debug display, native drag/double-click numeric editing. Diagnostic UI/commands and runtime capture disabled; backend retained.
+- English-first/Japanese-second user README; remove obsolete history and developer-only explanations, retain required attribution in README/NOTICE.
+- Clean Release, 208 offline checks, seven-language/four-face offscreen font coverage and numeric input interaction pass. No live game input performed. Public repository/icon/ZIP and commit-pinned index retrieved; ZIP hash/CRC/manifest and source README text verified. Main raw index briefly cached 1.0.13.0 during CDN propagation.
+- ZIP 142763 bytes; SHA-256: 1d92b71ff8421a4864786945779a8020b9e1dcde2dc82f0e814954a51eca7120.
+- Supersedes 1.0.13.0 published earlier this session (source 9077d2589ddadecaeaf7bd119bc532793d302d15, index a59d872eefeb840c4806d07e5dcd4468b5afcc37), with reader-focused bilingual documentation. Runtime unchanged from 1.0.13.0.
+
 ## 2026-10-29 — Keybound Pilot 1.0.12.0 keyboard entry confirmation
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.12.0
