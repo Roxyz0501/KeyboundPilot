@@ -1,3 +1,7 @@
+# Validation — 1.0.8.0
+
+IME preparation/state/committed-answer failures enter the existing physical Backspace cleanup path instead of stopping the session. Confirm both no composition and an empty evaluated input before selecting a fresh answer and preparing IME again. Preserve focus/mechanic/manual-pause gates, one key per interval, the 384-deletion bound and send-failure stop. No mismatched answer is submitted. 184 offline checks pass, including mismatch cleanup, empty confirmation and fresh preparation. Native live-game recovery remains unverified.
+
 # Validation — 1.0.7.0 / 2026-10-28 JST
 
 - 181 offline checks pass, including 42 additional assertions for two-run completion, single queue/pop/exit actions, delayed result buttons, pause/loading timeout suspension, queue/departure timeouts, unrelated queues, premature departure, stop/logout, activity scheduling, log-off disk behavior and old/new configuration persistence. Tests send no actual keys or queue requests.

@@ -157,15 +157,15 @@ public sealed class Plugin : IDalamudPlugin
             var paused=encounter.Paused(now) || typing.ManualPaused;
             var focused=typing.Submitted || (!paused && reader.EnsureFocus(now));
             if(typing.CurrentWord.Length==0) {preparedWord="";currentEntity=0;}
-            if(!paused && focused && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
+            if(!paused && focused && !typing.Recovering && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
             {
-                if(!string.IsNullOrEmpty(reader.EvaluatedText())) {controlGate="ExistingInput";typing.Stop("ImeFailed");return;}
-                if(!ime.Prepare(typing.Japanese)) {controlGate="ImePreparation";typing.Stop("ImeFailed");return;}
+                if(!string.IsNullOrEmpty(reader.EvaluatedText())) {controlGate="ExistingInput";typing.RecoverIme(now);return;}
+                if(!ime.Prepare(typing.Japanese)) {controlGate="ImePreparation";typing.RecoverIme(now);return;}
                 preparedWord=typing.CurrentWord;controlGate="ImeSettling";return;
             }
             var imeState=ime.Inspect();
-            if(!paused && focused && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
-            {controlGate="ImeState";typing.Stop("ImeFailed");return;}
+            if(!paused && focused && !typing.Recovering && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
+            {controlGate="ImeState";typing.RecoverIme(now);return;}
             var previousWord=typing.CurrentWord;
             controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),

@@ -83,7 +83,11 @@ Check(new string(sent.ToArray())=="kue","romaji key sequence");
 jp.Tick(3400,true,"くえ",true,100,100,Send,composing:true);Check(sent.Last()=='\r' && !jp.Submitted,"first Enter commits IME only");
 jp.Tick(3600,true,"くえ",true,100,100,Send,composing:false,evaluated:"くえ");Check(jp.Submitted && sent.Count==5,"second Enter submits verified hiragana");
 var wrong=new TypingSession((a,b)=>a);wrong.Start(0);wrong.Tick(3000,true,"あ",false,100,100,Send);wrong.Tick(3100,true,"あ",true,100,100,Send);
-var sentBefore=sent.Count;wrong.Tick(3200,true,"あ",true,100,100,Send,evaluated:"a");Check(wrong.Status=="ImeFailed" && sent.Count==sentBefore,"unconverted Latin never submitted as Japanese");
+var sentBefore=sent.Count;wrong.Tick(3200,true,"あ",true,100,100,Send,evaluated:"a");Check(wrong.Recovering && wrong.Running && sent.Count==sentBefore,"unconverted Latin never submitted as Japanese");
+wrong.Tick(3300,true,"あ",true,100,100,Send,evaluated:"a");Check(sent.Last()=='\b' && wrong.Recovering,"IME mismatch clears physical input");
+var clearedCount=sent.Count;wrong.Tick(3400,true,"あ",true,100,100,Send,evaluated:"");Check(!wrong.Recovering && wrong.Running && wrong.CurrentWord=="" && sent.Count==clearedCount,"empty confirmation before recovery restart");
+wrong.Tick(3500,true,"あ",true,100,100,Send,evaluated:"");Check(wrong.CurrentWord=="あ" && wrong.NeedsPreparation,"recovery prepares fresh IME input");
+
 var pause=new TypingSession((a,b)=>a);pause.Start(0);pause.Tick(3000,true,"ABC",false,100,100,Send);sentBefore=sent.Count;
 pause.Tick(3100,false,"ABC",true,100,100,Send,paused:true);pause.Tick(7099,false,"ABC",true,100,100,Send,paused:true);
 Check(pause.Running && sent.Count==sentBefore,"no input throughout four-second pause");

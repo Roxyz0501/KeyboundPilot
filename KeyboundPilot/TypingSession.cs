@@ -18,6 +18,8 @@ public sealed class TypingSession
     public bool Japanese=>plan?.Japanese ?? false;
     public bool NeedsPreparation=>plan!=null && index==0 && !submitted;
     public bool Submitted=>submitted;
+    public bool Recovering=>clearing;
+    public void RecoverIme(long now) { if(!Running)return; clearing=true;submitted=false;index=Math.Max(1,index);due=now;Status="Clearing"; }
     public int Position=>index;
     public long Sent {get;private set;}
     public TypingSession(Func<int,int,int>? sample=null)=>random=sample??Random.Shared.Next;
@@ -32,7 +34,7 @@ public sealed class TypingSession
         if(paused || !ready || ManualPaused) {if(pausedAt<0)pausedAt=now;Status=ManualPaused?"UserPaused":"Paused";return;}
         if(pausedAt>=0) {var delay=now-pausedAt;due+=delay;commitAt+=delay;pausedAt=-1;}
         if(now<due)return;
-        if(plan!=null && (!currentStillVisible || clearing))
+        if(clearing || (plan!=null && !currentStillVisible))
         {
             if(index>0 && !submitted && (composing || evaluated==null || evaluated.Length>0))
             {
@@ -50,7 +52,7 @@ public sealed class TypingSession
             {
                 if(plan.Japanese && composing)
                 {
-                    if(committing) {if(now-commitAt>2000)Stop("ImeFailed");return;}
+                    if(committing) {if(now-commitAt>2000)RecoverIme(now);return;}
                     if(!hiraganaRequested && plan.Expected.Contains('ゔ'))
                     {
                         if(!send(HiraganaKey)) {Stop("SendFailed");return;}
@@ -62,7 +64,7 @@ public sealed class TypingSession
                 if(plan.Japanese)
                 {
                     AnswerCheck=evaluated==null?"Unavailable":TypingPlan.NormalizeAnswer(evaluated)!=TypingPlan.NormalizeAnswer(plan.Expected)?"DifferentText":evaluated==plan.Expected?"Exact":"Equivalent";
-                    if(AnswerCheck is "Unavailable" or "DifferentText") {Stop("ImeFailed");return;}
+                    if(AnswerCheck is "Unavailable" or "DifferentText") {RecoverIme(now);return;}
                 }
                 if(!send('\r')) {Stop("SendFailed");return;}
                 submitted=true;nextWordAt=now+Math.Clamp(betweenWordsMs,0,60000);due=now+max;Status="Waiting";return;

@@ -2,7 +2,7 @@
   "Author": "Roxyz0501",
   "Name": "Keybound Pilot",
   "InternalName": "KeyboundPilot",
-  "AssemblyVersion": "1.0.7.0",
+  "AssemblyVersion": "1.0.8.0",
   "DalamudApiLevel": 15,
   "Punchline": "キーバウンド・ブロウラーの自動入力と指定回数の周回。",
   "Description": "キーバウンド・ブロウラーの出題を読み取り、キーボード操作で回答するプラグインです。バリア強化・詠唱中の敵を優先し、入力禁止時は待機します。/keyboundpilot で画面を開き、設定で入力間隔を指定してください。通常は再生ボタンで開始。周回はスクウェアで回数を指定し、循環矢印ボタンで申請から開始します。一時停止・停止もボタンで操作できます。診断ログは設定で切り替え、初期値はオフです。",
