@@ -1,3 +1,10 @@
+# Validation — 1.0.10.0
+
+- User reported 90002 immediately after loop start in the Square; local host log confirms a 90002 logout. No plugin exception or loop action trace establishes causation. Do not claim the cause or successful live resolution is proven.
+- Removed direct QueueInfo.QueueDuties invocation. Follow AutoDuty's documented source UI sequence conceptually: OpenRegularDuty, verify selected detail, select the target through the list callback, verify the single selected ID and displayed title, then invoke Join callback once. Code independently implemented; no AutoDuty source copied. References and unavailable root license noted in README.
+- UI preparation is sampled at most twice per second, joins are latched before dispatch, selection is attempted once, and existing fifteen-second no-queue timeout bounds preparation. Other selected duties fail closed. Pause, foreground/loading gates, stop/logout and unrelated queues prevent advancing; no fallback to direct queueing. Regular Duty Finder support for this special content is not yet live verified; unsupported UI ends the loop without issuing a join.
+- Clean Release and 194 offline checks pass, including cancellation, pause and unrelated queues during preparation. Native UI pointer/layout/callback compatibility and elimination of 90002 still require live verification. No live queue or deliberate disconnect reproduction performed.
+
 # Validation — 1.0.9.0
 
 Add Japanese cursed gaze to inferred late-cast completion handling. Track cast name and progress per entity so consecutive different blocking casts trigger separately. Pause four seconds; disabled input continues to gate typing after this deadline. Early interrupts/despawn do not infer activation. Seven new checks cover gaze start/end, deadline, interruption, despawn, consecutive casts, extension and reset: 191 total. Four seconds is a provisional policy, not a measured mechanic duration. Live avoidance of the input penalty remains unverified. Diagnostic event renamed input_prohibition_cast_end.

@@ -114,7 +114,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void StopByUser()
     {
-        loop.Stop();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
+        loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
     }
     private void UpdateCore()
     {
@@ -191,12 +191,15 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void UpdateLoop(long now)
     {
-        if(!loop.Active)return;
+        if(!loop.Active){loopUi.CancelQueuePreparation();return;}
         if(Keyboard.ForegroundGame && Keyboard.Escape){StopByUser();return;}
         if(now-loopSample<200)return;loopSample=now;
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
-        var action=loop.Tick(now,loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading),
-            !Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures);
+        var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
+        var blocked=!Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures;
+        if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame
+            && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
+        var action=loop.Tick(now,snapshot,blocked);
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
         if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}

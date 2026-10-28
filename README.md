@@ -45,3 +45,9 @@ Dalamud のカスタムリポジトリに以下を登録し、Keybound Pilot を
 設定保存・フォント補助の一部は [Roxyz0501/BaitBeacon](https://github.com/Roxyz0501/BaitBeacon)（Roxyz0501、Apache-2.0）を参照・再利用しています。共有タブは同一作者の共通テンプレートです。512×512のアイコンはオリジナルで、生成元は `tools/Create-Icon.py` です。
 
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
+
+## 申請処理の参照元
+
+申請の手順は [AutoDuty / QueueHelper](https://github.com/ffxivcode/AutoDuty/blob/53f4e7400f9791f4534f803a2ec2d2ff709375ba/AutoDuty/Helpers/QueueHelper.cs)（ffxivcode と各コントリビューター）を参考にしました。通常の申請画面を開き、対象の選択を確認して参加操作を行います。AutoDutyのコードはコピーしておらず、依存・IPC接続も不要です。確認したリポジトリ直下にはライセンスファイルが見当たらないため、コードの流用は行っていません。
+
+申請済みの別コンテンツや別の選択対象がある場合、対象が画面に表示されない場合は停止します。画面の準備・選択・参加を分け、参加操作は1周につき1回に限定します。対象コンテンツが通常の申請画面で扱えない場合も直接申請へ戻しません。

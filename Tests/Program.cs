@@ -251,6 +251,9 @@ rounds.Start(0,1,false);rounds.Tick(0,lobby with {LoggedIn=false});Check(!rounds
 rounds.Start(0,1,false);rounds.Stop();Check(rounds.Tick(0,lobby)==LoopAction.None,"stop cancels pending loop work");
 rounds.Start(0,1,false);Check(rounds.Tick(0,lobby,true)==LoopAction.None,"foreground or UI capture blocks queue");
 rounds.Start(0,1,true);rounds.Tick(1,result);rounds.Tick(120002,result);Check(rounds.Phase==LoopPhase.Error,"departure timeout stops without duplicate exit");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Stop();Check(rounds.Tick(100,popped)==LoopAction.None,"cancel during UI preparation prevents later accept");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Pause();Check(rounds.Tick(100,popped)==LoopAction.None,"pause during UI preparation blocks pop action");
+rounds.Resume();Check(rounds.Tick(200,popped with {OtherQueue=true})==LoopAction.None && rounds.Phase==LoopPhase.Error,"unrelated queue after UI preparation stops loop");
 var keeper=new ActivityKeeper();var touches=0;bool Touch(){touches++;return true;}
 keeper.Tick(0,false,Touch);Check(touches==0,"inactive content has no activity writes");
 keeper.Tick(0,true,Touch);keeper.Tick(9999,true,Touch);Check(touches==1,"activity write limited to once per ten seconds");

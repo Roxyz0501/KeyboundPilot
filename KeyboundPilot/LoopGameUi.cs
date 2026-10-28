@@ -14,6 +14,9 @@ internal sealed unsafe class LoopGameUi
     public const uint LobbyTerritory=1360,GameTerritory=1359,DutyId=1095;
     private readonly IGameGui gui;
     private readonly string dutyName,exitPrompt;
+    private bool preparingQueue,selectionRequested;
+    private long queueStepAt;
+    public void CancelQueuePreparation() {preparingQueue=false;selectionRequested=false;}
     public bool Supported {get;}
     public LoopGameUi(IGameGui gui,IDataManager data)
     {
@@ -63,7 +66,10 @@ internal sealed unsafe class LoopGameUi
         {
             var finder=ContentsFinder.Instance();
             if(territory!=LobbyTerritory || finder==null || finder->QueueInfo.QueueState!=ContentsFinderQueueState.None)return false;
-            uint id=DutyId;finder->QueueInfo.QueueDuties(&id,1);return true;
+            var agent=AgentContentsFinder.Instance();
+            if(agent==null || agent->SelectedContent.Count>0)return false;
+            preparingQueue=true;selectionRequested=false;queueStepAt=Environment.TickCount64+500;
+            agent->OpenRegularDuty(DutyId);return true;
         }
         if(action==LoopAction.Accept)
         {
@@ -81,6 +87,50 @@ internal sealed unsafe class LoopGameUi
             return territory==GameTerritory && MatchingExit(addon) && Click((AtkUnitBase*)addon,addon->YesButton);
         }
         return false;
+    }
+    // Follow the normal Duty Finder UI flow; never submit a raw QueueDuties request.
+    public bool AdvanceQueue(long now,uint territory)
+    {
+        if(!preparingQueue || now<queueStepAt)return true;
+        queueStepAt=now+500;
+        if(territory!=LobbyTerritory)return false;
+        var finder=ContentsFinder.Instance();var agent=AgentContentsFinder.Instance();
+        if(finder==null || agent==null)return false;
+        if(finder->QueueInfo.QueueState!=ContentsFinderQueueState.None){CancelQueuePreparation();return true;}
+        var addon=gui.GetAddonByName<AddonContentsFinder>("ContentsFinder");
+        if(!Visible((AtkUnitBase*)addon))return true;
+        if(!Own(agent->SelectedDuty))return false;
+        if(agent->SelectedContent.Count>1)return false;
+        if(agent->SelectedContent.Count==1)
+        {
+            if(!Own(agent->SelectedContent[0]))return false;
+            if(Text(addon->SelectedDutyTextNode[0].Value).Trim()!=dutyName)return true;
+            if(!Ready(addon->JoinButton))return true;
+            preparingQueue=false; // Latch before dispatch: never repeat an uncertain join.
+            return Callback((AtkUnitBase*)addon,12,0);
+        }
+        if(selectionRequested)return true;
+        var list=addon->DutyList;
+        if(list==null || list->Items.Count==0)return true;
+        var selected=list->SelectedItemIndex;
+        if(selected<0 || selected>=list->Items.Count || list->Items.Count>2048)return false;
+        var item=list->Items[selected].Value;
+        if(item==null || item->Renderer==null || Text(item->Renderer->GetTextNodeById(5)).Trim()!=dutyName)return false;
+        var leaf=0;
+        for(var i=0;i<=selected;i++)
+        {
+            var entry=list->Items[i].Value;if(entry==null)return false;
+            if(entry->Type is TreeListItemType.None or TreeListItemType.LastItemInGroup)leaf++;
+        }
+        if(leaf==0)return false;
+        selectionRequested=true;
+        return Callback((AtkUnitBase*)addon,3,leaf);
+    }
+    private static bool Callback(AtkUnitBase* addon,int operation,int argument)
+    {
+        AtkValue* values=stackalloc AtkValue[2];values[0]=default;values[1]=default;
+        values[0].SetInt(operation);values[1].SetInt(argument);
+        addon->FireCallback(2,values,true);return true;
     }
     private static bool Click(AtkUnitBase* addon,AtkComponentButton* button)
     {
