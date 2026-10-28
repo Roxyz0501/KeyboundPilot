@@ -258,6 +258,14 @@ rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Tick(16000,lobby with {Prepa
 rounds.Tick(120001,lobby with {Preparing=true});Check(rounds.Phase==LoopPhase.Error,"missing receptionist or path has bounded preparation wait");
 rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Tick(10000,lobby with {Preparing=true});rounds.Tick(16000,lobby);Check(rounds.Active,"queue response timeout starts after reception preparation");
 rounds.Tick(31001,lobby);Check(rounds.Phase==LoopPhase.Error,"finished reception request without queue is not retried");
+var warning=lobby with {KeyboardWarning=true};
+rounds.Start(0,2,false);rounds.Tick(0,lobby);Check(rounds.Tick(100,warning)==LoopAction.ConfirmKeyboard,"keyboard confirmation accepted during own loop wait");
+Check(rounds.Tick(200,warning)==LoopAction.None,"persistent keyboard warning clicked once");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Pause();Check(rounds.Tick(100,warning)==LoopAction.None,"paused loop never confirms warning");
+rounds.Resume();Check(rounds.Tick(200,warning,true)==LoopAction.None,"foreground gate blocks warning confirmation");
+rounds.Stop();Check(rounds.Tick(300,warning)==LoopAction.None,"stopped loop never confirms warning");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);Check(rounds.Tick(100,warning with {OtherQueue=true})==LoopAction.None,"unrelated queue blocks warning");
+rounds.Start(0,1,true);Check(rounds.Tick(100,playing with {KeyboardWarning=true})==LoopAction.None,"in-game loop never confirms entry warning");
 var keeper=new ActivityKeeper();var touches=0;bool Touch(){touches++;return true;}
 keeper.Tick(0,false,Touch);Check(touches==0,"inactive content has no activity writes");
 keeper.Tick(0,true,Touch);keeper.Tick(9999,true,Touch);Check(touches==1,"activity write limited to once per ten seconds");

@@ -17,7 +17,7 @@ internal sealed unsafe class LoopGameUi
     // Verified from installed TerritoryType/ContentFinderCondition data, fail closed on changed mappings.
     public const uint LobbyTerritory=1360,GameTerritory=1359,DutyId=1095;
     private readonly IGameGui gui;
-    private readonly string dutyName,exitPrompt;
+    private readonly string dutyName,exitPrompt,keyboardPrompt;
     private bool preparingQueue,interacted;
     private readonly IObjectTable objects;
     private readonly ReceptionTravel travel;
@@ -32,6 +32,7 @@ internal sealed unsafe class LoopGameUi
         var lobby=data.GetExcelSheet<TerritoryType>().GetRowOrDefault(LobbyTerritory);
         Supported=duty?.TerritoryType.RowId==GameTerritory && lobby?.Name.ToString()=="w1eo";
         dutyName=duty?.Name.ToString()??"";
+        keyboardPrompt=data.GetExcelSheet<Addon>().GetRowOrDefault(17826)?.Text.ToString()??"";
         exitPrompt=data.GetExcelSheet<Addon>().GetRowOrDefault(17854)?.Text.ToString()??"";
     }
     private static bool Visible(AtkUnitBase* addon)=>addon!=null && addon->IsVisible && addon->RootNode!=null && addon->RootNode->IsVisible();
@@ -40,6 +41,8 @@ internal sealed unsafe class LoopGameUi
     private static string Normalize(string text)=>string.Concat(text.Where(c=>!char.IsWhiteSpace(c)));
     private bool MatchingConfirmation(AddonContentsFinderConfirm* confirm)=>Visible((AtkUnitBase*)confirm)
         && Text(confirm->AtkTextNode230).Trim()==dutyName && Ready(confirm->CommenceButton);
+    private bool MatchingKeyboard(AddonSelectYesno* confirm)=>Visible((AtkUnitBase*)confirm) && keyboardPrompt.Length>0
+        && Normalize(Text(confirm->PromptText))==Normalize(keyboardPrompt) && Ready(confirm->YesButton);
     private bool MatchingExit(AddonSelectYesno* confirm)=>Visible((AtkUnitBase*)confirm) && dutyName.Length>0 && exitPrompt.Length>0
         && Text(confirm->PromptText).Contains(dutyName,StringComparison.Ordinal)
         && Normalize(Text(confirm->PromptText).Replace(dutyName,"",StringComparison.Ordinal))==Normalize(exitPrompt)
@@ -64,7 +67,7 @@ internal sealed unsafe class LoopGameUi
         var button=Visible(result)?(AtkComponentButton*)result->GetComponentByNodeId(48):null;
         var pop=gui.GetAddonByName<AddonContentsFinderConfirm>("ContentsFinderConfirm");
         return new(loggedIn,territory==LobbyTerritory,territory==GameTerritory,loading,other,queued,
-            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),preparingQueue);
+            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),preparingQueue,territory==LobbyTerritory && MatchingKeyboard(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")));
     }
     public bool Execute(LoopAction action,uint territory)
     {
@@ -75,6 +78,11 @@ internal sealed unsafe class LoopGameUi
             if(territory!=LobbyTerritory || finder==null || finder->QueueInfo.QueueState!=ContentsFinderQueueState.None)return false;
             preparingQueue=true;interacted=false;queueStepAt=0;
             return true;
+        }
+        if(action==LoopAction.ConfirmKeyboard)
+        {
+            var addon=gui.GetAddonByName<AddonSelectYesno>("SelectYesno");
+            return territory==LobbyTerritory && MatchingKeyboard(addon) && Click((AtkUnitBase*)addon,addon->YesButton);
         }
         if(action==LoopAction.Accept)
         {

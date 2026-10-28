@@ -1,3 +1,7 @@
+# Validation — 1.0.12.0 / 2026-10-29
+
+Recognize keyboard-disconnection entry warning by exact whitespace-normalized localized Addon 17826 text in SelectYesno, with ready Yes button. Only own active loop Waiting phase in Square can accept; one attempt per round before dispatch, respecting pause/loading/foreground/unrelated-queue gates. Never accept an arbitrary yes/no dialog. Seven additional controller checks pass (205 total). Native button dispatch remains unverified in live play.
+
 # Validation — 1.0.11.0 / 2026-10-29
 
 - Replace regular Duty Finder preparation with the identified reception NPC (ENpcResident 1058751, 参加受付) inside territory 1360. Find matching targetable object, walk into three-unit interaction range, interact once and click ready KTGEnterDialogue button node 9 once. No direct queue or regular-Duty-Finder fallback. Unknown conversation menus are not automatically answered.

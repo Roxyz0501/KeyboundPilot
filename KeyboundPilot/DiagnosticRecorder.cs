@@ -42,7 +42,7 @@ public sealed class DiagnosticRecorder : IDisposable
                 session=Guid.NewGuid().ToString("N"); started=flushed=clock.GetTimestamp();
                 BytesWritten=Records=sequence=0;previous=null;buffer.SetLength(0);bufferedDate=null;
                 Active=true;State="DiagRecording";
-                Add("start",new { schema=1, plugin="KeyboundPilot",version="1.0.11.0",timeZone="Asia/Tokyo", samplingMs=100,
+                Add("start",new { schema=1, plugin="KeyboundPilot",version="1.0.12.0",timeZone="Asia/Tokyo", samplingMs=100,
                     numbers="KTG number array 161: count then 20 records of 13 integers; meanings are provisional", strings="KTG string array 128: 20 triples, game words/reading/cast names",privacy="No chat, player names, raw keys or input text" });
                 return Active;
             }

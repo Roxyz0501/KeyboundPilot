@@ -198,7 +198,7 @@ public sealed class Plugin : IDalamudPlugin
         if(loop.Paused || loading || !Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
         var blocked=!Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures;
-        if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame
+        if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
         var action=loop.Tick(now,snapshot,blocked);
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
