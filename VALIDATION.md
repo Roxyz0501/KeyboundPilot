@@ -1,3 +1,7 @@
+# Validation — 1.0.9.0
+
+Add Japanese cursed gaze to inferred late-cast completion handling. Track cast name and progress per entity so consecutive different blocking casts trigger separately. Pause four seconds; disabled input continues to gate typing after this deadline. Early interrupts/despawn do not infer activation. Seven new checks cover gaze start/end, deadline, interruption, despawn, consecutive casts, extension and reset: 191 total. Four seconds is a provisional policy, not a measured mechanic duration. Live avoidance of the input penalty remains unverified. Diagnostic event renamed input_prohibition_cast_end.
+
 # Validation — 1.0.8.0
 
 IME preparation/state/committed-answer failures enter the existing physical Backspace cleanup path instead of stopping the session. Confirm both no composition and an empty evaluated input before selecting a fresh answer and preparing IME again. Preserve focus/mechanic/manual-pause gates, one key per interval, the 384-deletion bound and send-failure stop. No mismatched answer is submitted. 184 offline checks pass, including mismatch cleanup, empty confirmation and fresh preparation. Native live-game recovery remains unverified.

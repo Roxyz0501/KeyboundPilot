@@ -197,6 +197,14 @@ focus.Step(1000,false,()=>requests++);focus.Step(1250,false,()=>requests++);focu
 Check(focus.Step(1750,false,()=>requests++)==FocusResult.Exhausted && requests==6,"bounded focus failure after last observation window");
 Check(focus.Step(3749,false,()=>requests++)==FocusResult.Exhausted && requests==6,"focus retry cooldown has no extra requests");
 Check(focus.Step(3750,false,()=>requests++)==FocusResult.Requested && requests==7,"focus reacquisition resumes after bounded cooldown");
+var gazePolicy=new EncounterPolicy();
+gazePolicy.Update(100,[Enemy(1,"呪いの視線",98)]);Check(!gazePolicy.Paused(100),"gaze does not stop during cast");
+Check(gazePolicy.Update(200,[Enemy(1,"",0)]) && gazePolicy.Paused(4199) && !gazePolicy.Paused(4200),"gaze end pauses exactly four seconds");
+gazePolicy.Reset();gazePolicy.Update(100,[Enemy(1,"呪いの視線",40)]);Check(!gazePolicy.Update(200,[Enemy(1,"",0)]) && !gazePolicy.Paused(200),"gaze interruption does not trigger");
+gazePolicy.Update(300,[Enemy(1,"呪いの視線",99)]);Check(!gazePolicy.Update(400,[]) && !gazePolicy.Paused(400),"gaze despawn does not trigger");
+gazePolicy.Update(500,[Enemy(1,"呪いの視線",100)]);Check(gazePolicy.Update(600,[Enemy(1,"動体感知ジャマー",1)]),"consecutive different blocking casts detect first end");
+gazePolicy.Update(700,[Enemy(1,"動体感知ジャマー",99)]);gazePolicy.Update(800,[Enemy(1,"",0)]);Check(gazePolicy.PauseUntil==4800,"second blocking cast extends pause");
+gazePolicy.Reset();Check(!gazePolicy.Paused(800),"reset clears gaze history and pause");
 var migrationRoot=Path.Combine(AppContext.BaseDirectory,"auto-config-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(migrationRoot);
 try {
  var file=Path.Combine(migrationRoot,"config.json");File.WriteAllText(file,"{\"Version\":1,\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");

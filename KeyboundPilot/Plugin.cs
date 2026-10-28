@@ -132,7 +132,7 @@ public sealed class Plugin : IDalamudPlugin
             var needsRead=inGame && (typing.Running || loop.Active || (config.AutoStart && !automation.Consumed));
             if(needsRead && now-scanned>=50) {reader.Refresh();scanned=now;}
             if(reader.ContentComplete) {automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
-            if(encounter.Update(now,reader.Enemies))diagnostics.Event("jammer_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
+            if(encounter.Update(now,reader.Enemies))diagnostics.Event("input_prohibition_cast_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
             if(!typing.Running)
             {
                 ime.Restore();preparedWord="";currentEntity=0;
