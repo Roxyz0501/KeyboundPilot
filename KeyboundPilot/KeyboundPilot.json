@@ -2,10 +2,10 @@
   "Author": "Roxyz0501",
   "Name": "Keybound Pilot",
   "InternalName": "KeyboundPilot",
-  "AssemblyVersion": "1.0.0.0",
+  "AssemblyVersion": "1.0.1.0",
   "DalamudApiLevel": 15,
-  "Punchline": "キーバウンド・ブロウラーの文字入力とランダムな入力間隔設定。",
-  "Description": "公開プレビュー：実ゲームでの出題取得・フォーカス判定・キー認識は未検証です。キーバウンド・ブロウラーの文字を読み、Windowsのキーボード押下・解放イベントで1文字ずつ入力します。Configで入力間隔の下限・上限を設定し、範囲内のランダム間隔で入力。同値で固定間隔。/keyboundpilot で開きます。",
+  "Punchline": "プレイ中の診断ログ取得と、キー入力・入力間隔設定。",
+  "Description": "診断ログ対応の公開プレビュー。実ゲームの入力不具合は調査中です。コンテンツ内では自動入力が停止中でも出題・詠唱関連の専用UI状態をローカル記録します。手動でプレイしてログを取得できます。診断タブで記録停止・保存先コピー・入力禁止／詠唱の目印を操作。/keyboundpilot。キー押下・解放と入力間隔設定。実ゲームでの入力・詠唱優先・入力禁止判定は未確認です。",
   "Tags": [
     "gold saucer",
     "typing",

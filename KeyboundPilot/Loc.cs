@@ -42,6 +42,18 @@ internal static class Loc
         ["InputFocused"] = ["専用入力欄のフォーカス", "Dedicated input focused", "Spieleingabe fokussiert", "Champ du jeu actif", "전용 입력란 포커스", "专用输入框获得焦点", "專用輸入框取得焦點"],
         ["Yes"] = ["はい", "Yes", "Ja", "Oui", "예", "是", "是"],
         ["No"] = ["いいえ", "No", "Nein", "Non", "아니요", "否", "否"],
+        ["Diagnostics"] = ["診断ログ", "Diagnostics", "Diagnose", "Diagnostic", "진단 로그", "诊断日志", "診斷日誌"],
+        ["DiagHelp"] = ["コンテンツ内では自動入力が停止中でも状態を記録します。手動で1回遊び、退出または記録停止後にログを確認してください。チャット・プレイヤー名・入力文字列・生のキーは記録しません。最大30分・1回8MiB・合計32MiB。上限で停止し、既存ログは削除しません。", "State is recorded in the content even when auto typing is stopped. Play manually once, then leave or stop recording. No chat, player names, typed text or raw keys are recorded. Limits: 30 minutes, 8 MiB per session, 32 MiB total. Recording stops at the limit; existing logs are kept.", "Der Zustand wird im Inhalt auch ohne automatische Eingabe aufgezeichnet. Einmal manuell spielen, dann verlassen oder Aufnahme stoppen. Keine Chats, Spielernamen, Eingabetexte oder rohen Tasten. Grenzen: 30 Minuten, 8 MiB pro Sitzung, insgesamt 32 MiB. Vorhandene Protokolle bleiben erhalten.", "L’état est enregistré dans le contenu même sans saisie automatique. Jouez une fois manuellement, puis quittez ou arrêtez. Aucun chat, nom de joueur, texte saisi ou touche brute. Limites : 30 minutes, 8 Mio par session, 32 Mio au total. Les anciens journaux sont conservés.", "자동 입력 중지 상태에서도 콘텐츠 상태를 기록합니다. 한 번 수동으로 플레이한 후 퇴장하거나 기록을 중지하세요. 채팅, 플레이어 이름, 입력한 텍스트, 원시 키는 기록하지 않습니다. 최대 30분, 세션당 8MiB, 총 32MiB이며 기존 로그는 삭제하지 않습니다.", "即使自动输入已停止，仍会在副本内记录状态。请手动玩一次，然后退出或停止记录。不记录聊天、玩家姓名、输入文字或原始按键。上限为30分钟、每次8MiB、总计32MiB。达到上限后停止，不删除已有日志。", "即使自動輸入已停止，仍會在副本內記錄狀態。請手動玩一次，然後退出或停止記錄。不記錄聊天、玩家姓名、輸入文字或原始按鍵。上限為30分鐘、每次8MiB、總計32MiB。達到上限後停止，不刪除既有日誌。"],
+        ["DiagIdle"] = ["記録待機中", "Recording idle", "Aufnahme inaktiv", "En attente", "기록 대기", "等待记录", "等待記錄"],
+        ["DiagRecording"] = ["記録中", "Recording", "Aufzeichnung läuft", "Enregistrement", "기록 중", "正在记录", "正在記錄"],
+        ["DiagLimit"] = ["記録上限に到達したため停止", "Stopped at recording limit", "Aufnahmegrenze erreicht", "Limite atteinte", "기록 한도에 도달하여 중지", "达到记录上限，已停止", "達到記錄上限，已停止"],
+        ["DiagError"] = ["記録に失敗しました。自動再送は行いません。", "Recording failed; no automatic replay.", "Aufnahme fehlgeschlagen; keine automatische Wiederholung.", "Échec d’enregistrement ; aucune réécriture automatique.", "기록 실패. 자동 재전송하지 않습니다.", "记录失败，不自动重写。", "記錄失敗，不自動重寫。"],
+        ["DiagStart"] = ["記録開始／再開", "Start / restart recording", "Aufnahme starten / neu starten", "Démarrer / redémarrer", "기록 시작 / 재시작", "开始／重新记录", "開始／重新記錄"],
+        ["DiagStop"] = ["記録を停止", "Stop recording", "Aufnahme stoppen", "Arrêter", "기록 중지", "停止记录", "停止記錄"],
+        ["DiagCopy"] = ["保存先をコピー", "Copy log directory", "Protokollpfad kopieren", "Copier le dossier", "저장 경로 복사", "复制保存路径", "複製儲存路徑"],
+        ["DiagBlock"] = ["入力禁止を見た時の目印", "Mark typing prohibition", "Eingabeverbot markieren", "Marquer une interdiction", "입력 금지 시점 표시", "标记禁止输入时刻", "標記禁止輸入時刻"],
+        ["DiagCast"] = ["詠唱を見た時の目印", "Mark enemy cast", "Gegnerzauber markieren", "Marquer une incantation", "적 시전 시점 표시", "标记敌人咏唱", "標記敵人詠唱"],
+        ["DiagRecords"] = ["記録件数／書込バイト", "Records / written bytes", "Einträge / geschriebene Bytes", "Entrées / octets écrits", "기록 수 / 기록 바이트", "记录数／写入字节", "記錄數／寫入位元組"],
     };
     public static string FontText => string.Concat(Text.Values.SelectMany(x => x)) + string.Concat(Codes) + "日本語EnglishDeutschFrançais한국어简体中文繁體中文";
     public static bool IsSupported(string? value) => Array.IndexOf(Codes, value) >= 0;

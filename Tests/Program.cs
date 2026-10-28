@@ -13,7 +13,8 @@ s.Tick(3150, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("A"), "
 s.Tick(9000, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("AB"), "no catch-up burst");
 s.Tick(9001, true, "ABC", true, 80, 150, Send); Check(sent.Count == 2, "next deadline from actual send");
 s.Tick(9150, true, "ABC", true, 80, 150, Send); Check(sent.SequenceEqual("ABC"), "character order");
-s.Tick(10000, true, "ABC", true, 80, 150, Send); Check(sent.Count == 3, "do not retype stale word");
+s.Tick(9300,true,"ABC",true,80,150,Send);Check(sent.SequenceEqual("ABC\r"),"physical Enter after complete word");
+s.Tick(10000, true, "ABC", true, 80, 150, Send); Check(sent.Count == 4, "do not retype or submit stale word twice");
 s.Tick(13001, true, "ABC", true, 80, 150, Send); Check(!s.Running && s.Status == "NoProgress", "stale word timeout");
 Check(samples.All(x => x == (80,151)), "inclusive bounds");
 s.Start(0); s.Tick(3000,false,"ABC",false,80,150,Send); Check(!s.Running,"focus gate");
@@ -48,8 +49,25 @@ try {
   fail.Update(fail.Configuration);for(var i=0;i<8;i++){time.Advance(60);fail.Tick();}Check(fail.Stopped && failures==3,"bounded retry");
  }
 } finally { Directory.Delete(root,true); }
+var clock=new TestClock();var writes=new List<(string Path,byte[] Bytes)>();
+using(var diagnostic=new DiagnosticRecorder(Path.Combine(AppContext.BaseDirectory,"diagnostic-fixture"),clock,(path,bytes)=>writes.Add((path,bytes)))) {
+ Check(diagnostic.Start(),"start diagnostic");diagnostic.Observe("{\"ready\":true}");Check(writes.Count==0,"batch diagnostic writes");
+ clock.Advance(1);diagnostic.Observe("{\"ready\":true}");Check(writes.Count==0,"unchanged snapshot no write");
+ clock.Advance(1);diagnostic.Tick();Check(writes.Count==1,"two second flush");
+ diagnostic.Observe("{\"ready\":false}");diagnostic.Mark("block");Check(writes.Count==2,"marker flush");
+ Check(writes[0].Path!=writes[1].Path,"JST date partition rollover");
+ var records=diagnostic.Records;clock.Advance(5);diagnostic.Observe("{\"ready\":false}");diagnostic.Tick();Check(diagnostic.Records==records && writes.Count==2,"unchanged period zero append");
+ clock.Advance(1800);diagnostic.Tick();Check(!diagnostic.Active && diagnostic.State=="DiagLimit","30 minute limit without changed snapshot");
+}
+Check(writes.SelectMany(x=>System.Text.Encoding.UTF8.GetString(x.Bytes).Split('\n',StringSplitOptions.RemoveEmptyEntries)).All(x=>System.Text.Json.JsonDocument.Parse(x).RootElement.GetProperty("schema").GetInt32()==1),"parseable JSON lines");
+var failuresCount=0;using(var diagnostic=new DiagnosticRecorder(Path.Combine(AppContext.BaseDirectory,"diagnostic-fail"),append:(_,_)=>{failuresCount++;throw new IOException("fixture uncertain append");})){
+ diagnostic.Start();diagnostic.Mark("cast");diagnostic.Tick();diagnostic.Stop();Check(failuresCount==1 && diagnostic.State=="DiagError","uncertain append not replayed");
+}
+using(var diagnostic=new DiagnosticRecorder(Path.Combine(AppContext.BaseDirectory,"diagnostic-limit"),append:(_,_)=>{})){
+ diagnostic.Start();diagnostic.Observe(System.Text.Json.JsonSerializer.Serialize(new {value=new string('x',40000)}));Check(!diagnostic.Active && diagnostic.State=="DiagLimit","oversized record stops within cap");
+}
 Console.WriteLine($"PASS {checks} checks; no real keyboard events sent.");
 namespace KeyboundPilot { internal static class Loc { public static bool IsSupported(string? s)=>s is "ja" or "en" or "de" or "fr" or "ko" or "zh-Hans" or "zh-Hant"; } }
-sealed class TestClock:TimeProvider {long ticks;public override long TimestampFrequency=>1000;public override long GetTimestamp()=>ticks;public void Advance(int seconds)=>ticks+=seconds*1000;}
+sealed class TestClock:TimeProvider {long ticks;public override long TimestampFrequency=>1000;public override long GetTimestamp()=>ticks;public override DateTimeOffset GetUtcNow()=>new DateTimeOffset(2026,10,28,14,59,59,TimeSpan.Zero).AddMilliseconds(ticks);public void Advance(int seconds)=>ticks+=seconds*1000;}
 
 

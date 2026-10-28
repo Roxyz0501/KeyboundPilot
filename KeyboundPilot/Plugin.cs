@@ -22,6 +22,10 @@ public sealed class Plugin : IDalamudPlugin
     private readonly LocalizedFonts fonts;
     private readonly GameReader reader;
     private readonly TypingSession typing = new();
+    private readonly DiagnosticRecorder diagnostics;
+    private readonly DiagnosticReader diagnosticReader;
+    private bool diagnosticRequested=true, diagnosticAttempted;
+    private long lastDiagnosticSample;
     private readonly CommandInfo command;
     private readonly CancellationTokenRegistration shutdown, unload;
     private readonly object executionGate = new();
@@ -49,9 +53,15 @@ public sealed class Plugin : IDalamudPlugin
         }
         fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas, []);
         reader = new GameReader(gui);
+        diagnostics = new DiagnosticRecorder(Path.Combine(pi.GetPluginConfigDirectory(),"diagnostics"));
+        diagnosticReader = new DiagnosticReader(gui);
         open = settings.Recovered || settings.LoadWarning != null;
         command = new CommandInfo((_, args) =>
         {
+            if(args.Trim().Equals("log start",StringComparison.OrdinalIgnoreCase)) { StartDiagnostics(); return; }
+            if(args.Trim().Equals("log stop",StringComparison.OrdinalIgnoreCase)) { diagnosticRequested=false;diagnostics.Stop();return; }
+            if(args.Trim().Equals("mark block",StringComparison.OrdinalIgnoreCase)) { diagnostics.Mark("block");return; }
+            if(args.Trim().Equals("mark cast",StringComparison.OrdinalIgnoreCase)) { diagnostics.Mark("cast");return; }
             if (args.Trim().Equals("stop", StringComparison.OrdinalIgnoreCase)) { typing.Stop(); Keyboard.Release(true); }
             else open = true;
         }) { HelpMessage = T("CommandHelp") };
@@ -66,8 +76,8 @@ public sealed class Plugin : IDalamudPlugin
     }
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { typing.Stop(); Keyboard.Release(true); reader.Clear(); settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true; typing.Stop(); Keyboard.Release(true); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { typing.Stop(); Keyboard.Release(true); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true; typing.Stop(); Keyboard.Release(true);diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -86,6 +96,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (stopping) return;
         settings.Tick();
+        try { UpdateDiagnostics(); } catch(Exception ex) { diagnostics.Stop();diagnosticAttempted=true;log.Error(ex,"KTG diagnostic sampling stopped"); }
         if (!Keyboard.Release()) { typing.Stop("SendFailed"); return; }
         if (!typing.Running) return;
         try
@@ -107,6 +118,40 @@ public sealed class Plugin : IDalamudPlugin
             typing.Stop("Fault"); open = true;
             if (++failures <= 3) log.Error(ex, "Keybound read stopped; restart is manual");
         }
+    }
+    private void StartDiagnostics()
+    {
+        diagnostics.Stop();diagnosticReader.Reset();diagnosticRequested=true;
+        diagnosticAttempted=IsContent();
+        if(diagnosticAttempted)diagnostics.Start();
+    }
+    private void UpdateDiagnostics()
+    {
+        if(!IsContent()) { diagnostics.Stop();diagnosticAttempted=false;return; }
+        if(!diagnosticRequested)return;
+        if(!diagnosticAttempted) { diagnosticAttempted=true;diagnosticReader.Reset();diagnostics.Start(); }
+        var now=Environment.TickCount64;
+        if(diagnostics.Active && now-lastDiagnosticSample>=100)
+        {
+            lastDiagnosticSample=now;
+            var sample=diagnosticReader.Capture(typing);
+            if(sample!=null)diagnostics.Observe(sample);
+        }
+        diagnostics.Tick();
+    }
+    private void DrawDiagnostics()
+    {
+        ImGui.TextWrapped(T("DiagHelp"));
+        ImGui.TextUnformatted(T(diagnostics.State));
+        ImGui.TextWrapped(diagnostics.DirectoryPath);
+        if(ImGui.Button(T("DiagStart")))StartDiagnostics();
+        ImGui.SameLine();
+        if(ImGui.Button(T("DiagStop"))) {diagnosticRequested=false;diagnostics.Stop();}
+        if(ImGui.Button(T("DiagCopy")))ImGui.SetClipboardText(diagnostics.DirectoryPath);
+        if(ImGui.Button(T("DiagBlock")))diagnostics.Mark("block");
+        ImGui.SameLine();
+        if(ImGui.Button(T("DiagCast")))diagnostics.Mark("cast");
+        ImGui.TextUnformatted(T("DiagRecords")+": "+diagnostics.Records+" / "+diagnostics.BytesWritten+" B");
     }
     private void Draw()
     {
@@ -146,6 +191,7 @@ public sealed class Plugin : IDalamudPlugin
                     foreach (var word in reader.Words) ImGui.TextUnformatted(word);
                     ImGui.EndTabItem();
                 }
+                if(ImGui.BeginTabItem(T("Diagnostics")+"###Diagnostics")) {DrawDiagnostics();ImGui.EndTabItem();}
                 StandardPluginTabs.DrawStandardTrailingTabs(T("Settings"), "Settings", DrawSettings,
                     T("Language"), DrawLanguage, T("Support"), () =>
                     StandardPluginTabs.DrawSupportContent(T("Support"), T("SupportText"), T("Recipient"), T("Donate")));

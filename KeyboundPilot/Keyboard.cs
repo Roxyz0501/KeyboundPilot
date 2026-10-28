@@ -33,7 +33,9 @@ internal static class Keyboard
     public static bool TryMap(char c, out ushort scan)
     {
         scan = 0;
-        if (!ForegroundGame || c is < ' ' or > '~') return false;
+        if (!ForegroundGame) return false;
+        if (c == '\r') { scan = 0x1C; return true; } // physical Enter
+        if (c is < ' ' or > '~') return false;
         var thread = GetWindowThreadProcessId(GetForegroundWindow(), out _);
         var layout = GetKeyboardLayout(thread);
         // The minigame displays capitals, but physical letter keys need no Shift.
