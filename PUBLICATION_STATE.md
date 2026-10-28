@@ -1,3 +1,15 @@
+## 2026-10-28 — Keybound Pilot 1.0.2.0
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.2.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.2.0/KeyboundPilot-1.0.2.0.zip
+- Source/tag `25deb02b2bbb69743b62d0b38af7a841b15a96b7`; ZIP 108,267 bytes; SHA-256 `0f53bc9bc10ea98d72c11248e755b3a97bea06f367974357e03ab05e8d6b75f3`.
+- Japanese IME input, automatic dedicated-field focus, tilde support, next-word cast priority and user-requested four-second jammer wait implemented. Revised native keyboard/IME behavior remains unverified in live gameplay.
+- Diagnostic limits expanded to 64 MiB/session, 256 MiB total and 120 minutes; UI delta encoding added. Captured logs are excluded from distribution.
+- Release build: zero warnings/errors; 69 offline checks passed. 53 UI keys across seven languages; canonical trailing tabs retained.
+- Public repository/icon/ZIP returned HTTP 200; icon image/png. Downloaded ZIP hash/CRC/manifest verified. Release is public, prerelease=true, draft=false.
+- Shared index `ac3f2044be9580e59c3a0dd3b995f5ffae70f35b`: public main and pinned versions both 1.0.2.0; 15 entries with all 14 unrelated entries preserved.
+- Source/index/state via GitHub connector; Release/assets via standard Roxyz0501 CLI. Installed plugin/configuration and modified local shared repo.json were not replaced.
+
 ## 2026-10-28 — Keybound Pilot 1.0.1.0 gameplay diagnostics
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.1.0
