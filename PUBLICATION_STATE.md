@@ -1,3 +1,14 @@
+## 2026-10-28 — Keybound Pilot 1.0.5.0 observed-prompt filtering
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.5.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.5.0/KeyboundPilot-1.0.5.0.zip
+- Source/tag `968b743b42a5fb604ff9f1eb1938c67ac87fb6c2`; ZIP 119,672 bytes; SHA-256 `96095ff094520380a6dbede52d291ef2e814423daea3d0ef757e7ade6070d359`.
+- Require actual text-node display before admitting a candidate. Remember entity/reading pairs while temporarily concealed; invalidate on replacement/despawn/content reset. Distinguish temporary text hiding from target disappearance. Visibility history is bounded to current slots; diagnostic additions are entity/visibility booleans only.
+- Historical recordings lacked child text visibility, so no retrospective first-visible time is asserted. Read-only native display mapping is locally inspected and fails closed on unmatched root/entity/reading; live mapping remains unverified.
+- Clean Release zero warnings/errors; 126 offline checks pass. Existing 1.0.4.0 phase/control/priority/IME/font corrections retained. 61 UI keys x 7 languages and canonical tabs verified.
+- Anonymous repository/icon/ZIP HTTP 200; image/png icon; ZIP hash/CRC/eight-file manifest verified. Release draft=false, prerelease=true. Public raw main and pinned index `cd628d15f5c2c3d820e7e7d77dff55bdb977950b` both 1.0.5.0; 15 entries and 14 unrelated entries preserved.
+- Source/index/records via GitHub connector; Release/assets via standard Roxyz0501 CLI. Captured recordings, input strings, native inspection output, host libraries and personal paths excluded. Installed configuration/DLL and modified local repo.json preserved.
+
 ## 2026-10-28 — Keybound Pilot 1.0.4.0 phase continuity and input corrections
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.4.0
@@ -7,7 +18,7 @@
 - For hiragana vu, request physical F6 once before IME commit and compare vu script/Unicode variants without accepting unrelated readings. Record answer-check categories only. Dynamic glyph coverage, batched four-face font replacement and loading/error handling added.
 - Clean Release zero warnings/errors; 114 offline checks plus 3 local replay checks pass. Native background ImGui rendering: 764 characters on four fonts, seven languages, production symbol controls. 61 localization keys x 7 languages; canonical trailing tabs retained. Updated live gameplay and exact reported glyph appearance remain unverified; the specific IME text difference was not captured.
 - Anonymous public repository/icon/ZIP HTTP 200; image/png icon; downloaded ZIP SHA/CRC/eight files/manifest/version/URLs verified. Release prerelease=true, draft=false.
-- Shared index `89cf20b8bf88f6d20c2c6a24917249d3e879cffa`: pinned public index and connected main version/URLs verified (raw main cache may lag), 15 entries; all 14 unrelated entries preserved.
+- Shared index `89cf20b8bf88f6d20c2c6a24917249d3e879cffa`: public raw main and pinned index version/URLs verified, 15 entries; all 14 unrelated entries preserved.
 - Source/index/records via GitHub connector; Release/assets via authenticated standard Roxyz0501 CLI. Installed DLL/configuration and modified local shared repo.json preserved. Captured logs, input strings and detailed per-game records are excluded from publication.
 
 ## 2026-10-28 — Keybound Pilot 1.0.3.0 startup focus and resume
