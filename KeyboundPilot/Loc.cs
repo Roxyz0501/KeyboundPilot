@@ -5,6 +5,11 @@ internal static class Loc
     public static readonly string[] Codes = ["ja", "en", "de", "fr", "ko", "zh-Hans", "zh-Hant"];
     private static readonly Dictionary<string, string[]> Text = new()
     {
+        ["ShowDebug"] = ["デバッグ表示", "Show debug information", "Debug-Informationen anzeigen", "Afficher le débogage", "디버그 정보 표시", "显示调试信息", "顯示偵錯資訊"],
+        ["LoopButton"] = ["周回", "Loop", "Wiederholen", "Boucle", "반복", "循环", "循環"],
+        ["LoopStatus"] = ["周回ステータス", "Loop status", "Wiederholungsstatus", "État de la boucle", "반복 상태", "循环状态", "循環狀態"],
+        ["DetectedList"] = ["検出された文字の一覧", "Detected text", "Erkannte Texte", "Textes détectés", "감지된 문자 목록", "检测到的文字", "偵測到的文字"],
+        ["NumberHelp"] = ["左右にドラッグして変更。ダブルクリックで数値を入力できます。", "Drag left or right to adjust. Double-click to type a number.", "Zum Ändern nach links oder rechts ziehen. Doppelklicken zur Zahleneingabe.", "Glissez à gauche ou à droite pour régler. Double-cliquez pour saisir un nombre.", "좌우로 드래그하여 변경합니다. 두 번 클릭하면 숫자를 입력할 수 있습니다.", "左右拖动调整。双击可直接输入数值。", "左右拖曳調整。按兩下可直接輸入數值。"],
         ["ActivityUnavailable"] = ["操作状態の更新に失敗しました。再開時に再試行します。", "Activity update failed. Restart to retry.", "Aktivitätsaktualisierung fehlgeschlagen. Zum Wiederholen neu starten.", "Échec de mise à jour de l’activité. Redémarrez pour réessayer.", "활동 상태 갱신 실패. 다시 시작하면 재시도합니다.", "操作状态更新失败。重新开始时重试。", "操作狀態更新失敗。重新開始時重試。"],
         ["LoopError"] = ["周回停止：申請・画面・入力状態を確認してください", "Loop stopped: check queue, screen and input state", "Wiederholung gestoppt: Anmeldung, Bildschirm und Eingabe prüfen", "Boucle arrêtée : vérifiez l’inscription, l’écran et la saisie", "반복 중지: 신청, 화면, 입력 상태를 확인하세요", "循环停止：请检查报名、界面及输入状态", "循環停止：請檢查報名、介面及輸入狀態"],
         ["LoopStopped"] = ["周回停止", "Loop stopped", "Wiederholung gestoppt", "Boucle arrêtée", "반복 중지", "循环已停止", "循環已停止"],
@@ -14,7 +19,7 @@ internal static class Loc
         ["LoopWaiting"] = ["参加待ち", "Waiting for entry", "Warten auf Eintritt", "En attente d’entrée", "입장 대기", "等待入场", "等待入場"],
         ["LoopRequesting"] = ["参加申請の準備", "Preparing queue", "Anmeldung vorbereiten", "Préparation de l’inscription", "신청 준비", "准备报名", "準備報名"],
         ["LoopIdle"] = ["待機", "Idle", "Bereit", "En attente", "대기", "待机", "待命"],
-        ["LoopHelp"] = ["周回数を指定し、循環矢印で申請から自動実行。スクウェアで開始してください。停止しても申請済みの参加申請は取り消しません。", "Set the run count, then use the loop arrows in the Square to queue and play. Stopping does not cancel an existing queue.", "Anzahl wählen und im Square mit den Kreispfeilen anmelden und spielen. Stopp bricht eine laufende Anmeldung nicht ab.", "Choisissez le nombre de parties puis les flèches en boucle dans le Square. L’arrêt n’annule pas une inscription en cours.", "스퀘어에서 횟수를 정하고 순환 화살표로 신청과 플레이를 시작하세요. 중지해도 기존 참가 신청은 취소되지 않습니다.", "在广场设置次数后点击循环箭头，自动报名并游玩。停止不会取消已有的报名。", "在廣場設定次數後點擊循環箭頭，自動報名並遊玩。停止不會取消已有的報名。"],
+        ["LoopHelp"] = ["周回数を指定し、「周回」で申請から自動実行。スクウェアで開始してください。停止しても申請済みの参加申請は取り消しません。", "Set the run count, then use the Loop button in the Square to queue and play. Stopping does not cancel an existing queue.", "Anzahl wählen und im Square mit den Wiederholen-Button anmelden und spielen. Stopp bricht eine laufende Anmeldung nicht ab.", "Choisissez le nombre de parties puis le bouton Boucle dans le Square. L’arrêt n’annule pas une inscription en cours.", "스퀘어에서 횟수를 정하고 반복 버튼으로 신청과 플레이를 시작하세요. 중지해도 기존 참가 신청은 취소되지 않습니다.", "在广场设置次数后点击循环按钮，自动报名并游玩。停止不会取消已有的报名。", "在廣場設定次數後點擊循環按鈕，自動報名並遊玩。停止不會取消已有的報名。"],
         ["LoopStart"] = ["周回開始", "Start loop", "Wiederholung starten", "Démarrer la boucle", "반복 시작", "开始循环", "開始循環"],
         ["LoopProgress"] = ["{0} / {1} 周目（完了 {2} 回）", "Run {0} / {1} ({2} completed)", "Durchlauf {0} / {1} ({2} abgeschlossen)", "Partie {0} / {1} ({2} terminées)", "{0} / {1}회차 ({2}회 완료)", "第 {0} / {1} 轮（已完成 {2} 轮）", "第 {0} / {1} 輪（已完成 {2} 輪）"],
         ["LoopCount"] = ["周回数", "Number of runs", "Anzahl der Durchläufe", "Nombre de parties", "반복 횟수", "循环次数", "循環次數"],

@@ -1,3 +1,12 @@
+# Validation — 1.0.13.0 / 2026-10-29
+
+- Separate normal transport from loop controls. Hide the run-count label and place the labeled loop button below its numeric field. Move instructions to the information-icon tooltip. Show current target only while running and not manually paused.
+- Hide diagnostic tab, logging option and diagnostic commands; remove runtime diagnostic sampling. Retain recorder implementation for later restoration. Previously enabled logging is turned off on load. Debug display is a separate persisted flag, off by default; it never enables logging. Only an open debug UI adds stopped-session reads inside the target content, using the existing 50 ms cadence; no external calls or extra persistence writes.
+- 208 offline checks pass, including old-setting migration and enabled/disabled debug persistence. Changed-only 60-second autosave, backups and lifecycle flushing retained.
+- Native offscreen ImGui tests pass: four CJK font faces cover all 852 requested characters, seven languages render, double-click enters numeric editing, Enter commits and horizontal dragging changes values. Numeric bounds use AlwaysClamp plus explicit clamps. Main layout preview uses synthetic state, not a live game capture.
+- Clean Release build: zero warnings/errors. No real keyboard events, NPC interaction or game queue executed during these checks. Live in-game layout/IME integration still requires user verification.
+- README rewritten using nanaism/yomiyasu 2.4.0; lint, diff, material comparison and final hash verification executed. The original/final manuscripts and checker state remain local and are not packaged.
+
 # Validation — 1.0.12.0 / 2026-10-29
 
 Recognize keyboard-disconnection entry warning by exact whitespace-normalized localized Addon 17826 text in SelectYesno, with ready Yes button. Only own active loop Waiting phase in Square can accept; one attempt per round before dispatch, respecting pause/loading/foreground/unrelated-queue gates. Never accept an arbitrary yes/no dialog. Seven additional controller checks pass (205 total). Native button dispatch remains unverified in live play.

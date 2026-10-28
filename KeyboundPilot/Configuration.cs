@@ -1,6 +1,7 @@
 namespace KeyboundPilot;
 public sealed class Configuration
 {
+    public bool ShowDebug { get; set; }
     public bool RecordDiagnostics { get; set; }
     public int LoopCount { get; set; } = 1;
     public bool AutoStart { get; set; } = true;

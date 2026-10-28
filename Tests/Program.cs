@@ -285,13 +285,15 @@ try {
  var file=Path.Combine(newConfigRoot,"config.json");File.WriteAllText(file,"{\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");
  using(var store=new ConfigurationStore(file)) {
   Check(!store.Configuration.RecordDiagnostics && store.Configuration.LoopCount==1,"old config migrates logging off and one run");
-  store.Configuration.RecordDiagnostics=true;store.Configuration.LoopCount=12;store.Update(store.Configuration);store.Flush();
+  Check(!store.Configuration.ShowDebug,"old config defaults debug display off");
+  store.Configuration.ShowDebug=true;store.Configuration.RecordDiagnostics=true;store.Configuration.LoopCount=12;store.Update(store.Configuration);store.Flush();
  }
  using(var store=new ConfigurationStore(file)) {
+  Check(store.Configuration.ShowDebug,"debug display survives save/reload");
   Check(store.Configuration.RecordDiagnostics && store.Configuration.LoopCount==12,"loop and log settings survive save/reload");
-  store.Configuration.RecordDiagnostics=false;store.Update(store.Configuration);store.Flush();
+  store.Configuration.ShowDebug=false;store.Configuration.RecordDiagnostics=false;store.Update(store.Configuration);store.Flush();
  }
- using(var store=new ConfigurationStore(file))Check(!store.Configuration.RecordDiagnostics,"disabled logging survives restart");
+ using(var store=new ConfigurationStore(file)){Check(!store.Configuration.RecordDiagnostics,"disabled logging survives restart");Check(!store.Configuration.ShowDebug,"disabled debug display survives restart");}
 } finally {Directory.Delete(newConfigRoot,true);}
 
 if(args.Length>0)

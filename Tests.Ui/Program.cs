@@ -32,13 +32,14 @@ unsafe partial class Program
    {
     var face=code switch {"zh-Hant"=>1,"zh-Hans"=>2,"ko"=>3,_=>0};ImGui.PushFont(fonts[face]);ImGui.PushID(code);
     ImGui.TextUnformatted(code+" | "+Loc.Get(code,"AutoStart"));
-    PlaybackControls.Draw(false,false,key=>Loc.Get(code,key),()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.DrawLoop(true,Loc.Get(code,"LoopStart"),()=>{});ImGui.SameLine();ImGui.Button(Loc.Get(code,"Support"));
-    ImGui.TextUnformatted(string.Format(Loc.Get(code,"LoopProgress"),1,3,0)+" | "+Loc.Get(code,"RecordDiagnostics"));ImGui.TextUnformatted(synthetic);ImGui.Separator();ImGui.PopID();ImGui.PopFont();
+    PlaybackControls.Draw(false,false,key=>Loc.Get(code,key),()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.DrawLoop(true,Loc.Get(code,"LoopButton"),()=>{});ImGui.SameLine();ImGui.Button(Loc.Get(code,"Support"));
+    ImGui.TextUnformatted(string.Format(Loc.Get(code,"LoopProgress"),1,3,0)+" | "+Loc.Get(code,"ShowDebug"));ImGui.TextUnformatted(synthetic);ImGui.Separator();ImGui.PopID();ImGui.PopFont();
    }
    ImGui.End();ImGui.Render();
   }
   Directory.CreateDirectory(args[1]);Render(ImGui.GetDrawData(),textures,Path.Combine(args[1],"fonts.bmp"));
   Console.WriteLine("PASS: 4 font faces, dynamic glyph additions/coalescing, 7-language native ImGui rendering");
+  Preview(fonts,textures,args[1]);CheckNumberEditing();
   ImGui.DestroyContext();
  }
 }

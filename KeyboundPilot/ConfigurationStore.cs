@@ -5,10 +5,10 @@ namespace KeyboundPilot;
 /// <summary>One synchronous writer for small configuration snapshots; no timers/tasks survive disposal.</summary>
 public sealed class ConfigurationStore : IDisposable
 {
-    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount)
+    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug)
     {
-        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount);
-        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount };
+        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug);
+        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug };
     }
 
     private readonly object gate = new();
@@ -96,6 +96,7 @@ public sealed class ConfigurationStore : IDisposable
                 Configuration.BetweenWordsMs = loaded.BetweenWordsMs;
                 Configuration.RecordDiagnostics = loaded.RecordDiagnostics;
                 Configuration.LoopCount = loaded.LoopCount;
+                Configuration.ShowDebug = loaded.ShowDebug;
                 current = Snapshot.From(loaded);
             }
             failures = 0;

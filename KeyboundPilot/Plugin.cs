@@ -58,6 +58,7 @@ public sealed class Plugin : IDalamudPlugin
         settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => { log.Error(ex, "Configuration saving stopped"); open = true; },
             onFinalFailure: ex => { log.Error(ex, "Final configuration flush failed"); open = true; });
         config = settings.Configuration;
+        if(config.RecordDiagnostics){config.RecordDiagnostics=false;settings.Update(config);}
         if (!Loc.IsSupported(config.Language))
         {
             config.Language = Loc.FromGame(client.ClientLanguage) ?? Loc.Normalize(pi.UiLanguage) ?? "en";
@@ -70,10 +71,6 @@ public sealed class Plugin : IDalamudPlugin
         open = settings.Recovered || settings.LoadWarning != null;
         command = new CommandInfo((_, args) =>
         {
-            if(args.Trim().Equals("log start",StringComparison.OrdinalIgnoreCase)) { StartDiagnostics(); return; }
-            if(args.Trim().Equals("log stop",StringComparison.OrdinalIgnoreCase)) { SetDiagnostics(false);return; }
-            if(args.Trim().Equals("mark block",StringComparison.OrdinalIgnoreCase)) { diagnostics.Mark("block");return; }
-            if(args.Trim().Equals("mark cast",StringComparison.OrdinalIgnoreCase)) { diagnostics.Mark("cast");return; }
             if (args.Trim().Equals("stop", StringComparison.OrdinalIgnoreCase)) StopByUser();
             else open = true;
         }) { HelpMessage = T("CommandHelp") };
@@ -120,7 +117,6 @@ public sealed class Plugin : IDalamudPlugin
     {
         if(stopping)return;
         settings.Tick();
-        try {UpdateDiagnostics();} catch(Exception ex) {diagnostics.Stop();diagnosticAttempted=true;log.Error(ex,"KTG diagnostic sampling stopped");}
         try
         {
             var now=Environment.TickCount64;
@@ -129,7 +125,7 @@ public sealed class Plugin : IDalamudPlugin
             var inGame=IsContent();
             activity.Tick(now,inGame && typing.Running && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
-            var needsRead=inGame && (typing.Running || loop.Active || (config.AutoStart && !automation.Consumed));
+            var needsRead=inGame && (typing.Running || loop.Active || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
             if(needsRead && now-scanned>=50) {reader.Refresh();scanned=now;}
             if(reader.ContentComplete) {automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
             if(encounter.Update(now,reader.Enemies))diagnostics.Event("input_prohibition_cast_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
@@ -266,34 +262,37 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     ImGui.TextUnformatted(T("Status") + ": " + T(typing.Status));
                     if(activity.Failed)ImGui.TextWrapped(T("ActivityUnavailable"));
-                    ImGui.TextUnformatted(T("Words") + ": " + reader.Words.Count);
-                    ImGui.TextUnformatted(T("InputVisible") + ": " + T(reader.InputVisible ? "Yes" : "No"));
-                    ImGui.TextUnformatted(T("InputFocused") + ": " + T(reader.InputFocused ? "Yes" : "No"));
-                    ImGui.TextUnformatted(T("Sent") + ": " + typing.Sent);
-                    ImGui.TextWrapped(T("Current") + ": " + typing.CurrentWord);
-                    ImGui.BeginDisabled(loop.Active);
-                    var count=config.LoopCount;ImGui.SetNextItemWidth(160);
-                    if(ImGui.InputInt(T("LoopCount")+"###LoopCount",ref count)) {config.LoopCount=Math.Clamp(count,1,9999);settings.Update(config);}
-                    ImGui.EndDisabled();
-                    if(loop.Total>0)ImGui.TextWrapped(string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":"Loop"+loop.Phase));
+                    if(typing.Running && !typing.ManualPaused && typing.CurrentWord.Length>0)
+                        ImGui.TextWrapped(T("Current") + ": " + typing.CurrentWord);
                     PlaybackControls.Draw(typing.Running||loop.Active,loop.Active?loop.Paused:typing.ManualPaused,T,
                         ()=>{if(loop.Active){loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
                         ()=>{loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
                     ImGui.SameLine();
-                    PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopStart"),StartLoop);
-                    ImGui.SameLine();
-                    if (ImGui.Button(T("Refresh") + "###Inspect"))
+                    PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
+                    ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
+                    ImGui.TextWrapped(T("LoopStatus")+": "+(loop.Total>0
+                        ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":"Loop"+loop.Phase)
+                        :T("LoopIdle")));
+                    ImGui.BeginDisabled(loop.Active);
+                    var count=config.LoopCount;ImGui.SetNextItemWidth(Math.Min(400,ImGui.GetContentRegionAvail().X));
+                    if(PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp")))
+                    {config.LoopCount=count;settings.Update(config);}
+                    ImGui.EndDisabled();
+                    PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
+                    if(config.ShowDebug)
                     {
-                        StopByUser();
-                        try { reader.Refresh(); } catch (Exception ex) { typing.Stop("Fault"); log.Error(ex, "Manual word inspection failed"); }
+                        ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
+                        ImGui.TextUnformatted(T("Words")+": "+reader.Words.Count);
+                        ImGui.TextUnformatted(T("DetectedList"));
+                        if(ImGui.BeginChild("DetectedWords",new Vector2(0,120),true))
+                            foreach(var word in reader.Words)ImGui.TextUnformatted(word);
+                        ImGui.EndChild();
+                        ImGui.TextUnformatted(T("InputVisible")+": "+T(reader.InputVisible?"Yes":"No"));
+                        ImGui.TextUnformatted(T("InputFocused")+": "+T(reader.InputFocused?"Yes":"No"));
+                        ImGui.TextUnformatted(T("Sent")+": "+typing.Sent);
                     }
-                    ImGui.TextWrapped(T("Guide"));
-                    ImGui.TextWrapped(T("LoopHelp"));
-                    ImGui.TextWrapped(T("ReceptionHelp"));
-                    foreach (var word in reader.Words) ImGui.TextUnformatted(word);
                     ImGui.EndTabItem();
                 }
-                if(ImGui.BeginTabItem(T("Diagnostics")+"###Diagnostics")) {DrawDiagnostics();ImGui.EndTabItem();}
                 StandardPluginTabs.DrawStandardTrailingTabs(T("Settings"), "Settings", DrawSettings,
                     T("Language"), DrawLanguage, T("Support"), () =>
                     StandardPluginTabs.DrawSupportContent(T("Support"), T("SupportText"), T("Recipient"), T("Donate")));
@@ -304,22 +303,22 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void DrawSettings()
     {
-        var logging=config.RecordDiagnostics;
-        if(ImGui.Checkbox(T("RecordDiagnostics")+"###RecordDiagnostics",ref logging))SetDiagnostics(logging);
+        var debug=config.ShowDebug;
+        if(ImGui.Checkbox(T("ShowDebug")+"###ShowDebug",ref debug)){config.ShowDebug=debug;settings.Update(config);}
         var auto=config.AutoStart;
         if(ImGui.Checkbox(T("AutoStart")+"###AutoStart",ref auto)) {config.AutoStart=auto;settings.Update(config);}
         var min = config.MinimumMs; var max = config.MaximumMs;
         ImGui.SetNextItemWidth(200);
-        var changed = ImGui.InputInt(T("Min") + "###Minimum", ref min, 5, 20);
+        var changed = PlaybackControls.Number(T("Min") + "###Minimum", ref min,20,5000,5,T("NumberHelp"));
         if (changed) { min = Math.Clamp(min, 20, 5000); max = Math.Max(min, max); }
         ImGui.SetNextItemWidth(200);
-        var maxChanged = ImGui.InputInt(T("Max") + "###Maximum", ref max, 5, 20);
+        var maxChanged = PlaybackControls.Number(T("Max") + "###Maximum", ref max,20,5000,5,T("NumberHelp"));
         if (maxChanged) { max = Math.Clamp(max, 20, 5000); min = Math.Min(min, max); }
         if (changed || maxChanged) { config.SetRange(min, max); settings.Update(config); }
         ImGui.TextWrapped(T("RangeHelp"));
         var between=config.BetweenWordsMs;
         ImGui.SetNextItemWidth(200);
-        if(ImGui.InputInt(T("BetweenWordsMs")+"###BetweenWordsMs",ref between,50,250))
+        if(PlaybackControls.Number(T("BetweenWordsMs")+"###BetweenWordsMs",ref between,0,60000,50,T("NumberHelp")))
         {config.BetweenWordsMs=Math.Clamp(between,0,60000);settings.Update(config);}
         ImGui.TextWrapped(T("BetweenWordsHelp"));
         if (settings.Recovered) ImGui.TextWrapped(T("Recovered"));
