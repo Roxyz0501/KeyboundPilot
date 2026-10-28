@@ -10,7 +10,7 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
     private readonly DiagnosticDelta delta=new();
     private string? unavailable;
     public void Reset() {delta.Reset();unavailable=null;}
-    public string? Capture(TypingSession typing,ImeState ime,bool paused)
+    public string? Capture(TypingSession typing,ImeState ime,bool paused,object control)
     {
         var stage=AtkStage.Instance();
         if(stage==null || stage->AtkArrayDataHolder==null) return Unavailable("stage_missing");
@@ -36,7 +36,7 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
             }
         }
         var ui=new Dictionary<string,object> {
-            ["input"]=inputState,["word"]=Probe("KTGEWord"),["cast"]=Probe("KTGEnemyCastBar"),["hp"]=Probe("KTGHudGaugeHp"),
+            ["control"]=control,["input"]=inputState,["word"]=Probe("KTGEWord"),["cast"]=Probe("KTGEnemyCastBar"),["hp"]=Probe("KTGHudGaugeHp"),
             ["typing"]=new {typing.Running,typing.Status,typing.Position,typing.Sent,paused},["ime"]=ime,
             ["inputHints"]=new {label=ReadNode(input,3),hint=ReadNode(input,6)}
         };

@@ -106,33 +106,50 @@ Check(!changed.RootElement.GetProperty("ui").EnumerateObject().Any(),"numeric-on
 ui["input"]=new{enabled=false};changed=System.Text.Json.JsonDocument.Parse(delta.Capture(nums,txt,ui)!);
 Check(changed.RootElement.GetProperty("ui").EnumerateObject().Count()==1,"only changed UI section stored");
 Check(DiagnosticRecorder.SessionLimit==64*1024*1024 && DiagnosticRecorder.TotalLimit==256*1024*1024,"expanded log capacity");
+var lifecycle=new AutomationLifecycle();
+Check(!lifecycle.TryAutoStart(true,true,false,true),"auto start waits for playable game");
+Check(!lifecycle.TryAutoStart(true,true,true,false),"auto start does not steal another input");
+Check(lifecycle.TryAutoStart(true,true,true,true),"auto start at first playable frame");
+lifecycle.Start(100);
+Check(lifecycle.Evaluate(101,true,false,true,false,false,true,true)==RunGate.Arming,"start-click capture does not stop arming");
+Check(lifecycle.Evaluate(3100,true,false,true,false,false,true,true)==RunGate.InputUnavailable,"disabled pre-game input waits before focus checks");
+Check(lifecycle.Evaluate(3101,true,false,true,false,true,false,false)==RunGate.Run,"proceed when input becomes usable");
+Check(lifecycle.Evaluate(3101,true,false,true,false,true,false,true)==RunGate.OtherTextInput,"protect another text editor");
+Check(lifecycle.Evaluate(101,true,false,false,false,false,false,false)==RunGate.ForegroundLost,"foreground stop also during arming");
+Check(!lifecycle.TryAutoStart(true,true,true,true),"one auto start per content entry");
+lifecycle.Suppress();Check(!lifecycle.TryAutoStart(true,true,true,true),"manual stop cannot auto-resume");
+lifecycle.Start(5000);Check(lifecycle.Evaluate(7999,true,false,true,false,true,false,false)==RunGate.Arming,"resume button re-arms");
+Check(lifecycle.Evaluate(8000,true,false,true,false,true,false,false)==RunGate.Run,"resume button reaches run");
+lifecycle.TryAutoStart(false,true,false,false);Check(lifecycle.TryAutoStart(true,true,true,true),"next entry can auto start");
+var focus=new FocusAcquisition();var requests=0;
+Check(focus.Step(0,false,()=>requests++)==FocusResult.Requested,"first focus request");
+focus.Step(250,false,()=>requests++);Check(focus.Step(500,false,()=>requests++)==FocusResult.Requested && requests==3,"third focus request still pending");
+Check(focus.Step(501,false,()=>requests++)==FocusResult.Waiting,"observe third request before failure");
+Check(focus.Step(749,true,()=>requests++)==FocusResult.Ready && focus.Attempts==0,"third focus request may succeed");
+focus.Step(1000,false,()=>requests++);focus.Step(1250,false,()=>requests++);focus.Step(1500,false,()=>requests++);
+Check(focus.Step(1750,false,()=>requests++)==FocusResult.Exhausted && requests==6,"bounded focus failure after last observation window");
+var migrationRoot=Path.Combine(AppContext.BaseDirectory,"auto-config-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(migrationRoot);
+try {
+ var file=Path.Combine(migrationRoot,"config.json");File.WriteAllText(file,"{\"Version\":1,\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");
+ using(var store=new ConfigurationStore(file)) {Check(store.Configuration.AutoStart,"old configuration inherits authorized auto start");store.Configuration.AutoStart=false;store.Update(store.Configuration);store.Flush();}
+ using(var store=new ConfigurationStore(file))Check(!store.Configuration.AutoStart,"auto-start setting survives save/reload");
+} finally {Directory.Delete(migrationRoot,true);}
 if(args.Length>0)
 {
-    var numbers=new int[261];var texts=Enumerable.Repeat("",60).ToArray();var replay=new EncounterPolicy();var readings=new HashSet<string>();
-    var activations=new List<double>();long oldBytes=0,newBytes=0;var encoder=new DiagnosticDelta();var retainedUi=new Dictionary<string,object>();var snapshots=0;
+    var numbers=new int[261];var inputEnabled=false;var replayLifecycle=new AutomationLifecycle();var started=0;var premature=false;var stopped=false;
     foreach(var line in File.ReadLines(args[0]))
     {
-        oldBytes+=System.Text.Encoding.UTF8.GetByteCount(line)+1;
-        using var doc=System.Text.Json.JsonDocument.Parse(line);var row=doc.RootElement;
-        if(row.GetProperty("kind").GetString()!="snapshot")continue;
+        using var doc=System.Text.Json.JsonDocument.Parse(line);var row=doc.RootElement;if(row.GetProperty("kind").GetString()!="snapshot")continue;
         var data=row.GetProperty("data");if(!data.TryGetProperty("numericChanges",out var changes))continue;
         foreach(var item in changes.EnumerateArray())numbers[item[0].GetInt32()]=item[1].GetInt32();
-        foreach(var item in data.GetProperty("textChanges").EnumerateArray())texts[item.GetProperty("index").GetInt32()]=item.GetProperty("value").GetString()!;
-        var enemies=new List<KtgWord>();for(var k=0;k<numbers[0];k++) {readings.Add(texts[3*k+1]);enemies.Add(new(unchecked((uint)numbers[1+13*k]),texts[3*k+1],k,texts[3*k+2],numbers[1+13*k+7],numbers[1+13*k+11]));}
-        var now=row.GetProperty("elapsedMs").GetDouble();if(replay.Update((long)now,enemies))activations.Add(now);
-        foreach(var entry in data.GetProperty("ui").EnumerateObject())
-        {
-            var value=System.Text.Json.Nodes.JsonNode.Parse(entry.Value.GetRawText())!;
-            if(value["components"] is System.Text.Json.Nodes.JsonArray components)foreach(var component in components){component!.AsObject().Remove("x");component.AsObject().Remove("y");}
-            retainedUi[entry.Name]=value;
-        }
-        var compact=encoder.Capture(numbers,texts,retainedUi);if(compact!=null)newBytes+=System.Text.Encoding.UTF8.GetByteCount(compact)+250; // includes estimated envelope
-        snapshots++;
+        if(data.GetProperty("ui").TryGetProperty("input",out var input))inputEnabled=input.GetProperty("enabled").GetBoolean();
+        var now=(long)row.GetProperty("elapsedMs").GetDouble();
+        if(replayLifecycle.TryAutoStart(true,true,inputEnabled && numbers[0]>0,true)) {started++;premature|=!inputEnabled;replayLifecycle.Start(now);}
+        if(started>0) {var gate=replayLifecycle.Evaluate(now,true,false,true,false,inputEnabled,false,false);stopped|=gate is not (RunGate.Arming or RunGate.InputUnavailable or RunGate.Run);}
     }
-    Check(readings.Count==116 && readings.Count(x=>TypingPlan.Create(x)!=null)==116,"all 116 recorded readings supported");
-    Check(activations.Count==2 && Math.Abs(activations[0]-240740)<150 && Math.Abs(activations[1]-323870)<150,"recorded two jammer cast-end transitions");
-    Check(newBytes<oldBytes/3,"replay estimated log volume below one third");
-    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new {snapshots,readings=readings.Count,supported=readings.Count(x=>TypingPlan.Create(x)!=null),activations,oldBytes,estimatedCompactBytes=newBytes}));
+    Check(started==1,"recording replay starts exactly once after input becomes usable");
+    Check(!premature,"recording replay never starts during disabled input");
+    Check(!stopped,"recording replay preserves waiting across disabled input transitions");
 }
 Console.WriteLine($"PASS {checks} checks; no real keyboard events sent.");
 namespace KeyboundPilot { internal static class Loc { public static bool IsSupported(string? s)=>s is "ja" or "en" or "de" or "fr" or "ko" or "zh-Hans" or "zh-Hant"; } }

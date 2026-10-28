@@ -5,10 +5,10 @@ namespace KeyboundPilot;
 /// <summary>One synchronous writer for small configuration snapshots; no timers/tasks survive disposal.</summary>
 public sealed class ConfigurationStore : IDisposable
 {
-    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs)
+    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart)
     {
-        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs);
-        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs };
+        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart);
+        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart };
     }
 
     private readonly object gate = new();
@@ -54,7 +54,7 @@ public sealed class ConfigurationStore : IDisposable
         current = Snapshot.From(Configuration);
     }
 
-    // A UI change captures four small fields, not JSON. Reverting edits cancels pending writes.
+    // A UI change captures small fields, not JSON. Reverting edits cancels pending writes.
     public void Update(Configuration config)
     {
         lock (gate)
@@ -92,6 +92,7 @@ public sealed class ConfigurationStore : IDisposable
                 Configuration.Language = loaded.Language;
                 Configuration.MinimumMs = loaded.MinimumMs;
                 Configuration.MaximumMs = loaded.MaximumMs;
+                Configuration.AutoStart = loaded.AutoStart;
                 current = Snapshot.From(loaded);
             }
             failures = 0;

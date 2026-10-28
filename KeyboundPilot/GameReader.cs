@@ -6,15 +6,17 @@ namespace KeyboundPilot;
 internal sealed unsafe class GameReader(IGameGui gui)
 {
     private readonly Dictionary<string,uint> sources=new(StringComparer.Ordinal);
-    private long nextFocus;
-    private int focusAttempts;
+    private readonly FocusAcquisition focus=new();
+    public string FocusState {get;private set;}="Idle";
+    public bool? FocusRequestAccepted {get;private set;}
+    public int FocusAttempts=>focus.Attempts;
     public bool InputVisible {get;private set;}
     public bool InputFocused {get;private set;}
     public bool InputEnabled {get;private set;}
     public bool Available {get;private set;}
     public IReadOnlyList<string> Words {get;private set;}=[];
     public IReadOnlyList<KtgWord> Enemies {get;private set;}=[];
-    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=false;Words=[];Enemies=[];sources.Clear();focusAttempts=0;nextFocus=0;}
+    public void Clear() {InputVisible=InputFocused=InputEnabled=Available=false;Words=[];Enemies=[];sources.Clear();focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     private AtkComponentTextInput* Input(out AtkUnitBase* addon)
     {
         addon=gui.GetAddonByName<AtkUnitBase>("KTGInput");
@@ -27,21 +29,23 @@ internal sealed unsafe class GameReader(IGameGui gui)
     {
         var input=Input(out var addon);var stage=AtkStage.Instance();
         if(stage==null || stage->AtkInputManager==null || stage->RaptureAtkUnitManager==null)return true;
-        var other=stage->RaptureAtkUnitManager->FocusedAddon;
-        return (stage->AtkInputManager->IsTextInputActive && (input==null || !input->IsActive))
-            || (other!=null && other!=addon && other->IsVisible);
+        // A focused HUD/addon is not an active text editor. Only protect another text input.
+        return stage->AtkInputManager->IsTextInputActive && (input==null || !input->IsActive);
     }
-    public bool FocusFailed=>focusAttempts>=3;
+    public bool FocusFailed=>FocusState is "Exhausted" or "MissingCollision";
     public bool EnsureFocus(long now)
     {
-        var input=Input(out var addon);if(input==null || !input->Enabled || CompetingFocus())return false;
-        if(input->IsActive) {focusAttempts=0;return true;}
-        if(now<nextFocus || focusAttempts>=3)return false;
-        var stage=AtkStage.Instance();if(stage==null || stage->AtkInputManager==null || input->CollisionNode==null)return false;
-        nextFocus=now+250;focusAttempts++;
-        // Focus only. Text and game callbacks are never injected.
-        stage->AtkInputManager->SetFocus((AtkResNode*)input->CollisionNode,addon,0);
-        return false; // allow a framework frame before inspecting the result
+        var input=Input(out var addon);
+        if(input==null || !input->Enabled) {FocusState="InputUnavailable";return false;}
+        if(CompetingFocus()) {FocusState="OtherTextInput";return false;}
+        if(input->CollisionNode==null) {FocusState="MissingCollision";return false;}
+        var result=focus.Step(now,input->IsActive,()=>
+        {
+            // Activate the addon as well as its edit node; do not write text or invoke an answer callback.
+            addon->Focus();
+            FocusRequestAccepted=addon->SetFocusNode((AtkResNode*)input->CollisionNode);
+        });
+        FocusState=result.ToString();return result==FocusResult.Ready;
     }
     public string? EvaluatedText()
     {

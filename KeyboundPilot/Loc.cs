@@ -58,6 +58,8 @@ internal static class Loc
         ["Confirming"] = ["ひらがなを確定中", "Confirming hiragana", "Hiragana bestätigen", "Confirmation des hiragana", "히라가나 확정 중", "正在确认平假名", "正在確認平假名"],
         ["ImeFailed"] = ["IME・確定した読みを確認できないため停止。日本語のひらがな入力を確認してください。", "Stopped: IME or committed reading could not be verified. Check Japanese hiragana input.", "Gestoppt: IME oder bestätigte Lesung nicht verifiziert. Japanische Hiragana-Eingabe prüfen.", "Arrêt : IME ou lecture validée non vérifiée. Vérifiez la saisie japonaise en hiragana.", "IME 또는 확정된 읽기를 확인할 수 없어 중지했습니다. 일본어 히라가나 입력을 확인하세요.", "无法确认IME或已确定的读音，已停止。请检查日语平假名输入。", "無法確認IME或已確定的讀音，已停止。請檢查日語平假名輸入。"],
         ["TargetChanged"] = ["入力途中で対象が変わったため停止。残った文字を消して再開してください。", "Stopped: target changed during typing. Clear remaining input before restarting.", "Gestoppt: Ziel während der Eingabe geändert. Resttext vor Neustart löschen.", "Arrêt : cible modifiée pendant la saisie. Effacez le texte restant avant de reprendre.", "입력 중 대상이 변경되어 중지했습니다. 남은 입력을 지우고 다시 시작하세요.", "输入途中目标变化，已停止。请清空剩余文字后重新开始。", "輸入途中目標變化，已停止。請清空剩餘文字後重新開始。"],
+        ["Resume"] = ["再開（3秒後）", "Resume (after 3 s)", "Fortsetzen (nach 3 s)", "Reprendre (dans 3 s)", "재개 (3초 후)", "继续（3秒后）", "繼續（3秒後）"],
+        ["AutoStart"] = ["ゲーム開始時に自動実行", "Start automatically when the game begins", "Bei Spielbeginn automatisch starten", "Démarrer automatiquement au début de la partie", "게임 시작 시 자동 실행", "游戏开始时自动运行", "遊戲開始時自動執行"],
     };
     public static string FontText => string.Concat(Text.Values.SelectMany(x => x)) + string.Concat(Codes) + "日本語EnglishDeutschFrançais한국어简体中文繁體中文";
     public static bool IsSupported(string? value) => Array.IndexOf(Codes, value) >= 0;

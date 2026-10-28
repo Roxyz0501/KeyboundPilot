@@ -35,7 +35,7 @@ internal sealed class ImeInput
             if(!owned) {window=hwnd;savedContext=context;originalOpen=ImmGetOpenStatus(context);originalConversion=conversion;originalSentence=sentence;owned=true;}
             if(window!=hwnd || savedContext!=context)return false;
             if(ImmGetOpenStatus(context)!=japanese && !ImmSetOpenStatus(context,japanese))return false;
-            var desired=(conversion|0x19u)&~0x02u; // NATIVE | FULLSHAPE, clear KATAKANA; enable ROMAN.
+            var desired=(conversion|0x09u)&~0x02u; // NATIVE | FULLSHAPE, clear KATAKANA; preserve the IME's ROMAN bit.
             if(japanese && desired!=conversion && !ImmSetConversionStatus(context,desired,sentence))return false;
             return true;
         }

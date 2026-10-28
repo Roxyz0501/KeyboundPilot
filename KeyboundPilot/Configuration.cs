@@ -1,6 +1,7 @@
 namespace KeyboundPilot;
 public sealed class Configuration
 {
+    public bool AutoStart { get; set; } = true;
     public int Version { get; set; } = 1;
     public string? Language { get; set; }
     public int MinimumMs { get; set; } = 80;
