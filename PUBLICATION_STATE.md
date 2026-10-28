@@ -1,3 +1,15 @@
+## 2026-10-28 — Keybound Pilot 1.0.6.0 nearest moving target and post-submit delay
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.6.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.6.0/KeyboundPilot-1.0.6.0.zip
+- Source/tag `615dae42166dfe91c06bdde3dfaeee3e6016eee1`; ZIP 123,122 bytes; SHA-256 `a5c1a4145cc77a57d906b9da763a5c07b960fc4e66ec106cedec98fe0815e3c9`.
+- Select observed support/barrier prompts first, casting enemies second, then the closest moving eligible target, then other slots. Motion uses accumulated two-pixel coordinate changes with a two-second window. Closest is the screen-front (larger projected Y) approximation, not world-space distance. In-flight typing is retained.
+- Add BetweenWordsMs, default 0, range 0–60000 ms, to seven-language settings and changed-only persistence. Start its deadline at game answer submission; IME Enter, per-key interval and unchanged-answer timeout remain separate. Diagnostics add configured delay and current entity ID only.
+- Clean Release zero warnings/errors; 139 offline checks pass, including priority, movement, timing boundaries, old-config migration and new-setting persistence. Native background rendering verifies 776 glyphs across four fonts and seven-language labels/controls. 64 localization keys and canonical shared tabs verified. Updated live game behavior remains unverified.
+- Anonymous public repository/icon/ZIP HTTP 200; image/png icon; downloaded ZIP SHA/CRC/eight files/manifest/version/URLs verified. Release prerelease=true, draft=false.
+- Shared index `2f1beaa8333506c5a248b66ec1c94f80464d4859`: pinned public index and connected main both 1.0.6.0, full contents verified; all 14 unrelated entries preserved (15 total). The unqualified raw main URL still served 1.0.5.0 from cache at the first verification.
+- Source/index/records via GitHub connector; unsupported Release/assets via authenticated standard Roxyz0501 CLI. Installed DLL/configuration and modified local shared repo.json preserved. Captured logs, input strings, native inspection artifacts, host libraries and personal paths excluded from publication.
+
 ## 2026-10-28 — Keybound Pilot 1.0.5.0 observed-prompt filtering
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.5.0
