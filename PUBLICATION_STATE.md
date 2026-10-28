@@ -1,3 +1,12 @@
+## 2026-10-29 — Keybound Pilot 1.0.14.0 input adjustment
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.14.0
+- Source/tag: 5fdc756e354214d0951350471f8317bff35a1163. Shared index: cdc8df09d4783edc092f0669101aaabf8be4f438.
+- Input adjustment groups key intervals, post-submit delay and optional typo submission (default off, interval 20). Intervals draw N±5, minimum 1; count answer submissions only. Preserve target identity, IME verification, pause/focus/prohibition gates, settings persistence and cleanup after wrong answers.
+- Red XIII uses katakana prefix confirmation followed by IME-off exact uppercase XIII. Verify prefix and final spelling; never send prefix Enter without active composition. Preserve seen-prompt gating.
+- Clean Release (zero warnings/errors), 252 offline checks, seven-language/four-font glyph coverage and native numeric interactions pass. Live game typo penalties, IME behavior and new settings UI remain unverified; no real keyboard events sent.
+- Public repository/icon/ZIP, main and pinned index retrieved; hash/CRC/manifest and bilingual README verified. ZIP 147555 bytes; SHA-256: b6761fb27a7d9bd8112d57e3aa84bbffcf9609d277f13c625904e29e9ca092c3.
+
 ## 2026-10-29 — Keybound Pilot 1.0.13.2 interval endpoint fix
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.13.2
