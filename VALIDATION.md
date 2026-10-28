@@ -1,3 +1,9 @@
+# Validation — 1.0.11.0 / 2026-10-29
+
+- Replace regular Duty Finder preparation with the identified reception NPC (ENpcResident 1058751, 参加受付) inside territory 1360. Find matching targetable object, walk into three-unit interaction range, interact once and click ready KTGEnterDialogue button node 9 once. No direct queue or regular-Duty-Finder fallback. Unknown conversation menus are not automatically answered.
+- vnavmesh IPC uses cancellable pathfinding and owned path movement, with a 1.5-unit approach offset. Existing paths are not commandeered; pause/block/stop/logout/unload cancel pending paths and stop owned movement. No late task continuation can start walking. NPC absence/preparation is bounded to 120 seconds. The NPC must be present in the object table; no unsupported teleport or guessed coordinates.
+- 198 offline checks and clean Release build pass. Seven-language reception/dependency help added (79 keys). Native navigation, NPC interaction, dedicated-dialog dispatch and repeated games remain unverified. No live NPC interaction or queue executed during verification.
+
 # Validation — 1.0.10.0
 
 - User reported 90002 immediately after loop start in the Square; local host log confirms a 90002 logout. No plugin exception or loop action trace establishes causation. Do not claim the cause or successful live resolution is proven.

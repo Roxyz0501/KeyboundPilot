@@ -254,6 +254,10 @@ rounds.Start(0,1,true);rounds.Tick(1,result);rounds.Tick(120002,result);Check(ro
 rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Stop();Check(rounds.Tick(100,popped)==LoopAction.None,"cancel during UI preparation prevents later accept");
 rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Pause();Check(rounds.Tick(100,popped)==LoopAction.None,"pause during UI preparation blocks pop action");
 rounds.Resume();Check(rounds.Tick(200,popped with {OtherQueue=true})==LoopAction.None && rounds.Phase==LoopPhase.Error,"unrelated queue after UI preparation stops loop");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Tick(16000,lobby with {Preparing=true});Check(rounds.Active,"reception travel can exceed normal queue timeout");
+rounds.Tick(120001,lobby with {Preparing=true});Check(rounds.Phase==LoopPhase.Error,"missing receptionist or path has bounded preparation wait");
+rounds.Start(0,1,false);rounds.Tick(0,lobby);rounds.Tick(10000,lobby with {Preparing=true});rounds.Tick(16000,lobby);Check(rounds.Active,"queue response timeout starts after reception preparation");
+rounds.Tick(31001,lobby);Check(rounds.Phase==LoopPhase.Error,"finished reception request without queue is not retried");
 var keeper=new ActivityKeeper();var touches=0;bool Touch(){touches++;return true;}
 keeper.Tick(0,false,Touch);Check(touches==0,"inactive content has no activity writes");
 keeper.Tick(0,true,Touch);keeper.Tick(9999,true,Touch);Check(touches==1,"activity write limited to once per ten seconds");

@@ -50,10 +50,10 @@ public sealed class Plugin : IDalamudPlugin
     private bool uiCaptures;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IClientState client, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition)
+        IClientState client, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
     {
         this.pi = pi; this.commands = commands; this.framework = framework;
-        this.client = client; this.data = data; this.log = log;this.condition=condition;loopUi=new LoopGameUi(gui,data);
+        this.client = client; this.data = data; this.log = log;this.condition=condition;loopUi=new LoopGameUi(gui,data,objects,pi);
         Loc.CheckCompleteness();
         settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => { log.Error(ex, "Configuration saving stopped"); open = true; },
             onFinalFailure: ex => { log.Error(ex, "Final configuration flush failed"); open = true; });
@@ -88,8 +88,8 @@ public sealed class Plugin : IDalamudPlugin
     }
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { loop.Stop();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true;loop.Stop(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true;loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -177,7 +177,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch(Exception ex)
         {
-            controlGate="Exception";if(loop.Active)loop.Stop(true);typing.Stop("Fault");open=true;
+            controlGate="Exception";if(loop.Active)loop.Stop(true);loopUi.CancelQueuePreparation();typing.Stop("Fault");open=true;
             if(++failures<=3)log.Error(ex,"Keybound read stopped; restart is manual");
         }
         finally {if(!typing.Running){ime.Restore();if(loop.Active && loop.Phase==LoopPhase.Playing && typing.Status!="Completed")loop.Stop(true);}}
@@ -195,6 +195,7 @@ public sealed class Plugin : IDalamudPlugin
         if(Keyboard.ForegroundGame && Keyboard.Escape){StopByUser();return;}
         if(now-loopSample<200)return;loopSample=now;
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
+        if(loop.Paused || loading || !Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
         var blocked=!Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame
@@ -202,7 +203,7 @@ public sealed class Plugin : IDalamudPlugin
         var action=loop.Tick(now,snapshot,blocked);
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
-        if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}
+        if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){loopUi.CancelQueuePreparation();automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}
     }
     private void StartDiagnostics()
     {
@@ -288,6 +289,7 @@ public sealed class Plugin : IDalamudPlugin
                     }
                     ImGui.TextWrapped(T("Guide"));
                     ImGui.TextWrapped(T("LoopHelp"));
+                    ImGui.TextWrapped(T("ReceptionHelp"));
                     foreach (var word in reader.Words) ImGui.TextUnformatted(word);
                     ImGui.EndTabItem();
                 }

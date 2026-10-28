@@ -1,4 +1,8 @@
 using Dalamud.Plugin.Services;
+using Dalamud.Plugin;
+using System.Numerics;
+using FFXIVClientStructs.FFXIV.Client.Game.Control;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Enums;
@@ -14,13 +18,16 @@ internal sealed unsafe class LoopGameUi
     public const uint LobbyTerritory=1360,GameTerritory=1359,DutyId=1095;
     private readonly IGameGui gui;
     private readonly string dutyName,exitPrompt;
-    private bool preparingQueue,selectionRequested;
+    private bool preparingQueue,interacted;
+    private readonly IObjectTable objects;
+    private readonly ReceptionTravel travel;
+    public void SuspendTravel()=>travel.Stop();
     private long queueStepAt;
-    public void CancelQueuePreparation() {preparingQueue=false;selectionRequested=false;}
+    public void CancelQueuePreparation() {preparingQueue=false;interacted=false;travel.Stop();}
     public bool Supported {get;}
-    public LoopGameUi(IGameGui gui,IDataManager data)
+    public LoopGameUi(IGameGui gui,IDataManager data,IObjectTable objects,IDalamudPluginInterface pi)
     {
-        this.gui=gui;
+        this.gui=gui;this.objects=objects;travel=new ReceptionTravel(pi);
         var duty=data.GetExcelSheet<ContentFinderCondition>().GetRowOrDefault(DutyId);
         var lobby=data.GetExcelSheet<TerritoryType>().GetRowOrDefault(LobbyTerritory);
         Supported=duty?.TerritoryType.RowId==GameTerritory && lobby?.Name.ToString()=="w1eo";
@@ -57,7 +64,7 @@ internal sealed unsafe class LoopGameUi
         var button=Visible(result)?(AtkComponentButton*)result->GetComponentByNodeId(48):null;
         var pop=gui.GetAddonByName<AddonContentsFinderConfirm>("ContentsFinderConfirm");
         return new(loggedIn,territory==LobbyTerritory,territory==GameTerritory,loading,other,queued,
-            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")));
+            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),preparingQueue);
     }
     public bool Execute(LoopAction action,uint territory)
     {
@@ -66,10 +73,8 @@ internal sealed unsafe class LoopGameUi
         {
             var finder=ContentsFinder.Instance();
             if(territory!=LobbyTerritory || finder==null || finder->QueueInfo.QueueState!=ContentsFinderQueueState.None)return false;
-            var agent=AgentContentsFinder.Instance();
-            if(agent==null || agent->SelectedContent.Count>0)return false;
-            preparingQueue=true;selectionRequested=false;queueStepAt=Environment.TickCount64+500;
-            agent->OpenRegularDuty(DutyId);return true;
+            preparingQueue=true;interacted=false;queueStepAt=0;
+            return true;
         }
         if(action==LoopAction.Accept)
         {
@@ -88,49 +93,41 @@ internal sealed unsafe class LoopGameUi
         }
         return false;
     }
-    // Follow the normal Duty Finder UI flow; never submit a raw QueueDuties request.
+    // Only the identified reception NPC and its dedicated entry dialog are used.
     public bool AdvanceQueue(long now,uint territory)
     {
         if(!preparingQueue || now<queueStepAt)return true;
         queueStepAt=now+500;
         if(territory!=LobbyTerritory)return false;
-        var finder=ContentsFinder.Instance();var agent=AgentContentsFinder.Instance();
-        if(finder==null || agent==null)return false;
+        var finder=ContentsFinder.Instance();if(finder==null)return false;
         if(finder->QueueInfo.QueueState!=ContentsFinderQueueState.None){CancelQueuePreparation();return true;}
-        var addon=gui.GetAddonByName<AddonContentsFinder>("ContentsFinder");
-        if(!Visible((AtkUnitBase*)addon))return true;
-        if(!Own(agent->SelectedDuty))return false;
-        if(agent->SelectedContent.Count>1)return false;
-        if(agent->SelectedContent.Count==1)
+        var player=objects.LocalPlayer;if(player==null)return false;
+        var npc=objects.Where(x=>x.BaseId==1058751 && x.IsTargetable)
+            .OrderBy(x=>Vector3.DistanceSquared(x.Position,player.Position)).FirstOrDefault();
+        if(npc==null)return true; // Bounded by preparation timeout; never choose a different NPC.
+        if(Vector3.Distance(player.Position,npc.Position)>3.0f)
         {
-            if(!Own(agent->SelectedContent[0]))return false;
-            if(Text(addon->SelectedDutyTextNode[0].Value).Trim()!=dutyName)return true;
-            if(!Ready(addon->JoinButton))return true;
-            preparingQueue=false; // Latch before dispatch: never repeat an uncertain join.
-            return Callback((AtkUnitBase*)addon,12,0);
+            if(interacted)return false;
+            return travel.Approach(player.Position,npc.Position);
         }
-        if(selectionRequested)return true;
-        var list=addon->DutyList;
-        if(list==null || list->Items.Count==0)return true;
-        var selected=list->SelectedItemIndex;
-        if(selected<0 || selected>=list->Items.Count || list->Items.Count>2048)return false;
-        var item=list->Items[selected].Value;
-        if(item==null || item->Renderer==null || Text(item->Renderer->GetTextNodeById(5)).Trim()!=dutyName)return false;
-        var leaf=0;
-        for(var i=0;i<=selected;i++)
+        travel.Stop();
+        var dialog=gui.GetAddonByName<AtkUnitBase>("KTGEnterDialogue");
+        if(interacted && Visible(dialog))
         {
-            var entry=list->Items[i].Value;if(entry==null)return false;
-            if(entry->Type is TreeListItemType.None or TreeListItemType.LastItemInGroup)leaf++;
+            var button=(AtkComponentButton*)dialog->GetComponentByNodeId(9);
+            if(!Ready(button))return true;
+            preparingQueue=false; // One join attempt, including uncertain outcomes.
+            return Click(dialog,button);
         }
-        if(leaf==0)return false;
-        selectionRequested=true;
-        return Callback((AtkUnitBase*)addon,3,leaf);
-    }
-    private static bool Callback(AtkUnitBase* addon,int operation,int argument)
-    {
-        AtkValue* values=stackalloc AtkValue[2];values[0]=default;values[1]=default;
-        values[0].SetInt(operation);values[1].SetInt(argument);
-        addon->FireCallback(2,values,true);return true;
+        if(!interacted)
+        {
+            // Never advance an unrelated conversation or selection window.
+            if(Visible(gui.GetAddonByName<AtkUnitBase>("Talk")) || Visible(gui.GetAddonByName<AtkUnitBase>("SelectString")) || Visible(gui.GetAddonByName<AtkUnitBase>("SelectYesno")))return false;
+            var target=TargetSystem.Instance();if(target==null)return false;
+            interacted=true;
+            target->InteractWithObject((GameObject*)npc.Address,true);
+        }
+        return true;
     }
     private static bool Click(AtkUnitBase* addon,AtkComponentButton* button)
     {

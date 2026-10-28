@@ -20,6 +20,7 @@ internal static class Loc
         ["LoopCount"] = ["周回数", "Number of runs", "Anzahl der Durchläufe", "Nombre de parties", "반복 횟수", "循环次数", "循環次數"],
         ["DiagDisabled"] = ["ログ作成はオフです", "Logging is off", "Protokollierung ist aus", "Journalisation désactivée", "로그 생성 꺼짐", "日志记录已关闭", "日誌記錄已關閉"],
         ["RecordDiagnostics"] = ["診断ログを作成（初期値オフ）", "Create diagnostic logs (off by default)", "Diagnoseprotokolle erstellen (standardmäßig aus)", "Créer des journaux de diagnostic (désactivé par défaut)", "진단 로그 생성 (기본값 꺼짐)", "创建诊断日志（默认关闭）", "建立診斷日誌（預設關閉）"],
+        ["ReceptionHelp"] = ["受付への自動移動にはvnavmeshが必要です。スクウェア内の参加受付へ移動して申請します。", "Automatic travel to reception requires vnavmesh. Moves to reception within the Square and registers.", "Automatischer Weg zur Anmeldung benötigt vnavmesh. Geht im Square zur Anmeldung.", "Le déplacement automatique vers l’accueil nécessite vnavmesh. Rejoint l’accueil du Square pour s’inscrire.", "접수 NPC로 자동 이동하려면 vnavmesh가 필요합니다. 스퀘어 안에서 접수 NPC에게 이동하여 신청합니다.", "自动前往接待员需要vnavmesh。在广场内移动到接待员处报名。", "自動前往接待員需要vnavmesh。在廣場內移動到接待員處報名。"],
         ["Main"] = ["自動入力", "Auto typing", "Automatische Eingabe", "Saisie automatique", "자동 입력", "自动输入", "自動輸入"],
         ["Settings"] = ["設定", "Settings", "Einstellungen", "Paramètres", "설정", "设置", "設定"],
         ["Language"] = ["言語設定", "Language settings", "Spracheinstellungen", "Langue", "언어 설정", "语言设置", "語言設定"],
