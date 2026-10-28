@@ -1,0 +1,17 @@
+{
+  "Author": "Roxyz0501",
+  "Name": "Keybound Pilot",
+  "InternalName": "KeyboundPilot",
+  "AssemblyVersion": "1.0.0.0",
+  "DalamudApiLevel": 15,
+  "Punchline": "キーバウンド・ブロウラーの文字入力とランダムな入力間隔設定。",
+  "Description": "公開プレビュー：実ゲームでの出題取得・フォーカス判定・キー認識は未検証です。キーバウンド・ブロウラーの文字を読み、Windowsのキーボード押下・解放イベントで1文字ずつ入力します。Configで入力間隔の下限・上限を設定し、範囲内のランダム間隔で入力。同値で固定間隔。/keyboundpilot で開きます。",
+  "Tags": [
+    "gold saucer",
+    "typing",
+    "keybound brawler"
+  ],
+  "IsHide": false,
+  "RepoUrl": "https://github.com/Roxyz0501/KeyboundPilot",
+  "IconUrl": "https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png"
+}

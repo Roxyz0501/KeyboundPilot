@@ -1,0 +1,5 @@
+**/bin/
+**/obj/
+artifacts/
+tools/Inspect/*layout.txt
+tools/Inspect/uld-inspection.txt
