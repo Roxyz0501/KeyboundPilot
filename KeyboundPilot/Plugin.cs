@@ -22,6 +22,10 @@ public sealed class Plugin : IDalamudPlugin
     private readonly LocalizedFonts fonts;
     private readonly GameReader reader;
     private readonly TypingSession typing = new();
+    private readonly ImeInput ime = new();
+    private readonly EncounterPolicy encounter = new();
+    private string preparedWord="";
+    private uint currentEntity;
     private readonly DiagnosticRecorder diagnostics;
     private readonly DiagnosticReader diagnosticReader;
     private bool diagnosticRequested=true, diagnosticAttempted;
@@ -76,8 +80,8 @@ public sealed class Plugin : IDalamudPlugin
     }
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { typing.Stop(); Keyboard.Release(true); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true; typing.Stop(); Keyboard.Release(true);diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true; typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -98,7 +102,7 @@ public sealed class Plugin : IDalamudPlugin
         settings.Tick();
         try { UpdateDiagnostics(); } catch(Exception ex) { diagnostics.Stop();diagnosticAttempted=true;log.Error(ex,"KTG diagnostic sampling stopped"); }
         if (!Keyboard.Release()) { typing.Stop("SendFailed"); return; }
-        if (!typing.Running) return;
+        if (!typing.Running) {ime.Restore();preparedWord="";currentEntity=0;return;}
         try
         {
             var now = Environment.TickCount64;
@@ -107,10 +111,27 @@ public sealed class Plugin : IDalamudPlugin
             {
                 reader.Refresh(); scanned = now;
             }
-            var ready = IsContent() && reader.InputFocused && !uiCaptures;
-            // Recheck foreground/focus at the actual send boundary; cached word lists are not sufficient.
-            typing.Tick(now, ready, reader.Words.FirstOrDefault(), reader.StillVisible(typing.CurrentWord),
-                config.MinimumMs, config.MaximumMs, c => !stopping && IsContent() && !uiCaptures && reader.FocusedNow() && reader.StillVisible(typing.CurrentWord) && Keyboard.Send(c));
+            if(!IsContent() || uiCaptures || reader.CompetingFocus()) {typing.Stop("FocusLost");return;}
+            if(reader.Available && encounter.Update(now,reader.Enemies))diagnostics.Event("jammer_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
+            var paused=encounter.Paused(now) || !reader.InputEnabled || !reader.Available;
+            var focused=typing.Submitted || typing.CurrentWord.Length==0 || (!paused && reader.EnsureFocus(now));
+            if(!paused && reader.FocusFailed) {typing.Stop("FocusLost");return;}
+            if(typing.CurrentWord.Length==0) {preparedWord="";currentEntity=0;}
+            if(!paused && focused && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
+            {
+                if(!string.IsNullOrEmpty(reader.EvaluatedText()) || !ime.Prepare(typing.Japanese)) {typing.Stop("ImeFailed");return;}
+                preparedWord=typing.CurrentWord;
+                return; // IME changes must settle before the first key
+            }
+            var imeState=ime.Inspect();
+            if(!paused && focused && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
+            {typing.Stop("ImeFailed");return;}
+            var previousWord=typing.CurrentWord;
+            typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
+                config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !uiCaptures && !encounter.Paused(Environment.TickCount64)
+                    && reader.FocusedNow() && reader.StillVisible(typing.CurrentWord,currentEntity) && Keyboard.Send(c),
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText());
+            if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures = 0;
         }
         catch (Exception ex)
@@ -118,6 +139,7 @@ public sealed class Plugin : IDalamudPlugin
             typing.Stop("Fault"); open = true;
             if (++failures <= 3) log.Error(ex, "Keybound read stopped; restart is manual");
         }
+        finally {if(!typing.Running)ime.Restore();}
     }
     private void StartDiagnostics()
     {
@@ -127,14 +149,14 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void UpdateDiagnostics()
     {
-        if(!IsContent()) { diagnostics.Stop();diagnosticAttempted=false;return; }
+        if(!IsContent()) { diagnostics.Stop();diagnosticAttempted=false;encounter.Reset();return; }
         if(!diagnosticRequested)return;
         if(!diagnosticAttempted) { diagnosticAttempted=true;diagnosticReader.Reset();diagnostics.Start(); }
         var now=Environment.TickCount64;
         if(diagnostics.Active && now-lastDiagnosticSample>=100)
         {
             lastDiagnosticSample=now;
-            var sample=diagnosticReader.Capture(typing);
+            var sample=diagnosticReader.Capture(typing,ime.Inspect(),encounter.Paused(now));
             if(sample!=null)diagnostics.Observe(sample);
         }
         diagnostics.Tick();
@@ -178,7 +200,7 @@ public sealed class Plugin : IDalamudPlugin
                     }
                     else if (ImGui.Button(T("Start") + "###Start"))
                     {
-                        if (failures < 3) { scanned = 0; reader.Clear(); typing.Start(Environment.TickCount64); }
+                        if (failures < 3) { scanned = 0; reader.Clear(); preparedWord="";currentEntity=0;typing.Start(Environment.TickCount64);open=false; }
                         else typing.Stop("Fault");
                     }
                     ImGui.SameLine();

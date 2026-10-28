@@ -7,13 +7,10 @@ namespace KeyboundPilot;
 /// <summary>Read only the dedicated KTG arrays; unknown values stay unnamed until correlated with play logs.</summary>
 internal sealed unsafe class DiagnosticReader(IGameGui gui)
 {
-    private int[]? lastNumbers;
-    private string[]? lastStrings;
-    private string? lastUi;
-    private long sample;
+    private readonly DiagnosticDelta delta=new();
     private string? unavailable;
-    public void Reset() { lastNumbers=null;lastStrings=null;lastUi=null;sample=0;unavailable=null; }
-    public string? Capture(TypingSession typing)
+    public void Reset() {delta.Reset();unavailable=null;}
+    public string? Capture(TypingSession typing,ImeState ime,bool paused)
     {
         var stage=AtkStage.Instance();
         if(stage==null || stage->AtkArrayDataHolder==null) return Unavailable("stage_missing");
@@ -38,20 +35,22 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
                 inputState=new {visible=input->IsVisible,enabled=text->Enabled,focused=text->IsActive,inputLength=Math.Clamp(text->RawString.Length,0,1024)};
             }
         }
-        var ui=new {input=inputState,word=Probe("KTGEWord"),cast=Probe("KTGEnemyCastBar"),hp=Probe("KTGHudGaugeHp"),typing=new {typing.Running,typing.Status,typing.Position,typing.Sent}};
-        var uiJson=JsonSerializer.Serialize(ui);
-        var numericChanges=new List<int[]>();var textChanges=new List<object>();
-        for(var i=0;i<numbers.Length;i++) if(lastNumbers==null || lastNumbers[i]!=numbers[i])numericChanges.Add([i,numbers[i]]);
-        for(var i=0;i<strings.Length;i++) if(lastStrings==null || lastStrings[i]!=strings[i])textChanges.Add(new {index=i,value=strings[i]});
-        if(numericChanges.Count==0 && textChanges.Count==0 && lastUi==uiJson)return null;
-        var full=lastNumbers==null;
-        lastNumbers=numbers;lastStrings=strings;lastUi=uiJson;
-        return JsonSerializer.Serialize(new {sample=++sample,full,numericChanges,textChanges,ui});
+        var ui=new Dictionary<string,object> {
+            ["input"]=inputState,["word"]=Probe("KTGEWord"),["cast"]=Probe("KTGEnemyCastBar"),["hp"]=Probe("KTGHudGaugeHp"),
+            ["typing"]=new {typing.Running,typing.Status,typing.Position,typing.Sent,paused},["ime"]=ime,
+            ["inputHints"]=new {label=ReadNode(input,3),hint=ReadNode(input,6)}
+        };
+        return delta.Capture(numbers,strings,ui);
+    }
+    private static string ReadNode(AtkUnitBase* addon,uint id)
+    {
+        if(addon==null)return "";var node=addon->GetTextNodeById(id);
+        return node==null?"":ReadText(node->NodeText.StringPtr);
     }
     private string? Unavailable(string reason)
     {
         if(unavailable==reason)return null;
-        unavailable=reason;lastNumbers=null;lastStrings=null;lastUi=null;
+        unavailable=reason;delta.Reset();
         return JsonSerializer.Serialize(new {available=false,reason});
     }
     private object Probe(string name)
@@ -66,7 +65,7 @@ internal sealed unsafe class DiagnosticReader(IGameGui gui)
             var node=manager->NodeList[i];
             if(node==null || (int)node->Type<1000)continue;
             // Only node visibility/geometry, never arbitrary player-facing text or raw pointers.
-            components.Add(new {ordinal=components.Count,nodeId=node->NodeId,visible=node->IsVisible(),alpha=node->Color.A,x=node->X,y=node->Y});
+            components.Add(new {ordinal=components.Count,nodeId=node->NodeId,visible=node->IsVisible(),alpha=node->Color.A});
         }
         return new {exists=true,visible=addon->IsVisible,components};
     }

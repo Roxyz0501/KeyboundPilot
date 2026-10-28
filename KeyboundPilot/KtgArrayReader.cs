@@ -2,7 +2,6 @@ using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 namespace KeyboundPilot;
 
-internal sealed record KtgWord(uint EntityId, string Word, int Slot);
 internal static unsafe class KtgArrayReader
 {
     public const int Slots=20;
@@ -20,9 +19,14 @@ internal static unsafe class KtgArrayReader
             var id=unchecked((uint)n->IntArray[1+13*slot]);
             if(id is 0 or 0xE0000000)continue;
             var word=Read(s->StringArray[3*slot+1]) ?? Read(s->StringArray[3*slot]);
-            if(word!=null)result.Add(new(id,word,slot));
+            result.Add(new(id,word ?? "",slot,ReadText(s->StringArray[3*slot+2]),n->IntArray[1+13*slot+7],n->IntArray[1+13*slot+11]));
         }
         words=result;return true;
+    }
+    private static string ReadText(byte* ptr)
+    {
+        if(ptr==null)return "";var length=0;while(length<512 && ptr[length]!=0)length++;
+        return length==512?"":SeString.Parse(new ReadOnlySpan<byte>(ptr,length)).TextValue.Trim();
     }
     private static string? Read(byte* ptr)
     {
@@ -30,6 +34,6 @@ internal static unsafe class KtgArrayReader
         var len=0;while(len<512 && ptr[len]!=0)len++;
         if(len==512)return null;
         var text=SeString.Parse(new ReadOnlySpan<byte>(ptr,len)).TextValue.Trim();
-        return text.Length is >0 and <=96 && text.All(c=>char.IsAsciiLetterOrDigit(c) || c is ' ' or '-' or '\'') ? text : null;
+        return TypingPlan.Create(text)!=null ? text : null;
     }
 }

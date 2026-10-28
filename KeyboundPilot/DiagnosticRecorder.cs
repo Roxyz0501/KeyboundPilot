@@ -5,8 +5,8 @@ namespace KeyboundPilot;
 /// <summary>Changed-only, JST date-partitioned, bounded local diagnostics. No automatic replay of uncertain writes.</summary>
 public sealed class DiagnosticRecorder : IDisposable
 {
-    public const long SessionLimit = 8 * 1024 * 1024;
-    public const long TotalLimit = 32 * 1024 * 1024;
+    public const long SessionLimit = 64 * 1024 * 1024;
+    public const long TotalLimit = 256 * 1024 * 1024;
     public const int BufferLimit = 64 * 1024;
     private readonly object gate = new();
     private readonly string root;
@@ -42,7 +42,7 @@ public sealed class DiagnosticRecorder : IDisposable
                 session=Guid.NewGuid().ToString("N"); started=flushed=clock.GetTimestamp();
                 BytesWritten=Records=sequence=0;previous=null;buffer.SetLength(0);bufferedDate=null;
                 Active=true;State="DiagRecording";
-                Add("start",new { schema=1, plugin="KeyboundPilot",version="1.0.1.0",timeZone="Asia/Tokyo", samplingMs=100,
+                Add("start",new { schema=1, plugin="KeyboundPilot",version="1.0.2.0",timeZone="Asia/Tokyo", samplingMs=100,
                     numbers="KTG number array 161: count then 20 records of 13 integers; meanings are provisional", strings="KTG string array 128: 20 triples, game words/reading/cast names",privacy="No chat, player names, raw keys or input text" });
                 return Active;
             }
@@ -54,17 +54,18 @@ public sealed class DiagnosticRecorder : IDisposable
         lock(gate)
         {
             if(!Active || disposed) return;
-            if(clock.GetElapsedTime(started)>=TimeSpan.FromMinutes(30)) { StopCore("DiagLimit");return; }
+            if(clock.GetElapsedTime(started)>=TimeSpan.FromMinutes(120)) { StopCore("DiagLimit");return; }
             if(snapshot!=previous) { previous=snapshot; Add("snapshot",JsonSerializer.Deserialize<JsonElement>(snapshot)); }
             if(Active && clock.GetElapsedTime(flushed)>=TimeSpan.FromSeconds(2)) FlushCore();
         }
     }
+    public void Event(string name,object details) {lock(gate) {if(Active)Add("event",new {name,details});}}
     public void Mark(string kind)
     {
         lock(gate) { if(Active && kind is "block" or "cast") { Add("marker",new {kind}); FlushCore(); } }
     }
     public void Stop() { lock(gate) { if(Active) StopCore("DiagIdle"); } }
-    public void Tick() { lock(gate) { if(Active && clock.GetElapsedTime(started)>=TimeSpan.FromMinutes(30))StopCore("DiagLimit");else if(Active && clock.GetElapsedTime(flushed)>=TimeSpan.FromSeconds(2)) FlushCore(); } }
+    public void Tick() { lock(gate) { if(Active && clock.GetElapsedTime(started)>=TimeSpan.FromMinutes(120))StopCore("DiagLimit");else if(Active && clock.GetElapsedTime(flushed)>=TimeSpan.FromSeconds(2)) FlushCore(); } }
     private void Add(string kind, object value)
     {
         if(!Active) return;

@@ -6,3 +6,5 @@ tools/Inspect/uld-inspection.txt
 
 diagnostics/
 *.jsonl
+
+tools/Inspect/

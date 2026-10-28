@@ -28,11 +28,14 @@ internal static class Keyboard
         get { GetWindowThreadProcessId(GetForegroundWindow(), out var pid); return pid == (uint)Environment.ProcessId; }
     }
     public static bool Escape => (GetAsyncKeyState(0x1B) & 0x8000) != 0;
-    public static bool Modifier => new[] { 0x10, 0x11, 0x12, 0x5B, 0x5C }.Any(k => (GetAsyncKeyState(k) & 0x8000) != 0);
+    public static bool Modifier => new[] {0x11,0x12,0x5B,0x5C,0xA1}.Any(k=>(GetAsyncKeyState(k)&0x8000)!=0)
+        || (!heldShift && (GetAsyncKeyState(0xA0)&0x8000)!=0);
+    internal static bool SupportedModifiers(short mapping)=>mapping!=-1 && (mapping&0xFF00) is 0 or 0x100;
 
-    public static bool TryMap(char c, out ushort scan)
+    public static bool TryMap(char c, out ushort scan)=>TryMap(c,out scan,out _);
+    private static bool TryMap(char c,out ushort scan,out bool shift)
     {
-        scan = 0;
+        scan = 0;shift=false;
         if (!ForegroundGame) return false;
         if (c == '\r') { scan = 0x1C; return true; } // physical Enter
         if (c is < ' ' or > '~') return false;
@@ -40,32 +43,37 @@ internal static class Keyboard
         var layout = GetKeyboardLayout(thread);
         // The minigame displays capitals, but physical letter keys need no Shift.
         var key = VkKeyScanEx(char.ToLowerInvariant(c), layout);
-        if (key == -1 || (key & 0xFF00) != 0) return false; // don't synthesize modifiers or guess layout
+        if(!SupportedModifiers(key))return false; // Never synthesize Ctrl/Alt/AltGr.
+        shift=(key&0x100)!=0;
         var mapped = MapVirtualKeyEx((uint)(key & 255), 0, layout);
         if (mapped == 0 || mapped > 255) return false;
         scan = (ushort)mapped;
         return true;
     }
     private static ushort held;
+    private static bool heldShift;
     private static long releaseAt;
     private static int releaseFailures;
     public static bool Release(bool force = false)
     {
-        if (held == 0 || (!force && Environment.TickCount64 < releaseAt)) return true;
+        if ((held == 0 && !heldShift) || (!force && Environment.TickCount64 < releaseAt)) return true;
         if (releaseFailures >= 3 && !force) return false;
-        if (SendInput(1, new[] { Make(held, true) }, Marshal.SizeOf<Input>()) == 1)
-        { held = 0; releaseFailures = 0; return true; }
+        var releases=new List<Input>();if(held!=0)releases.Add(Make(held,true));if(heldShift)releases.Add(Make(0x2A,true));
+        if(SendInput((uint)releases.Count,releases.ToArray(),Marshal.SizeOf<Input>())==releases.Count)
+        {held=0;heldShift=false;releaseFailures=0;return true;}
         releaseFailures++;
         return false;
     }
     public static bool Send(char c)
     {
-        if (!ForegroundGame || Modifier || Escape || !TryMap(c, out var scan)) return false;
-        if (held != 0) return false;
+        if (!ForegroundGame || Modifier || Escape || !TryMap(c,out var scan,out var shift)) return false;
+        if(held!=0 || heldShift)return false;
         // Keep the key down across a frame so polled keyboard consumers can observe it.
-        var sent = SendInput(1, new[] { Make(scan, false) }, Marshal.SizeOf<Input>());
-        if (sent != 1) return false;
-        held = scan; releaseAt = Environment.TickCount64 + 10; releaseFailures = 0;
+        var presses=shift?new[]{Make(0x2A,false),Make(scan,false)}:new[]{Make(scan,false)};
+        var sent=SendInput((uint)presses.Length,presses,Marshal.SizeOf<Input>());
+        if(sent!=presses.Length)
+        {if(shift && sent>0){heldShift=true;Release(true);}return false;}
+        held=scan;heldShift=shift;releaseAt=Environment.TickCount64+10;releaseFailures=0;
         return true;
     }
     private static Input Make(ushort scan, bool up) => new()
