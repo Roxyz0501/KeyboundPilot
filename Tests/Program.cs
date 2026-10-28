@@ -146,6 +146,22 @@ var twin=replacement with {EntityId=33};seen.Update([replacement,twin],[]);Check
 seen.Update([],[]);seen.Update([replacement],[]);Check(!seen.Contains(replacement),"despawn invalidates remembered reading");
 seen.Update([replacement],[new(31,replacement.Word,true)]);seen.Clear();Check(!seen.Contains(replacement),"content reset removes visibility history");
 seen.Update([replacement with {Visible=false}],[new(31,replacement.Word,true)]);Check(!seen.Contains(replacement),"inactive array target cannot become observed");
+var motion=new TargetMotion();var mover=Enemy(45,"",0) with {ScreenX=500,ScreenY=600};
+Check(!motion.Update(0,[mover])[0].Moving,"first observation does not invent movement");
+Check(!motion.Update(50,[mover with {ScreenY=601}])[0].Moving,"one pixel jitter ignored");
+Check(motion.Update(100,[mover with {ScreenY=602}])[0].Moving,"slow movement accumulates from baseline");
+Check(!motion.Update(2101,[mover with {ScreenY=602}])[0].Moving,"stationary target stops moving classification");
+motion.Update(2200,[]);Check(!motion.Update(2300,[mover])[0].Moving,"despawn drops motion history");
+var near=mover with {EntityId=46,Slot=7,ScreenY=800,Moving=true};var far=mover with {EntityId=47,Slot=1,ScreenY=650,Moving=true};var still=mover with {EntityId=48,Slot=0,ScreenY=900};
+ordered=EncounterPolicy.Prioritize([still,far,near,barrier,Enemy(49,"cast",80)]).ToArray();
+Check(ordered.Select(x=>x.EntityId).SequenceEqual(new uint[]{9,49,46,48,47}),"barrier then cast then closest moving then other slots");
+Check(EncounterPolicy.Prioritize([near with {Visible=false},far]).First().EntityId==47,"inactive target cannot receive closest priority");
+var gap=new TypingSession((a,b)=>a);sent.Clear();gap.Start(0);gap.Tick(0,true,"A",false,100,100,Send);gap.Tick(100,true,"A",true,100,100,Send);
+gap.Tick(200,true,"A",true,100,100,Send,betweenWordsMs:1000);gap.Tick(300,true,"B",false,100,100,Send,evaluated:"");
+Check(gap.Status=="BetweenWords" && sent.SequenceEqual("A\r"),"post-submit delay starts at game Enter");
+gap.Tick(1199,true,"B",false,100,100,Send);Check(gap.CurrentWord=="" && sent.Count==2,"next answer not selected early");
+gap.Tick(1200,true,"B",false,100,100,Send);gap.Tick(1300,true,"B",true,100,100,Send);Check(gap.CurrentWord=="B" && sent.Last()=='B',"next answer begins after deadline plus per-key interval");
+gap.Stop();gap.Start(1400);gap.Tick(1400,true,"C",false,100,100,Send);Check(gap.CurrentWord=="C","manual start discards old post-submit deadline");
 var delta=new DiagnosticDelta();var nums=new[]{0,1};var txt=new[]{"word"};var ui=new Dictionary<string,object>{{"input",new{enabled=true}},{"cast",new{visible=true}}};
 var first=delta.Capture(nums,txt,ui);Check(first!=null && delta.Capture(nums,txt,ui)==null,"identical frame has zero record");
 nums[1]=2;var changed=System.Text.Json.JsonDocument.Parse(delta.Capture(nums,txt,ui)!);
@@ -180,8 +196,8 @@ Check(focus.Step(3750,false,()=>requests++)==FocusResult.Requested && requests==
 var migrationRoot=Path.Combine(AppContext.BaseDirectory,"auto-config-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(migrationRoot);
 try {
  var file=Path.Combine(migrationRoot,"config.json");File.WriteAllText(file,"{\"Version\":1,\"Language\":\"ja\",\"MinimumMs\":80,\"MaximumMs\":150}");
- using(var store=new ConfigurationStore(file)) {Check(store.Configuration.AutoStart,"old configuration inherits authorized auto start");store.Configuration.AutoStart=false;store.Update(store.Configuration);store.Flush();}
- using(var store=new ConfigurationStore(file))Check(!store.Configuration.AutoStart,"auto-start setting survives save/reload");
+ using(var store=new ConfigurationStore(file)) {Check(store.Configuration.AutoStart,"old configuration inherits authorized auto start");Check(store.Configuration.BetweenWordsMs==0,"old configuration defaults to zero answer delay");store.Configuration.BetweenWordsMs=1750;store.Configuration.AutoStart=false;store.Update(store.Configuration);store.Flush();}
+ using(var store=new ConfigurationStore(file)){Check(!store.Configuration.AutoStart,"auto-start setting survives save/reload");Check(store.Configuration.BetweenWordsMs==1750,"answer delay survives save/reload");}
 } finally {Directory.Delete(migrationRoot,true);}
 if(args.Length>0)
 {

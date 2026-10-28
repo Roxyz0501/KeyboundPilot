@@ -1,6 +1,6 @@
 namespace KeyboundPilot;
 
-public sealed record KtgWord(uint EntityId,string Word,int Slot,string Cast,int Progress,int Special,int Kind=0,bool Visible=true);
+public sealed record KtgWord(uint EntityId,string Word,int Slot,string Cast,int Progress,int Special,int Kind=0,bool Visible=true,int ScreenX=0,int ScreenY=0,bool Moving=false);
 
 /// <summary>Only the observed Japanese jammer is recognized. Cast end is a sampled inference, not a server action event.</summary>
 public sealed class EncounterPolicy
@@ -24,6 +24,12 @@ public sealed class EncounterPolicy
     }
     public bool Paused(long now)=>now<PauseUntil;
     public void Reset() {jammerProgress.Clear();PauseUntil=0;}
-    public static IEnumerable<KtgWord> Prioritize(IEnumerable<KtgWord> enemies)=>enemies
-        .OrderByDescending(x=>x.Kind==2).ThenByDescending(x=>x.Cast.Length>0).ThenByDescending(x=>x.Cast.Length>0?x.Progress:0).ThenBy(x=>x.Slot);
+    public static IEnumerable<KtgWord> Prioritize(IEnumerable<KtgWord> enemies)
+    {
+        var current=enemies.ToArray();
+        var closest=current.Where(x=>x.Visible && x.Kind!=2 && x.Cast.Length==0 && x.Moving && x.ScreenY>0)
+            .OrderByDescending(x=>x.ScreenY).ThenBy(x=>x.Slot).FirstOrDefault();
+        return current.OrderByDescending(x=>x.Kind==2).ThenByDescending(x=>x.Cast.Length>0)
+            .ThenByDescending(x=>x.Cast.Length>0?x.Progress:0).ThenByDescending(x=>x==closest).ThenBy(x=>x.Slot);
+    }
 }

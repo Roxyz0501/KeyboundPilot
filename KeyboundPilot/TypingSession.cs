@@ -6,7 +6,7 @@ public sealed class TypingSession
 {
     public const char HiraganaKey='\u0006'; // Internal key command, mapped to physical F6.
     private readonly Func<int,int,int> random;
-    private long due,pausedAt=-1,commitAt;
+    private long due,pausedAt=-1,commitAt,nextWordAt;
     private TypingPlan? plan;
     private int index,clearKeys;
     private bool submitted,committing,hiraganaRequested,clearing;
@@ -22,11 +22,11 @@ public sealed class TypingSession
     public long Sent {get;private set;}
     public TypingSession(Func<int,int,int>? sample=null)=>random=sample??Random.Shared.Next;
     public void Start(long now) {Stop();Running=true;Status="Waiting";due=now;Sent=0;}
-    public void Stop(string reason="Stopped") {Running=false;ManualPaused=false;Status=reason;plan=null;index=clearKeys=0;submitted=committing=hiraganaRequested=clearing=false;pausedAt=-1;}
+    public void Stop(string reason="Stopped") {Running=false;ManualPaused=false;Status=reason;plan=null;index=clearKeys=0;submitted=committing=hiraganaRequested=clearing=false;pausedAt=-1;nextWordAt=0;}
     public void PauseByUser() {if(Running){ManualPaused=true;Status="UserPaused";}}
     public void ResumeByUser() {if(Running){ManualPaused=false;Status="Waiting";}}
     public void Tick(long now,bool ready,string? candidate,bool currentStillVisible,int min,int max,Func<char,bool> send,
-        bool paused=false,bool composing=false,string? evaluated=null)
+        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0)
     {
         if(!Running)return;
         if(paused || !ready || ManualPaused) {if(pausedAt<0)pausedAt=now;Status=ManualPaused?"UserPaused":"Paused";return;}
@@ -42,7 +42,7 @@ public sealed class TypingSession
                 if(!send('\b')) {Stop("SendFailed");return;}
                 clearKeys++;due=now+max;Status="Clearing";return;
             }
-            plan=null;index=clearKeys=0;submitted=committing=hiraganaRequested=clearing=false;due=now;Status="Waiting";return;
+            plan=null;index=clearKeys=0;submitted=committing=hiraganaRequested=clearing=false;due=Math.Max(now,nextWordAt);Status=now<nextWordAt?"BetweenWords":"Waiting";return;
         }
         if(plan!=null && index>=plan.Keys.Length)
         {
@@ -65,7 +65,7 @@ public sealed class TypingSession
                     if(AnswerCheck is "Unavailable" or "DifferentText") {Stop("ImeFailed");return;}
                 }
                 if(!send('\r')) {Stop("SendFailed");return;}
-                submitted=true;due=now+max;Status="Waiting";return;
+                submitted=true;nextWordAt=now+Math.Clamp(betweenWordsMs,0,60000);due=now+max;Status="Waiting";return;
             }
             Status="Waiting";if(now-due>3000)Stop("NoProgress");return;
         }

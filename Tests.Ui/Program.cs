@@ -33,7 +33,7 @@ unsafe partial class Program
     var face=code switch {"zh-Hant"=>1,"zh-Hans"=>2,"ko"=>3,_=>0};ImGui.PushFont(fonts[face]);ImGui.PushID(code);
     ImGui.TextUnformatted(code+" | "+Loc.Get(code,"AutoStart"));
     PlaybackControls.Draw(false,false,key=>Loc.Get(code,key),()=>{},()=>{},()=>{});ImGui.SameLine();ImGui.Button(Loc.Get(code,"Support"));
-    ImGui.TextUnformatted(synthetic);ImGui.Separator();ImGui.PopID();ImGui.PopFont();
+    ImGui.TextUnformatted(Loc.Get(code,"BetweenWordsMs")+": 0");ImGui.TextUnformatted(synthetic);ImGui.Separator();ImGui.PopID();ImGui.PopFont();
    }
    ImGui.End();ImGui.Render();
   }

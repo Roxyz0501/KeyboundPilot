@@ -163,7 +163,7 @@ public sealed class Plugin : IDalamudPlugin
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
                 config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !uiCaptures && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && Keyboard.Send(c),
-                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText());
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.BetweenWordsMs);
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
         }
@@ -190,7 +190,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             lastDiagnosticSample=now;
             var sample=diagnosticReader.Capture(typing,ime.Inspect(),encounter.Paused(now),
-                new {gate=controlGate,reader.FocusState,reader.FocusAttempts,reader.FocusRequestAccepted,uiCaptures,autoStart=config.AutoStart,autoConsumed=automation.Consumed});
+                new {gate=controlGate,currentEntity,betweenWordsMs=config.BetweenWordsMs,reader.FocusState,reader.FocusAttempts,reader.FocusRequestAccepted,uiCaptures,autoStart=config.AutoStart,autoConsumed=automation.Consumed});
             if(sample!=null)diagnostics.Observe(sample);
         }
         diagnostics.Tick();
@@ -269,6 +269,11 @@ public sealed class Plugin : IDalamudPlugin
         if (maxChanged) { max = Math.Clamp(max, 20, 5000); min = Math.Min(min, max); }
         if (changed || maxChanged) { config.SetRange(min, max); settings.Update(config); }
         ImGui.TextWrapped(T("RangeHelp"));
+        var between=config.BetweenWordsMs;
+        ImGui.SetNextItemWidth(200);
+        if(ImGui.InputInt(T("BetweenWordsMs")+"###BetweenWordsMs",ref between,50,250))
+        {config.BetweenWordsMs=Math.Clamp(between,0,60000);settings.Update(config);}
+        ImGui.TextWrapped(T("BetweenWordsHelp"));
         if (settings.Recovered) ImGui.TextWrapped(T("Recovered"));
         if (settings.LoadWarning != null || settings.LastError != null || settings.Stopped)
         {

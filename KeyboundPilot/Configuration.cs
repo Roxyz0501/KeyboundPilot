@@ -6,6 +6,7 @@ public sealed class Configuration
     public string? Language { get; set; }
     public int MinimumMs { get; set; } = 80;
     public int MaximumMs { get; set; } = 150;
+    public int BetweenWordsMs { get; set; }
     public void SetRange(int min, int max)
     {
         MinimumMs = Math.Clamp(min, 20, 5000);
