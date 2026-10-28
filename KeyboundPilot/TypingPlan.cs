@@ -3,6 +3,10 @@ namespace KeyboundPilot;
 
 public sealed record TypingPlan(string Expected, string Keys, bool Japanese)
 {
+    public bool ExactCase {get;init;}
+    public int LatinModeIndex => Keys.IndexOf(TypingSession.LatinModeKey);
+    public static bool IsRedXiii(string text)=>text.Trim().Normalize(NormalizationForm.FormKC).Equals("レッドXIII",StringComparison.OrdinalIgnoreCase)
+        || text.Trim().Normalize(NormalizationForm.FormKC).Equals("れっどXIII",StringComparison.OrdinalIgnoreCase);
     private static readonly Dictionary<char,string> Kana = BuildKana();
     private static Dictionary<char,string> BuildKana()
     {
@@ -21,6 +25,7 @@ public sealed record TypingPlan(string Expected, string Keys, bool Japanese)
     public static TypingPlan? Create(string text)
     {
         text=text.Trim();if(text.Length is 0 or >96)return null;
+        if(IsRedXiii(text))return new("レッドXIII","rextsudo"+TypingSession.KatakanaKey+'\r'+TypingSession.LatinModeKey+"XIII",true){ExactCase=true};
         var japanese=text.Any(c=>c is >= 'ぁ' and <= 'ゖ' or 'ー' or '～' or '〜');
         var keys=new StringBuilder();
         foreach(var c in text)

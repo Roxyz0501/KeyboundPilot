@@ -1,3 +1,10 @@
+# Validation — 1.0.14.0 / 2026-10-29
+
+- Optional typo submission defaults off; interval defaults to 20, configurable 1–9999. Draw inclusive [max(1,N-5),N+5] for each interval. Count only a successful answer-Enter dispatch, not IME commits, keys, abandoned targets or failed sends. Reset on session start or typo-setting changes. Retain pause/stop/input-prohibition and focus gates. Disable or reconfigure clears an in-flight planned typo before sending it.
+- Mutate one character through a supported typing plan. Keep target identity independent from the expected submitted text. Verify Japanese IME output against the intended altered answer; after submission, clear remaining text through the normal verified path and continue without stale-target timeout.
+- Red XIII labels (including compatibility Roman numerals) use a dedicated plan: romaji prefix, F7 katakana conversion, prefix Enter, wait for composition to end, switch IME off, physically type uppercase XIII with Shift, verify exact レッドXIII before answer Enter. Fullwidth/lowercase alternatives do not pass strict final verification. Preserve original prompt identity and seen-text gating.
+- 252 offline checks pass, including interval bounds, submitted-answer counting, disable/abandon/failure behavior, clearing after a rejected answer, settings migration/persistence and exact mixed-script typing. These tests simulate input delivery; the game-specific IME response, incorrect-answer penalties and live rendering remain unverified. No real keyboard input was sent.
+
 # Validation — 1.0.13.2 / 2026-10-29
 
 Interval endpoints are edited independently. Editing maximum clamps only maximum to the existing minimum; editing minimum clamps only minimum to the existing maximum. The other endpoint is never changed by the UI. Six regression checks cover crossing endpoints and global bounds (214 total). Existing delayed changed-only persistence is retained.

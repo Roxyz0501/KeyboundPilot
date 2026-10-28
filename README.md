@@ -39,15 +39,20 @@ The normal Pause, Play and Stop buttons also control loops. Stopping does not ca
 
 Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text with Backspace, checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
 
+When typo submission is enabled, one character in an answer is changed before sending. The plugin checks and clears any remaining text, then continues typing. “レッドXIII” is entered as katakana “レッド” followed by uppercase ASCII “XIII”.
+
 The four-second pause for “呪いの視線” is a precautionary waiting period, not a measured effect duration.
 
 ## Settings
+
+Key intervals, the delay after submission and typo options are grouped under “Input adjustment”.
 
 | Setting | Behavior |
 | --- | --- |
 | Key interval | Set minimum and maximum values from 20–5000 ms. An interval is chosen for each character. Equal values give a fixed interval. |
 | Delay after submission | Time before typing the next target, from 0–60000 ms. |
 | Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
+| Occasionally submit a typo | Disabled by default. Set the number of submitted answers between typos from 1–9999 (default 20). Each interval is randomized within ±5 of that value, with a minimum of 1. IME confirmations do not count. Starting a session or changing the typo settings resets the count. |
 | Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. |
 
 Input preparation and frame delays can make actual key intervals longer than configured.
@@ -103,15 +108,20 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 読み仮名はローマ字キーで入力し、ひらがなの確定と回答の送信を分けて行います。IMEの状態や確定した読みを確認できない場合は、入力済みの文字をBackspaceで消し、空欄を確認してから再開します。削除中も入力禁止・フォーカス待ち・手動停止を優先します。
 
+タイプミス送信をオンにすると、回答の一文字を変えて送信します。送信後は残った文字を確認・削除して入力を続けます。「レッドXIII」はカタカナの「レッド」と半角大文字の「XIII」で入力します。
+
 「呪いの視線」の4秒は予防のための待機時間で、効果時間の実測値ではありません。
 
 ### 設定
+
+キー入力間隔・送信後の待ち時間・タイプミスの設定は「入力調整」にまとめています。
 
 | 項目 | 内容 |
 | --- | --- |
 | キー入力間隔 | 20〜5000msの範囲で下限・上限を指定します。各文字で間隔を抽選し、上下限を同じにすると固定間隔になります。 |
 | 送信後の待ち時間 | 次の対象を入力し始めるまでの時間です。0〜60000msで指定します。 |
 | ゲーム開始時に自動実行 | ゲーム開始に合わせて自動入力を始めます。初期値はオンです。 |
+| タイプミスをして送信する | 初期値はオフです。ミスするまでの送信回数を1〜9999回で指定します（初期値20回）。毎回、設定回数の±5回から間隔を抽選し、最低1回とします。IMEの確定は数えません。開始時とタイプミス設定の変更時に数え直します。 |
 | デバッグ表示 | 検出した出題数・文字の一覧、専用入力欄の表示・フォーカス、送信文字数を表示します。初期値はオフです。 |
 
 入力準備やフレームの遅延によって、実際のキー間隔が設定より長くなる場合があります。

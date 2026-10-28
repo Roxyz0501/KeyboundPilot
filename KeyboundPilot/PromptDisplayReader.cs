@@ -33,7 +33,8 @@ internal static unsafe class PromptDisplayReader
             var label=component->GetTextNodeById(20);var reading=component->GetTextNodeById(22);
             // Verify both the entity and reading: UI can lag an array text replacement by a frame.
             var readingText=Text(reading);
-            var matches=readingText==word.Word || (readingText.Length==0 && Text(label)==word.Word);
+            var matches=readingText==word.Word || (readingText.Length==0 && Text(label)==word.Word)
+                || (word.Word=="レッドXIII" && TypingPlan.IsRedXiii(Text(label)));
             var visible=matches && Visible((AtkResNode*)entry.Root)
                 && (Visible((AtkResNode*)label) || Visible((AtkResNode*)reading));
             result.Add(new(entry.EntityId,word.Word,visible));

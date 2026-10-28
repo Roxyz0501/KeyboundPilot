@@ -5,10 +5,10 @@ namespace KeyboundPilot;
 /// <summary>One synchronous writer for small configuration snapshots; no timers/tasks survive disposal.</summary>
 public sealed class ConfigurationStore : IDisposable
 {
-    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug)
+    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug, bool MistypeEnabled, int MistypeInterval)
     {
-        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug);
-        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug };
+        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug, c.MistypeEnabled, c.MistypeInterval);
+        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug, MistypeEnabled = MistypeEnabled, MistypeInterval = MistypeInterval };
     }
 
     private readonly object gate = new();
@@ -97,6 +97,8 @@ public sealed class ConfigurationStore : IDisposable
                 Configuration.RecordDiagnostics = loaded.RecordDiagnostics;
                 Configuration.LoopCount = loaded.LoopCount;
                 Configuration.ShowDebug = loaded.ShowDebug;
+                Configuration.MistypeEnabled = loaded.MistypeEnabled;
+                Configuration.MistypeInterval = loaded.MistypeInterval;
                 current = Snapshot.From(loaded);
             }
             failures = 0;
@@ -283,7 +285,7 @@ public sealed class ConfigurationStore : IDisposable
             if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("Version", out var version)
                 || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out var v) || v != 1) return false;
             config = root.Deserialize<Configuration>();
-            return config is not null && config.LoopCount is >= 1 and <= 9999 && config.BetweenWordsMs is >= 0 and <= 60000 && config.MinimumMs >= 20 && config.MaximumMs <= 5000 && config.MinimumMs <= config.MaximumMs && (config.Language is null || Loc.IsSupported(config.Language));
+            return config is not null && config.MistypeInterval is >= 1 and <= 9999 && config.LoopCount is >= 1 and <= 9999 && config.BetweenWordsMs is >= 0 and <= 60000 && config.MinimumMs >= 20 && config.MaximumMs <= 5000 && config.MinimumMs <= config.MaximumMs && (config.Language is null || Loc.IsSupported(config.Language));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { error = ex; return false; }
     }

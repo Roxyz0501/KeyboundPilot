@@ -33,18 +33,19 @@ internal static class Keyboard
     internal static bool SupportedModifiers(short mapping)=>mapping!=-1 && (mapping&0xFF00) is 0 or 0x100;
 
     public static bool TryMap(char c, out ushort scan)=>TryMap(c,out scan,out _);
-    private static bool TryMap(char c,out ushort scan,out bool shift)
+    private static bool TryMap(char c,out ushort scan,out bool shift,bool exactCase=false)
     {
         scan = 0;shift=false;
         if (!ForegroundGame) return false;
         if(c=='\b') {scan=0x0E;return true;}
         if(c==TypingSession.HiraganaKey) {scan=0x40;return true;} // F6: IME hiragana conversion
+        if(c==TypingSession.KatakanaKey) {scan=0x41;return true;} // F7: IME katakana conversion
         if (c == '\r') { scan = 0x1C; return true; } // physical Enter
         if (c is < ' ' or > '~') return false;
         var thread = GetWindowThreadProcessId(GetForegroundWindow(), out _);
         var layout = GetKeyboardLayout(thread);
         // The minigame displays capitals, but physical letter keys need no Shift.
-        var key = VkKeyScanEx(char.ToLowerInvariant(c), layout);
+        var key = VkKeyScanEx(exactCase?c:char.ToLowerInvariant(c), layout);
         if(!SupportedModifiers(key))return false; // Never synthesize Ctrl/Alt/AltGr.
         shift=(key&0x100)!=0;
         var mapped = MapVirtualKeyEx((uint)(key & 255), 0, layout);
@@ -66,9 +67,9 @@ internal static class Keyboard
         releaseFailures++;
         return false;
     }
-    public static bool Send(char c)
+    public static bool Send(char c,bool exactCase=false)
     {
-        if (!ForegroundGame || Modifier || Escape || !TryMap(c,out var scan,out var shift)) return false;
+        if (!ForegroundGame || Modifier || Escape || !TryMap(c,out var scan,out var shift,exactCase)) return false;
         if(held!=0 || heldShift)return false;
         // Keep the key down across a frame so polled keyboard consumers can observe it.
         var presses=shift?new[]{Make(0x2A,false),Make(scan,false)}:new[]{Make(scan,false)};

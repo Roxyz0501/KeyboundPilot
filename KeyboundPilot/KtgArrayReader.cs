@@ -18,7 +18,8 @@ internal static unsafe class KtgArrayReader
         {
             var id=unchecked((uint)n->IntArray[1+13*slot]);
             if(id is 0 or 0xE0000000)continue;
-            var word=Read(s->StringArray[3*slot+1]) ?? Read(s->StringArray[3*slot]);
+            var label=ReadText(s->StringArray[3*slot]);
+            var word=TypingPlan.IsRedXiii(label)?"レッドXIII":Read(s->StringArray[3*slot+1]) ?? Read(s->StringArray[3*slot]);
             result.Add(new(id,word ?? "",slot,ReadText(s->StringArray[3*slot+2]),n->IntArray[1+13*slot+7],n->IntArray[1+13*slot+11],n->IntArray[1+13*slot+10],n->IntArray[1+13*slot+4]!=0,n->IntArray[1+13*slot+1],n->IntArray[1+13*slot+2]));
         }
         words=result;return true;

@@ -1,6 +1,8 @@
 namespace KeyboundPilot;
 public sealed class Configuration
 {
+    public bool MistypeEnabled { get; set; }
+    public int MistypeInterval { get; set; } = 20;
     public bool ShowDebug { get; set; }
     public bool RecordDiagnostics { get; set; }
     public int LoopCount { get; set; } = 1;
