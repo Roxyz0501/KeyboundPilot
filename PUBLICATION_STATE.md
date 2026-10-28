@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.13.2 interval endpoint fix
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.13.2
+- Source/tag: d1f6d7c03921aceba5dea273631c20c66143e643. Shared index: 884797250c90c23b9dced97ef341a56cc4452b30.
+- Editing maximum no longer lowers minimum; editing minimum no longer raises maximum. Clamp only the edited endpoint against the existing other endpoint. Preserve changed-only delayed persistence.
+- Clean Release (zero warnings/errors), 214 offline checks pass including six endpoint regressions. No live game keyboard events sent. Public repository/icon/ZIP and pinned index retrieved; hash/CRC/manifest/README verified. Main raw index temporarily cached 1.0.13.1 during initial verification.
+- ZIP 142886 bytes; SHA-256: 3d413f509833735fd1e6b678b8dcece55decf6ce8f4c0e48c9c976af91056cd3.
+
 ## 2026-10-29 — Keybound Pilot 1.0.13.1 UI and bilingual README
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.13.1
