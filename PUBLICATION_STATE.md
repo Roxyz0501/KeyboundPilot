@@ -1,3 +1,14 @@
+## 2026-10-28 — Keybound Pilot 1.0.1.0 gameplay diagnostics
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.1.0
+- ZIP: https://github.com/Roxyz0501/KeyboundPilot/releases/download/v1.0.1.0/KeyboundPilot-1.0.1.0.zip
+- Source/tag `e564cc6a77a71512e372d814bdd6f6fa011dfbfb`; ZIP 96,968 bytes, SHA-256 `b2775a937d2e3aa0ed146c03ce79c86f92a9db693f3ac008d3d1e9a294cf1504`.
+- User reports no actual typing. This remains open. Added automatic content-only diagnostics independent of auto typing for manual gameplay: dedicated KTG arrays/UI, 100ms sampling, changed-only JSONL deltas, JST daily files, up to 64KiB buffered / 2s flush, 30m / 8MiB per session / 32MiB total / 1000-file cap. Logout/unload flush. No uncertain append replay, no deletion or external upload. No chat, player names, input text or raw key records.
+- Static native inspection found the duplicated UI structure and required Enter submission; changed the reader to dedicated KTG arrays and added one physical Enter after each completed word. No live success claimed. Cast priority and typing-prohibition rules await actual gameplay logs; unknown fields stay unnamed.
+- Clean Release 0 warnings/errors; 41 offline checks, 49 keys x 7 languages, canonical trailing tabs byte-identical, original icon retained. Public repository/icon/ZIP HTTP200 (icon image/png); anonymous ZIP digest/CRC/manifest verified.
+- Shared index `1542050bc9945469cba124f8f2658b694962cb16`: main/pinned 1.0.1.0, 15 entries, all 14 unrelated entries preserved. Release prerelease=true, draft=false.
+- Published under explicit user request and standing authorization. Connector for supported source/index/state operations; standard Roxyz0501 CLI for unsupported Release/assets. No installed DLL/configuration overwritten. Real gameplay logs have not yet been collected by this agent; the user must update and play once.
+
 # Published plugin state
 
 ## 2026-10-28 — Keybound Pilot 1.0.0.0 initial public preview
