@@ -1,3 +1,11 @@
+## 2026-10-28 — Keybound Pilot 1.0.8.0 IME recovery
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.8.0
+- Source/tag: dca7ab0be40e2be34b4da0b6da6b01a5e9da6ebd. Shared index: 8ec2ba1513af233b7f30e00f33643223d88807ad.
+- IME failures clear input with physical Backspace, confirm empty composition/input, then prepare a fresh answer. Existing focus, prohibition, manual pause and bounded deletion remain.
+- Clean Release, 184 offline checks pass. Live recovery unverified; public prerelease.
+- Public repository/icon/ZIP and pinned index retrieved; ZIP hash/CRC/manifest verified. SHA-256: cc5c72b160593c08e0fe95e9c35ab2b21ad4f08f47580a24091f4c488f7ddc19.
+
 ## 2026-10-28 — Keybound Pilot 1.0.7.0 counted loops, optional logs and usage help
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.7.0
