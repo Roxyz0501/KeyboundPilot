@@ -1,3 +1,11 @@
+## 2026-10-28 — Keybound Pilot 1.0.9.0 cursed gaze
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.9.0
+- Source/tag: aa545eb2f5584935eeac58c928ca3f1a7532a7e3. Shared index: 2a260898fce0501eb7ed538b1f9004bd5cd25835.
+- Add four-second pause after inferred late completion of cursed gaze. Track cast identity as well as progress; early interruptions/despawn do not trigger, overlapping casts extend the deadline. Disabled input continues to block typing after four seconds.
+- Clean Release; 191 offline checks pass. Four seconds is provisional, not a measured effect duration. Live avoidance remains unverified; public prerelease.
+- Public repository/icon/ZIP and pinned index retrieved; ZIP hash/CRC/manifest verified. SHA-256: c7b55d9c5765da3d7332c67da52a35bcc2fdd2e0e369c618d8c2868b3850aefc.
+
 ## 2026-10-28 — Keybound Pilot 1.0.8.0 IME recovery
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.8.0
