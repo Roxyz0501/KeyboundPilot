@@ -1,3 +1,12 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.10 randomized exit wait
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.10
+- Source/tag f585b26d3d123a3f28f11936ffb6f08f0b16df93; distribution index 96b4feb3d1e0a790a42344b30582f4aeaf9201f5.
+- Exit wait uses independent minimum/maximum fields, 0–60000 ms. Existing fixed value remains both endpoints through nullable fallback. Draw inclusive delay once on readiness, retain it across polling/score wait/pause, redraw on range edit or readiness reacquisition; equal endpoints are fixed. Preserve score-wait overlap, stop and single-exit guards.
+- Both fields participate in changed-only autosave, validation, retry restoration and lifecycle flush. No additional network, polling, tasks or history writes.
+- Clean Release zero warnings/errors; 459 offline checks including 19 added range/RNG/migration/persistence cases. Native fixtures, 133 localization keys/seven languages, four-font 1030-character coverage, numeric interactions and Japanese/English settings render pass. README lint/diff/hash verification completed. Actual live game timing remains unverified.
+- Public repository/icon/ZIP/source README/main and pinned index verified, both indices 1.0.16.10. ZIP 194647 bytes; SHA-256 c2365dcebb3d0964cf63e219fc36a6cccf8055fd4523319f1083b01fa61affca.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.9 configurable exit wait
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.9
