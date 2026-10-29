@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.4 follow-up audit
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.4
+- Source/tag ea2e4fae95b30db9ad9a80dfee1e09e39824b67a; index 09eb43946d5ffe6ff3dc539f552590d9c87a827f.
+- Typo submissions require input focus before cleanup; normal submissions retain acknowledgment observation without forced focus. Block auto-start/readiness/final dispatch for both zone-loading conditions. Reviewed settings changes, resume and target identity; no speculative behavior changes elsewhere.
+- Clean Release zero warnings/errors and 328 offline checks pass. Three added regression checks distinguish normal vs typo post-submit focus needs. Live wrong-answer focus/zone transitions remain unverified. Previous background inactivity-removal report is still not confirmed resolved.
+- Public repo/icon/ZIP/source README/pinned index verified. ZIP 161339 bytes; SHA-256 c3243c5450cb0ab8c44e033dd7d28cef9cf5f343b50d0ca49f5e9d896d60b96f. Main raw index initially cached 1.0.16.3.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.3 activity reset and diagnostics
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.3
