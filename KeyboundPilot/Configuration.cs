@@ -26,6 +26,7 @@ public sealed class Configuration
     public int MistypeInterval { get; set; } = 20;
     public bool ShowDebug { get; set; }
     public bool RecordDiagnostics { get; set; }
+    public int ExitDelayMs { get; set; }
     public int LoopCount { get; set; } = 1;
     public bool AutoStart { get; set; } = true;
     public int Version { get; set; } = 1;

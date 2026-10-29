@@ -1,3 +1,10 @@
+# Validation — 1.0.16.9 / 2026-10-29
+
+- Added Settings → Loop → Wait before exit, 0–60000 ms, default 0; same drag/double-click numeric control and information tooltip as existing settings. Seven localized languages, 133 keys.
+- RoundLoop observes the actual enabled exit button after results before score gating. The configured delay starts there, overlaps the existing bounded score wait, and requires both before one exit action. Not measured from result appearance or after the score wait. Pause/background input gates prevent dispatch but retain elapsed readiness time; loss of readiness/loading resets the readiness timestamp. Manual stop/new loop/new registration clears it. Exit confirmation is not delayed again. Runtime edits apply against the original readiness time.
+- 440 offline checks pass, including 25 added checks for readiness vs result appearance, exact boundaries, single dispatch, score-wait ordering/overlap, zero/max delays, pause/resume, readiness loss, finish-current reservation, edits/manual stop, old-config migration, changed-only save and reload. Existing configuration backup/recovery/flush checks remain passing. Setting uses existing 60-second changed-only snapshot and lifecycle flush; no added polling, tasks, network calls or history I/O.
+- Clean Release zero warnings/errors. Native score/callback/activity fixtures, four-font 1028-character coverage, seven-language UI rendering and drag/double-click input pass. Reviewed Japanese/English settings render. README Japanese-skill lint/diff/verify completed (run 20261029T104341Z-94837c80, final sha256 prefix d4ddfb4a1c5d); added 60000 ms limits match code and tests. Live game exit timing remains unverified.
+
 # Validation — 1.0.16.8 / 2026-10-29
 
 - Stop-after-current is now a reversible toggle. The same stable button changes to Cancel scheduled stop. Cancellation while playing, paused or leaving preserves playback/pause state and permits the next queue; re-arming, inactive/completed guards and existing count boundaries are covered.

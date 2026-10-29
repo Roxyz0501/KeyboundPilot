@@ -39,6 +39,8 @@ Open “Score history” and select a date to review past games. Expand a result
 
 The results screen indicates that only the first-place player’s score and your own score are shown. Other players’ scores are recorded only when readable on that screen; their scores during play are not available here.
 
+Set “Settings → Loop → Wait before exit” to choose how long to wait after the exit button becomes enabled (0–60000 ms; default 0). Drag the value or double-click to enter it. This wait runs alongside score recording; the plugin exits when both are finished. Pausing prevents exit, and Stop cancels it.
+
 ## Input behavior
 
 - Answers prioritize barrier reinforcement, then casting enemies, then the nearest moving enemy, then other targets. Distance is approximated from screen position. Prompts whose text has never been seen are excluded by default. You can change this under Input adjustment → Visual obstruction.
@@ -125,6 +127,8 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 「スコア履歴」で日付を選ぶと過去の結果を見直せます。各結果を開くと、取得できた参加者のスコアを表示します。記録はこのPCに保存し、時刻には記録時のPCの時間帯を使います。取得できなかった値は「—」で表示します。キャラクター名が省略されて自分と照合できない場合は、表示名ごとのスコアだけを載せます。
 
 結果画面には「1位のプレイヤーと自分のスコアのみ表示されます」と案内されています。他の参加者のスコアはその画面で読み取れたものを記録します。味方のプレイ中のスコアは表示できません。
+
+「設定 → 周回 → 退出までの待機時間」で、退出ボタンが有効になってから待つ時間を0〜60000msで指定できます。初期値は0です。数値はドラッグまたはダブルクリックで変更してください。スコア記録待ちとは同時に数え、両方が終わってから退出します。一時停止中は退出せず、停止ボタンで退出待ちも終了します。
 
 ### 入力中の動作
 

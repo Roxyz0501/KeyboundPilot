@@ -18,6 +18,12 @@ internal static class SettingsPanel
         if(ImGui.Checkbox(t("ShowDebug")+"###ShowDebug",ref debug)){config.ShowDebug=debug;save();}
         Help("DebugHelp");
         ImGui.Spacing();
+        if(ImGui.CollapsingHeader(t("LoopButton")+"###LoopSettings",ImGuiTreeNodeFlags.DefaultOpen))
+        {
+            Title("ExitDelay","ExitDelayHelp");
+            Number("Milliseconds","ExitDelay",config.ExitDelayMs,0,60000,100,value=>config.ExitDelayMs=value);
+        }
+        ImGui.Spacing();
         if(!ImGui.CollapsingHeader(t("InputAdjustment")+"###InputAdjustment",ImGuiTreeNodeFlags.DefaultOpen))return;
         Title("InputInterval","RangeHelp");
         Number("MinimumMs","Minimum",config.MinimumMs,20,5000,5,config.SetMinimum);

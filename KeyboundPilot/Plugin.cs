@@ -239,16 +239,17 @@ public sealed class Plugin : IDalamudPlugin
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
         if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
+        var scoresReady=true;
         if(!snapshot.Result)scoreExitWait=-1;
         else
         {
             if(scoreExitWait<0)scoreExitWait=now;
-            if(now-scoreExitWait<5000 && scoreFailures<3 && (!scores.ResultSeen || !scores.ReadyToLeave(now)))snapshot=snapshot with {LeaveReady=false};
+            if(now-scoreExitWait<5000 && scoreFailures<3 && (!scores.ResultSeen || !scores.ReadyToLeave(now)))scoresReady=false;
         }
         var blocked=!InputAllowed || ModifierPressed || UiBlocked;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
-        var action=loop.Tick(now,snapshot,blocked);
+        var action=loop.Tick(now,snapshot,blocked,config.ExitDelayMs,scoresReady);
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
         if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){loopUi.CancelQueuePreparation();automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}
