@@ -1,3 +1,12 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.11 exit countdown and personal score history
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.11
+- Source/tag 821a0a523b654651f6005ab560a9083f15678b25; distribution index f003df4b04eb61372a52f518db8e8525ed066c60.
+- Show remaining rounded-up seconds in loop status using the selected exit delay. Rendering never redraws or changes the wait. At expiry distinguish score-recording wait from other exit blocking; hide countdown after dispatch, readiness loss or stop. Pause behavior remains unchanged.
+- Remove all score display from Auto typing and stop live HUD reads. Read a numeric result only after its name matches the local character, filter self again at final capture, and display only personal history. Older mixed files are retained unchanged but their other-player rows/names are excluded from history UI and font discovery.
+- Clean Release zero warnings/errors; 471 offline checks, including 12 countdown cases and revised self-only capture assertions. Native result identity/visibility/bounds, callback/activity fixtures, 136 localization keys/seven languages, four-font 1030-character coverage and UI/numeric checks pass. README lint/diff/hash verification completed. Live gameplay countdown and score extraction remain unverified.
+- Public repository/icon/ZIP/source README/main and pinned index verified, both indices 1.0.16.11. ZIP 195515 bytes; SHA-256 3520f4578463c8b25dd7b74f693cce909371c2a3e538235f72ac9f0a0c2148d1.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.10 randomized exit wait
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.10
