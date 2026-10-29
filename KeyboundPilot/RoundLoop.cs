@@ -3,7 +3,7 @@ namespace KeyboundPilot;
 public enum LoopAction { None, Queue, Accept, StartTyping, Leave, ConfirmExit, ConfirmKeyboard }
 public enum LoopPhase { Idle, Requesting, Waiting, Playing, Leaving, Complete, Stopped, Error }
 public readonly record struct LoopSnapshot(bool LoggedIn,bool Lobby,bool InGame,bool Loading,bool OtherQueue,
-    bool Queued,bool EntryReady,bool Result,bool LeaveReady,bool ExitConfirm,bool Preparing=false,bool KeyboardWarning=false);
+    bool Queued,bool EntryReady,bool Result,bool LeaveReady,bool ExitConfirm,bool Preparing=false,bool KeyboardWarning=false,bool WaitingForMatch=false);
 
 /// <summary>One request per round and one response per confirmation; never retry uncertain mutations.</summary>
 public sealed class RoundLoop
@@ -36,6 +36,10 @@ public sealed class RoundLoop
     {
         if(!Active)return LoopAction.None;
         if(!state.LoggedIn || state.OtherQueue) {Stop(true);return LoopAction.None;}
+        // Observe a return to matchmaking even while paused or input-blocked. A hidden/disabled
+        // commence button alone is not evidence of withdrawal: it also follows our acceptance.
+        if(Phase==LoopPhase.Waiting && state.Lobby && !state.InGame && !state.Loading
+            && state.Queued && state.WaitingForMatch && !state.EntryReady)accepted=false;
         var minimum=Math.Clamp(exitDelayMs,0,60000);
         var maximum=Math.Clamp(exitMaximumMs??minimum,minimum,60000);
         if(state.InGame && state.Result && state.LeaveReady && !state.Loading)

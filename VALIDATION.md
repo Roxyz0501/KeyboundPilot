@@ -1,3 +1,8 @@
+# Validation — 1.0.16.12 / 2026-10-30
+
+- Reset the per-match acceptance guard when the owned duty queue returns to Pending/Queued with no ready confirmation in the lobby. A hidden or disabled confirmation after acceptance alone never resets it. Observe withdrawal during pause/input blocking, but never dispatch until resumed/unblocked. Loading and unrelated-duty guards remain in place. Repeated rematches do not increment rounds or restart the total queue timeout.
+- 493 offline checks pass, including 22 rematching regression checks: repeated withdrawal, single acceptance per match, delayed acknowledgement, transient button state, pause/resume, blocked input, loading, unrelated queue, missing queue, stop, finish-current reservation, actual entry and total queue timeout. Clean Release build passes with zero warnings/errors; package metadata, canonical shared tabs, icon and all 136 localization keys in seven languages pass validation. Actual withdrawal/rematch in the live game remains unverified.
+- Reuse the existing 200 ms loop snapshot; add one enum comparison with no new external calls, polling, persistence, UI strings or configuration fields. No README behavior/instruction change required.
 # Validation — 1.0.16.11 / 2026-10-29
 
 - Add remaining whole seconds (ceiling) to loop status during exit waiting. Read the selected delay and existing readiness timestamp without changing state or drawing randomness. Hide after exit dispatch, readiness loss, manual stop and outside the exit phase. Preserve existing elapsed-time behavior during pauses. After the configured countdown reaches zero, show score-recording wait or exit-ready wait instead of claiming an immediate exit while blocked.

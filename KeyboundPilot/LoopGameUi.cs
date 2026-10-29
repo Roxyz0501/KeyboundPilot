@@ -50,11 +50,12 @@ internal sealed unsafe class LoopGameUi
     private static bool Own(ContentsId entry)=>entry.ContentType==ContentsType.Regular && entry.Id==DutyId;
     public LoopSnapshot Read(bool loggedIn,uint territory,bool loading)
     {
-        var finder=ContentsFinder.Instance();var queued=false;var other=false;
+        var finder=ContentsFinder.Instance();var queued=false;var other=false;var waitingForMatch=false;
         if(finder!=null)
         {
             var q=&finder->QueueInfo;
             queued=q->QueueState is ContentsFinderQueueState.Pending or ContentsFinderQueueState.Queued or ContentsFinderQueueState.Ready or ContentsFinderQueueState.Accepted;
+            waitingForMatch=q->QueueState is ContentsFinderQueueState.Pending or ContentsFinderQueueState.Queued;
             if(queued)
             {
                 var matching=Own(q->PoppedQueueEntry);var unrelated=false;
@@ -67,7 +68,7 @@ internal sealed unsafe class LoopGameUi
         var button=Visible(result)?(AtkComponentButton*)result->GetComponentByNodeId(48):null;
         var pop=gui.GetAddonByName<AddonContentsFinderConfirm>("ContentsFinderConfirm");
         return new(loggedIn,territory==LobbyTerritory,territory==GameTerritory,loading,other,queued,
-            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),preparingQueue,territory==LobbyTerritory && MatchingKeyboard(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")));
+            MatchingConfirmation(pop),Visible(result),Ready(button),MatchingExit(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),preparingQueue,territory==LobbyTerritory && MatchingKeyboard(gui.GetAddonByName<AddonSelectYesno>("SelectYesno")),waitingForMatch);
     }
     public bool Execute(LoopAction action,uint territory)
     {
