@@ -26,6 +26,7 @@ public sealed class TypingSession
     public bool ExactCase=>plan?.ExactCase ?? false;
     public bool NeedsPreparation=>plan!=null && index==0 && !submitted;
     public bool Submitted=>submitted;
+    public bool NeedsInputFocus=>!submitted || mistakeSubmitted;
     public bool Recovering=>clearing;
     public void RecoverIme(long now) { if(!Running)return; clearing=true;submitted=false;index=Math.Max(1,index);due=now;Status="Clearing"; }
     public int Position=>index;

@@ -27,6 +27,7 @@ static class MistypeTests
   s.Tick(100,true,"あ",true,100,100,Send,composing:true);check(sent.SequenceEqual("i"),"physically type changed kana");
   s.Tick(200,true,"あ",true,100,100,Send,composing:true);check(!s.Submitted && picks==1,"IME commit does not count as submission");
   s.Tick(350,true,"あ",true,100,100,Send,evaluated:"い");check(s.Submitted && picks==2 && sent.Count(c=>c=='\r')==2,"verified wrong answer is actually submitted");
+  check(s.NeedsInputFocus,"wrong answer requires reacquiring focus before cleanup");
   s.Tick(500,true,"あ",true,100,100,Send,paused:true,evaluated:"い");check(s.Submitted,"pause prevents cleanup input");
   s.Tick(600,true,"あ",true,100,100,Send,evaluated:"い");
   s.Tick(700,true,"あ",true,100,100,Send,evaluated:"い");check(s.Recovering && sent.Last()=='\b',"rejected answer clears without no-progress stop");

@@ -86,6 +86,7 @@ public sealed class Plugin : IDalamudPlugin
         unload = lifecycle.DalamudUnloadingToken.Register(Stop);
     }
     private bool UiBlocked => Keyboard.ForegroundGame && uiCaptures;
+    private bool Loading => condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
     private bool InputAllowed => config.DirectInput || Keyboard.ForegroundGame;
     private bool EscapePressed => Keyboard.ForegroundGame && Keyboard.Escape;
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
@@ -145,14 +146,14 @@ public sealed class Plugin : IDalamudPlugin
                 ime.Restore();preparedWord="";currentEntity=0;
                 if(inGame && EscapePressed)automation.Suppress();
                 if(loop.Active || !config.AutoStart || automation.Consumed)return;
-                var playable=reader.Available && reader.InputEnabled && reader.Words.Count>0;
+                var playable=!Loading && reader.Available && reader.InputEnabled && reader.Words.Count>0;
                 if(automation.TryAutoStart(inGame,config.AutoStart,playable,
                     !UiBlocked && InputAllowed && !ModifierPressed && !EscapePressed && !reader.CompetingFocus()))
                     StartTyping(now,"game_started");
                 else return;
             }
             var gate=automation.Evaluate(now,inGame,EscapePressed,InputAllowed,ModifierPressed,
-                reader.InputEnabled && reader.Available,UiBlocked,reader.CompetingFocus());
+                !Loading && reader.InputEnabled && reader.Available,UiBlocked,reader.CompetingFocus());
             controlGate=gate.ToString();
             if(gate==RunGate.Escape) {StopByUser();return;}
             if(gate!=RunGate.Run)
@@ -162,7 +163,7 @@ public sealed class Plugin : IDalamudPlugin
                 typing.Tick(now,true,null,false,config.MinimumMs,config.MaximumMs,_=>false,paused:true);return;
             }
             var paused=encounter.Paused(now) || typing.ManualPaused || (config.DirectInput && ime.Inspect(true).Composing);
-            var focused=typing.Submitted || (!paused && reader.EnsureFocus(now));
+            var focused=!typing.NeedsInputFocus || (!paused && reader.EnsureFocus(now));
             if(typing.CurrentWord.Length==0) {preparedWord="";currentEntity=0;}
             if(!config.DirectInput && !paused && focused && !typing.Recovering && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
             {
@@ -178,7 +179,7 @@ public sealed class Plugin : IDalamudPlugin
             var previousWord=typing.CurrentWord;
             controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
-                config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
+                config.MinimumMs,config.MaximumMs,c=>!stopping && !Loading && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
                 paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax,onSubmitted:()=>activity.OnSubmission(Environment.TickCount64,ContentActivity.Touch));
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);

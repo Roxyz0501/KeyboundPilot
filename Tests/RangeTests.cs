@@ -21,7 +21,7 @@ internal static class RangeTests
    var waits=new List<(int,int)>();var t=new TypingSession((a,b)=>{waits.Add((a,b));return b-1;});t.Start(0);var text="";
    bool Send(char ch){if(ch!='\r')text+=ch;return true;}
    void Tick(long now,bool visible=true)=>t.Tick(now,true,"a",visible,20,20,Send,evaluated:text,betweenWordsMs:100,directInput:background,betweenWordsMaximumMs:300);
-   Tick(0);Tick(20);Tick(40);check(t.Submitted && waits.Contains((100,301)),"post-submit sample inclusive for both transports");
+   Tick(0);Tick(20);Tick(40);check(!t.NeedsInputFocus,"normal submission can observe acknowledgment without forcing focus");check(t.Submitted && waits.Contains((100,301)),"post-submit sample inclusive for both transports");
    var count=waits.Count;Tick(60);check(waits.Count==count,"submission wait never resampled while waiting");
    Tick(80,false);text="";Tick(339);check(t.CurrentWord=="","upper sampled wait blocks next target");Tick(340);check(t.CurrentWord=="a","next target starts at sampled deadline");
   }

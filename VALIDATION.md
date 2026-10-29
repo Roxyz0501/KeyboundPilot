@@ -1,3 +1,9 @@
+# Validation — 1.0.16.4 / 2026-10-29
+
+- Follow-up review of typing cleanup, lifecycle, paused loop entry, target identity, IME preparation and settings changes. Found that Plugin considered all submitted plans focused, while typo cleanup performs Backspace after submission. If the game deactivated the input field after a wrong answer this could return SendFailed instead of reacquiring focus. Introduce NeedsInputFocus: wrong submissions require focus; normal submissions may still observe acknowledgment without forcing focus. Added regression checks for both categories.
+- Auto-start, run readiness and final input dispatch now reject both BetweenAreas loading conditions. Previously a lingering input addon in the old territory could satisfy the input gates during loading. Existing pause/deadline behavior handles this as waiting, with no extra submission or retry.
+- Offline checks and Release/native checks recorded at publication. Live transitions, wrong-answer penalties and game focus behavior remain unverified. No new diagnostic logs or background polling added.
+
 # Validation — 1.0.16.3 / 2026-10-29
 
 - User reports inactivity removal continues in background mode. Cause remains unconfirmed. Add an immediate activity reset after every successfully dispatched answer in both physical and background modes; IME confirmations, failed sends, pause and stopped sessions do not trigger it. A submission permits another reset attempt after periodic retries were exhausted, and postpones the next periodic reset by ten seconds.
