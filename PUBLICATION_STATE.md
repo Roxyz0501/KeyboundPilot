@@ -1,3 +1,11 @@
+## 2026-10-30 — Keybound Pilot 1.0.16.15 compact settings help
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.15
+- Source/tag 603885a939aaab501eb0a3c2b9d45819f2b346c7; distribution index 26671055998d827398ac6a8081591a354cedddaf.
+- Unify both condition-profile switches as Use custom settings / 固有の設定を使用する in seven languages. Scale help icon radius to font size and use standard frame height in settings, reducing vertical gaps. Preserve explicit 30 px alignment beside playback buttons, tooltip behavior and fixed auto-typing rows.
+- Clean Release zero warnings/errors; 555 offline checks, native HP/callback/activity/fixed-row/numeric fixtures, 147 localization keys and four-font 1073-character coverage pass. Native Japanese/English normal and condition tabs reviewed. No runtime input changes or new live gameplay verification.
+- Anonymous repository/icon/ZIP/source README/main and pinned index verified; both indices 1.0.16.15. ZIP 203175 bytes; SHA-256 42f0d62e1a33ddab1067f4cdb884ddca0d44a7a2e3692d1129afee98b384ddd3.
+
 ## 2026-10-30 — Keybound Pilot 1.0.16.14 conditional input modes
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.14
