@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.7 finish-current-run control
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.7
+- Source/tag b09ac4d558589aa5cf2fae090a88ee6c86babd83; distribution index 29c95ef80f4261461ef0796f85eda183ab3eb313.
+- Add “この周回で停止” / “Stop after this run” to the right of Loop, with pending indication and disabled repeat request. Keep current typing/results/exit flow, then complete on lobby return without another queue. Pre-dispatch requests suppress new queue; already requested entry finishes one run. Preserve configured count; pause/resume retains request, new loop/manual stop clears it. Transient state, no additional persistence/network/polling.
+- Clean Release zero warnings/errors, 365 offline checks including 16 new loop-state cases. Native callback/timer fixtures, seven-language/four-font 975-character coverage, numeric interactions and Japanese normal/pending button layout pass. README lint/diff/verify completed. Live gameplay transitions remain unverified.
+- Public repository/icon/ZIP/source README/main and pinned index verified; both indices 1.0.16.7. ZIP 173094 bytes; SHA-256 156809016e8983e196d9f96f0ddb81ccaf32b8a8f728cd0350027a3add13c633.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.6 dedicated inactivity fix
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.6
