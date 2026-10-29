@@ -1,28 +1,26 @@
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 namespace KeyboundPilot;
 
-internal readonly record struct ActivitySnapshot(bool Available,ushort Territory,float Content,float Input,float Afk,float Limit,int Status,float Controller,float Mouse);
+internal readonly record struct ActivitySnapshot(bool Available,ushort Territory,float Content,float Input,float Afk,float Limit,int Status,float Controller,float Mouse,KtgActivitySnapshot Ktg);
 internal static unsafe class ContentActivity
 {
-    private static readonly ActivityPulse pulse=new();
-    public static bool WindowAccepted=>pulse.WindowAccepted;
-    public static bool SystemAccepted=>pulse.SystemAccepted;
+    public static bool DedicatedSucceeded {get;private set;}
     public static long LastAttempt {get;private set;}
     public static bool LastSucceeded {get;private set;}
     public static long ResetCount {get;private set;}
     public static ActivitySnapshot Read()
     {
         var t=InputTimerModule.Instance();
-        return t==null?default:new(true,t->TerritoryTypeId,t->ContentInputTimer,t->InputTimer,t->AfkTimer,t->InstanceContentAfkTimeLimit,t->Status,ActivityTimers.Maximum(t->ControllerInputTimers),ActivityTimers.Maximum(t->MouseInputTimers));
+        return t==null?default:new(true,t->TerritoryTypeId,t->ContentInputTimer,t->InputTimer,t->AfkTimer,t->InstanceContentAfkTimeLimit,t->Status,ActivityTimers.Maximum(t->ControllerInputTimers),ActivityTimers.Maximum(t->MouseInputTimers),t->TerritoryTypeId==LoopGameUi.GameTerritory?KtgActivity.Read():default);
     }
     public static bool Touch()
     {
-        LastAttempt=Environment.TickCount64;LastSucceeded=false;
+        LastAttempt=Environment.TickCount64;LastSucceeded=DedicatedSucceeded=false;
         var timers=InputTimerModule.Instance();
         if(timers==null || timers->TerritoryTypeId!=LoopGameUi.GameTerritory)return false;
-        pulse.Tick(LastAttempt,ActivityInput.NotifyWindow,Keyboard.PulseActivity);
-        LastSucceeded=ActivityTimers.Reset(timers);
+        DedicatedSucceeded=KtgActivity.Reset();
+        LastSucceeded=ActivityTimers.Reset(timers) && DedicatedSucceeded;
         if(LastSucceeded)ResetCount++;
-        return LastSucceeded && pulse.WindowAccepted && pulse.SystemAccepted;
+        return LastSucceeded;
     }
 }

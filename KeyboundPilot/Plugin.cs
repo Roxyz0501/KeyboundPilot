@@ -309,7 +309,8 @@ public sealed class Plugin : IDalamudPlugin
                         ImGui.TextUnformatted(T("InputFocused")+": "+T(reader.InputFocused?"Yes":"No"));
                         ImGui.TextUnformatted(T("Sent")+": "+typing.Sent);
                         ImGui.TextWrapped(activitySnapshot.Available?string.Format(T("ActivityTimers"),activitySnapshot.Content,activitySnapshot.Input,activitySnapshot.Afk,activitySnapshot.Limit):T("ActivityNoData"));
-                        if(activitySnapshot.Available)ImGui.TextWrapped(string.Format(T("ActivityDevices"),activitySnapshot.Controller,activitySnapshot.Mouse,T(ContentActivity.WindowAccepted?"Yes":"No"),T(ContentActivity.SystemAccepted?"Yes":"No")));
+                        if(activitySnapshot.Available)ImGui.TextWrapped(string.Format(T("ActivityDevices"),activitySnapshot.Controller,activitySnapshot.Mouse));
+                        ImGui.TextWrapped(activitySnapshot.Ktg.Available?string.Format(T("KtgActivity"),activitySnapshot.Ktg.IdleSeconds,activitySnapshot.Ktg.SameKeySeconds,ContentActivity.LastAttempt==0?"—":T(ContentActivity.DedicatedSucceeded?"Yes":"No")):T("KtgActivityUnavailable"));
                         ImGui.TextWrapped(string.Format(T("ActivityReset"),ContentActivity.LastAttempt==0?"—":T(ContentActivity.LastSucceeded?"Yes":"No"),ContentActivity.ResetCount,ContentActivity.LastAttempt==0?"—":((Environment.TickCount64-ContentActivity.LastAttempt)/1000d).ToString("F1"),activitySnapshot.Territory,activitySnapshot.Status));
                     }
                     ImGui.EndTabItem();

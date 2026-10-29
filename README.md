@@ -35,7 +35,7 @@ The normal Pause, Play and Stop buttons also control loops. Stopping does not ca
 - Phase transitions from 1 through 3 and temporary loss of input focus put typing on hold. Typing stops at the result screen or on leaving. Normal input waits while you use another application. Both modes wait while another game text field is active.
 - If a target disappears during typing, the plugin clears the remaining text and checks that the field is empty and moves to the next target. It supports “ゔ” and the wave characters “~”, “～” and “〜”.
 - For the Japanese-named abilities “動体感知ジャマー” and “呪いの視線”, it estimates activation from the cast display and pauses input for four seconds. It keeps waiting if the input field is still disabled. Other ability names and other input-prohibition mechanics are not supported.
-- While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. It sends mouse activity notifications, including a zero-distance OS input, without moving the cursor or clicking. Game timers are also reset after each answer in both modes. Protection continues if typing stops on an error, and ends on manual pause, Stop, results or exit. A status message indicates when protection is continuing; Stop remains available.
+- While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. The Brawler-specific and general inactivity timers are reset periodically and after each answer in both modes. This does not send extra keystrokes, move the cursor or click. Protection continues if typing stops on an error, and ends on manual pause, Stop, results or exit. A status message indicates when protection is continuing; Stop remains available.
 
 Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text and checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
 
@@ -57,7 +57,7 @@ Background mode, automatic start and debug display appear above “Input adjustm
 | Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
 | Occasionally submit a typo | Disabled by default. Set the minimum and maximum number of submitted answers between typos (defaults 15–25). Each interval is drawn from that range. IME confirmations do not count. Starting a session or changing the typo settings resets the count. |
 | Visual obstruction | “Exclude prompts that have never been visible” is on by default. “Use a separate key interval” is off by default; when enabled, its 20–5000 ms range applies for the whole effect, including periods when text is visible. Normal intervals resume when the effect ends. |
-| Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. |
+| Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. Includes the Brawler-specific inactivity timers and reset result. |
 
 Input preparation and frame delays can make actual key intervals longer than configured.
 
@@ -73,7 +73,9 @@ Optional support: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
 ---
 
-Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the game-local input approach and the use of window/OS activity notifications and per-device timers for inactivity prevention. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
+Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the game-local input approach and per-device timers for inactivity prevention. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
+
+The Brawler-specific inactivity timer handling references [Saucy](https://github.com/PunishXIV/Saucy) by Puni.sh and contributors (BSD-3-Clause). See [NOTICE](NOTICE) for attribution and license terms.
 
 ## 日本語
 
@@ -110,7 +112,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 - フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。通常モードでは別アプリの操作中も待機します。ゲーム内の他の入力欄を操作している間は、どちらのモードも待機します。
 - 入力途中で対象が消えたら、残った文字を消し、空欄を確認して次の対象へ進みます。「ゔ」と波線「~」「～」「〜」にも対応しています。
 - 「動体感知ジャマー」「呪いの視線」の発動を詠唱表示から推定し、4秒間入力を止めます。入力欄が無効な間は4秒後も待機します。他言語の技名と、その他の入力禁止技は未対応です。
-- 自動入力中は、無操作による退出を防ぐため、ゲームとWindowsへマウスの入力通知を送ります。カーソルの移動やクリックは行いません。どちらの入力モードでも、回答の送信時にゲームのタイマーをリセットします。入力エラーで止まっている間も対策を続け、一時停止・停止・結果画面・退出で終了します。
+- 自動入力中は、無操作による退出を防ぐため、キーバウンド専用タイマーと汎用タイマーを定期的にリセットします。どちらの入力モードでも、回答の送信時にもリセットします。この処理による追加のキー入力、マウス移動、クリックはありません。入力エラーで止まっている間も対策を続け、一時停止・停止・結果画面・退出で終了します。
 
 読み仮名はローマ字キーで入力し、ひらがなの確定と回答の送信を分けて行います。IMEの状態や確定した読みを確認できない場合は、入力済みの文字をBackspaceで消し、空欄を確認してから再開します。削除中も入力禁止・フォーカス待ち・手動停止を優先します。
 
@@ -132,7 +134,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 | ゲーム開始時に自動実行 | ゲーム開始に合わせて自動入力を始めます。初期値はオンです。 |
 | タイプミスをして送信する | 初期値はオフです。「タイプミス抽選候補」の下限・上限で、ミスするまでの送信回数を指定します（初期値15〜25回）。毎回、その範囲から回数を抽選します。IMEの確定は数えません。開始時とタイプミス設定の変更時に数え直します。 |
 | 視界妨害 | 「一度も表示されていない文字を候補から外す」は初期値オンです。「専用の入力間隔を使う」は初期値オフ。オンにすると、文字が見える時間も含め、効果中は専用の下限・上限（20〜5000 ms）を使います。効果が切れると通常の入力間隔に戻ります。 |
-| デバッグ表示 | 検出した出題数・文字の一覧、専用入力欄の表示・フォーカス、送信文字数を表示します。初期値はオフです。 |
+| デバッグ表示 | 検出した出題数・文字の一覧、専用入力欄の表示・フォーカス、送信文字数を表示します。キーバウンド専用の無操作タイマーとリセット結果も確認できます。初期値はオフです。 |
 
 入力準備やフレームの遅延によって、実際のキー間隔が設定より長くなる場合があります。
 
@@ -146,4 +148,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
-バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内で入力を処理する方式と、退出対策の入力通知・機器別タイマーの扱いを参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。
+バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内で入力を処理する方式と、退出対策の機器別タイマーの扱いを参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。
+
+キーバウンド専用の無操作タイマーへの対応は、[Saucy](https://github.com/PunishXIV/Saucy)（Puni.sh と貢献者、BSD-3-Clause）を参考にしています。帰属表示とライセンス全文は [NOTICE](NOTICE) に記載しています。
+

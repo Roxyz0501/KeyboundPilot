@@ -1,7 +1,7 @@
 using KeyboundPilot;
 var checks = 0;
 void Check(bool value, string what) { checks++; if (!value) throw new Exception(what); }
-ObstructionTests.Run(Check);ActivityPulseTests.Run(Check);
+ObstructionTests.Run(Check);
 var samples = new List<(int, int)>();
 var sent = new List<char>();
 var s = new TypingSession((a,b) => { samples.Add((a,b)); return b-1; });
