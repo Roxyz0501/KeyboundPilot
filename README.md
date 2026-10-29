@@ -47,15 +47,15 @@ With “Background mode” enabled, the plugin sends converted characters direct
 
 ## Settings
 
-Key intervals, the delay after submission and typo options are grouped under “Input adjustment”.
+Background mode, automatic start and debug display appear above “Input adjustment”, in that order. Hover over the information icon beside a title for details. Input adjustment contains separate minimum and maximum fields for key intervals, post-submit waits and typo counts. Equal limits give a fixed value.
 
 | Setting | Behavior |
 | --- | --- |
-| Background mode | Disabled by default. Enable under Input adjustment to type and loop while FF14 is inactive, without an IME. Switching modes stops playback; press Play to restart. Finish any existing IME composition first. |
+| Background mode | Disabled by default. Enable in Settings to type and loop while FF14 is inactive, without an IME. Switching modes stops playback; press Play to restart. Finish any existing IME composition first. |
 | Key interval | Set minimum and maximum values from 20–5000 ms. An interval is chosen for each character. Equal values give a fixed interval. |
-| Delay after submission | Time before typing the next target, from 0–60000 ms. |
+| Wait after submission | Set minimum and maximum values from 0–60000 ms. A new delay is drawn after each answer submission. |
 | Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
-| Occasionally submit a typo | Disabled by default. Set the number of submitted answers between typos from 1–9999 (default 20). Each interval is randomized within ±5 of that value, with a minimum of 1. IME confirmations do not count. Starting a session or changing the typo settings resets the count. |
+| Occasionally submit a typo | Disabled by default. Set the minimum and maximum number of submitted answers between typos (defaults 15–25). Each interval is drawn from that range. IME confirmations do not count. Starting a session or changing the typo settings resets the count. |
 | Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. |
 
 Input preparation and frame delays can make actual key intervals longer than configured.
@@ -121,15 +121,15 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 ### 設定
 
-キー入力間隔・送信後の待ち時間・タイプミスの設定は「入力調整」にまとめています。
+「入力調整」の上に、バックグラウンドモード・ゲーム開始時に自動実行・デバッグ表示を並べています。各タイトル右側の「i」にマウスを合わせると詳細説明を表示します。入力間隔・送信後待機時間・タイプミス抽選候補は、それぞれ下限と上限を設定してください。同じ値なら固定になります。
 
 | 項目 | 内容 |
 | --- | --- |
-| バックグラウンドモード | 初期値はオフ。「入力調整」でオンにすると、IMEを使わず非アクティブ時も入力・周回します。切り替えると停止するため、再生で再開してください。入力途中のIME変換がある場合は、先に確定してください。 |
+| バックグラウンドモード | 初期値はオフ。設定でオンにすると、IMEを使わず非アクティブ時も入力・周回します。切り替えると停止するため、再生で再開してください。入力途中のIME変換がある場合は、先に確定してください。 |
 | キー入力間隔 | 20〜5000msの範囲で下限・上限を指定します。各文字で間隔を抽選し、上下限を同じにすると固定間隔になります。 |
-| 送信後の待ち時間 | 次の対象を入力し始めるまでの時間です。0〜60000msで指定します。 |
+| 送信後待機時間 | 0〜60000msの範囲で下限・上限を指定します。回答送信ごとに範囲内から待ち時間を抽選します。 |
 | ゲーム開始時に自動実行 | ゲーム開始に合わせて自動入力を始めます。初期値はオンです。 |
-| タイプミスをして送信する | 初期値はオフです。ミスするまでの送信回数を1〜9999回で指定します（初期値20回）。毎回、設定回数の±5回から間隔を抽選し、最低1回とします。IMEの確定は数えません。開始時とタイプミス設定の変更時に数え直します。 |
+| タイプミスをして送信する | 初期値はオフです。「タイプミス抽選候補」の下限・上限で、ミスするまでの送信回数を指定します（初期値15〜25回）。毎回、その範囲から回数を抽選します。IMEの確定は数えません。開始時とタイプミス設定の変更時に数え直します。 |
 | デバッグ表示 | 検出した出題数・文字の一覧、専用入力欄の表示・フォーカス、送信文字数を表示します。初期値はオフです。 |
 
 入力準備やフレームの遅延によって、実際のキー間隔が設定より長くなる場合があります。

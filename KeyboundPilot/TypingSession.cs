@@ -36,12 +36,16 @@ public sealed class TypingSession
     {
         if(mistakes.Configure(enabled,interval) && plannedMistake && !submitted)cancelMistake=true;
     }
+    public void ConfigureMistypes(bool enabled,int minimum,int maximum)
+    {
+        if(mistakes.Configure(enabled,minimum,maximum) && plannedMistake && !submitted)cancelMistake=true;
+    }
     public void Start(long now) {Stop();mistakes.Reset();Running=true;Status="Waiting";due=now;Sent=0;}
     public void Stop(string reason="Stopped") {Running=false;ManualPaused=false;Status=reason;plan=null;targetWord="";plannedMistake=mistakeSubmitted=cancelMistake=false;index=clearKeys=0;submitted=committing=hiraganaRequested=clearing=false;pausedAt=-1;nextWordAt=0;}
     public void PauseByUser() {if(Running){ManualPaused=true;Status="UserPaused";}}
     public void ResumeByUser() {if(Running){ManualPaused=false;Status="Waiting";}}
     public void Tick(long now,bool ready,string? candidate,bool currentStillVisible,int min,int max,Func<char,bool> send,
-        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0,bool directInput=false)
+        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0,bool directInput=false,int? betweenWordsMaximumMs=null)
     {
         if(!Running)return;
         if(cancelMistake){cancelMistake=false;RecoverIme(now);}
@@ -87,7 +91,7 @@ public sealed class TypingSession
                     if(AnswerCheck is "Unavailable" or "DifferentText") {RecoverIme(now);return;}
                 }
                 if(!send('\r')) {Stop("SendFailed");return;}
-                submitted=true;mistakeSubmitted=plannedMistake;mistakes.Submitted();nextWordAt=now+Math.Clamp(betweenWordsMs,0,60000);due=now+Math.Max(max,plannedMistake?150:0);Status="Waiting";return;
+                submitted=true;mistakeSubmitted=plannedMistake;mistakes.Submitted();var waitMin=Math.Clamp(betweenWordsMs,0,60000);var waitMax=Math.Clamp(betweenWordsMaximumMs??waitMin,waitMin,60000);nextWordAt=now+(waitMin==waitMax?waitMin:random(waitMin,waitMax+1));due=now+Math.Max(max,plannedMistake?150:0);Status="Waiting";return;
             }
             Status="Waiting";if(now-due>3000)Stop("NoProgress");return;
         }

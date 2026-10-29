@@ -1,3 +1,10 @@
+# Validation — 1.0.16.0 / 2026-10-29
+
+- Settings order: background mode, auto start, debug display, then Input adjustment. Each option/section has a unique scoped information icon tooltip. Numeric rows have minimum/maximum labels in ms or answer counts. No explanatory paragraphs remain inline. SettingsPanel is shared between live UI and offscreen preview.
+- Post-submit delay is sampled once per actual answer submission, inclusive minimum/maximum, with equal endpoints fixed. Both input transports use the same scheduler. Typo intervals use explicit inclusive endpoints without additional ±5. Changing either endpoint clamps only that endpoint.
+- Legacy settings preserve behavior: missing wait endpoints use the previous fixed value; missing typo endpoints use max(1,N-5) through N+5. The former maximum of 9999 therefore retains 10004 as its upper outcome. New endpoints are included in snapshot, reload/retry and validation; changed-only 60-second autosave and final flush retained.
+- 306 offline checks pass, including endpoint independence, inclusive sampling, fixed bounds, no resampling while waiting, next-target deadlines in both transports, legacy settings and range persistence. Clean Release and native UI rendering checks are recorded with publication. Live gameplay has not been exercised for this update.
+
 # Validation — 1.0.15.0 / 2026-10-29
 
 - Background mode defaults off and persists through the existing changed-only 60-second snapshot/flush/backups. Toggle stops both playback and looping, releases existing physical keys and restores owned IME state before changing transport.

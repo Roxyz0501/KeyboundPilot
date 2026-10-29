@@ -41,6 +41,24 @@ unsafe partial class Program
   }
   Render(ImGui.GetDrawData(),textures,Path.Combine(path,"layout.bmp"));
  }
+ static void SettingsPreview(List<ImFontPtr> fonts,Dictionary<ulong,(nint,int,int)> textures,string path)
+ {
+  for(var frame=0;frame<3;frame++)
+  {
+   ImGui.NewFrame();ImGui.PushFont(fonts[0]);
+   for(var panel=0;panel<2;panel++)
+   {
+    var language=panel==0?"ja":"en";
+    ImGui.SetNextWindowPos(new Vector2(20+panel*700,20));ImGui.SetNextWindowSize(new Vector2(680,620));
+    ImGui.Begin("Keybound Pilot - "+Loc.Get(language,"Settings")+"###SettingsPreview"+panel,ImGuiWindowFlags.NoResize|ImGuiWindowFlags.NoSavedSettings);
+    var config=new Configuration{DirectInput=true,AutoStart=true,ShowDebug=false,MinimumMs=70,MaximumMs=125,BetweenWordsMinimumMs=50,BetweenWordsMaximumMs=150,MistypeEnabled=true,MistypeMinimum=22,MistypeMaximum=32};
+    SettingsPanel.Draw(config,key=>Loc.Get(language,key),()=>{},()=>{});
+    ImGui.End();
+   }
+   ImGui.PopFont();ImGui.Render();
+  }
+  Render(ImGui.GetDrawData(),textures,Path.Combine(path,"settings.bmp"));
+ }
  static void CheckNumberEditing()
  {
   var io=ImGui.GetIO();var number=5;Vector2 min=default,max=default;

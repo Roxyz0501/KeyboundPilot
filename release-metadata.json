@@ -1,13 +1,13 @@
 {
-  "version": "1.0.15.0",
-  "asset": "KeyboundPilot-1.0.15.0.zip",
-  "bytes": 151667,
-  "sha256": "37ea2f4f6e73aaea5d1a1ddd0aa7ffc615f4939843c44a6fd49950d358ac5c9a",
+  "version": "1.0.16.0",
+  "asset": "KeyboundPilot-1.0.16.0.zip",
+  "bytes": 155687,
+  "sha256": "7b27b91897352d43f9d5f806ffd24f4a564a2214fca6c74076c1de66bbe84853",
   "RepoUrl": "https://github.com/Roxyz0501/KeyboundPilot",
   "IconUrl": "https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png",
   "prerelease": true,
   "live_game_verified": false,
-  "tests": 284,
-  "localization_keys": 90,
+  "tests": 306,
+  "localization_keys": 100,
   "languages": 7
 }

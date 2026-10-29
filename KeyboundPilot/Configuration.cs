@@ -1,6 +1,18 @@
 namespace KeyboundPilot;
 public sealed class Configuration
 {
+    public int? BetweenWordsMinimumMs { get; set; }
+    public int? BetweenWordsMaximumMs { get; set; }
+    public int? MistypeMinimum { get; set; }
+    public int? MistypeMaximum { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore] public int WaitMin => BetweenWordsMinimumMs ?? BetweenWordsMs;
+    [System.Text.Json.Serialization.JsonIgnore] public int WaitMax => BetweenWordsMaximumMs ?? BetweenWordsMs;
+    [System.Text.Json.Serialization.JsonIgnore] public int TypoMin => MistypeMinimum ?? Math.Max(1,MistypeInterval-5);
+    [System.Text.Json.Serialization.JsonIgnore] public int TypoMax => MistypeMaximum ?? MistypeInterval+5;
+    public void SetWaitMinimum(int value) {BetweenWordsMaximumMs=WaitMax;BetweenWordsMinimumMs=Math.Clamp(value,0,WaitMax);}
+    public void SetWaitMaximum(int value) {BetweenWordsMinimumMs=WaitMin;BetweenWordsMaximumMs=Math.Clamp(value,WaitMin,60000);}
+    public void SetTypoMinimum(int value) {MistypeMaximum=TypoMax;MistypeMinimum=Math.Clamp(value,1,TypoMax);}
+    public void SetTypoMaximum(int value) {MistypeMinimum=TypoMin;MistypeMaximum=Math.Clamp(value,TypoMin,10004);}
     public bool DirectInput { get; set; }
     public bool MistypeEnabled { get; set; }
     public int MistypeInterval { get; set; } = 20;

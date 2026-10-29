@@ -5,17 +5,18 @@ public sealed class MistypeSchedule
 {
     private readonly Func<int,int,int> random;
     private bool enabled;
-    private int interval=20;
+    private int minimum=15,maximum=25;
     public int Remaining {get;private set;}
     public bool Due => enabled && Remaining==1;
     public MistypeSchedule(Func<int,int,int>? sample=null) => random=sample??Random.Shared.Next;
-    public bool Configure(bool value,int count)
+    public bool Configure(bool value,int count) => Configure(value,Math.Max(1,Math.Clamp(count,1,9999)-5),Math.Clamp(count,1,9999)+5);
+    public bool Configure(bool value,int min,int max)
     {
-        count=Math.Clamp(count,1,9999);
-        if(enabled==value && interval==count)return false;
-        enabled=value;interval=count;Reset();return true;
+        min=Math.Clamp(min,1,10004);max=Math.Clamp(max,min,10004);
+        if(enabled==value && minimum==min && maximum==max)return false;
+        enabled=value;minimum=min;maximum=max;Reset();return true;
     }
-    public void Reset() => Remaining=enabled?random(Math.Max(1,interval-5),interval+6):0;
+    public void Reset() => Remaining=enabled?random(minimum,maximum+1):0;
     public void Submitted()
     {
         if(!enabled)return;

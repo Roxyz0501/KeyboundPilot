@@ -39,7 +39,8 @@ unsafe partial class Program
   }
   Directory.CreateDirectory(args[1]);Render(ImGui.GetDrawData(),textures,Path.Combine(args[1],"fonts.bmp"));
   Console.WriteLine("PASS: 4 font faces, dynamic glyph additions/coalescing, 7-language native ImGui rendering");
-  Preview(fonts,textures,args[1]);CheckNumberEditing();
+  Preview(fonts,textures,args[1]);SettingsPreview(fonts,textures,args[1]);CheckNumberEditing();
   ImGui.DestroyContext();
  }
 }
+

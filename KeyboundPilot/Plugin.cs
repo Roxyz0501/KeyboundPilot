@@ -124,7 +124,7 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             var now=Environment.TickCount64;
-            typing.ConfigureMistypes(config.MistypeEnabled,config.MistypeInterval);
+            typing.ConfigureMistypes(config.MistypeEnabled,config.TypoMin,config.TypoMax);
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
             UpdateLoop(now);
             var inGame=IsContent();
@@ -174,7 +174,7 @@ public sealed class Plugin : IDalamudPlugin
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
                 config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
-                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.BetweenWordsMs,directInput:config.DirectInput);
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax);
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
         }
@@ -310,39 +310,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void DrawSettings()
     {
-        var debug=config.ShowDebug;
-        if(ImGui.Checkbox(T("ShowDebug")+"###ShowDebug",ref debug)){config.ShowDebug=debug;settings.Update(config);}
-        var auto=config.AutoStart;
-        if(ImGui.Checkbox(T("AutoStart")+"###AutoStart",ref auto)) {config.AutoStart=auto;settings.Update(config);}
-        ImGui.Spacing();
-        if(ImGui.CollapsingHeader(T("InputAdjustment")+"###InputAdjustment",ImGuiTreeNodeFlags.DefaultOpen))
-        {
-            var direct=config.DirectInput;
-            if(ImGui.Checkbox(T("DirectInput")+"###DirectInput",ref direct))
-            {StopByUser();config.DirectInput=direct;settings.Update(config);}
-            ImGui.TextWrapped(T("DirectInputHelp"));
-            var min = config.MinimumMs; var max = config.MaximumMs;
-            ImGui.SetNextItemWidth(200);
-            var changed = PlaybackControls.Number(T("Min") + "###Minimum", ref min,20,5000,5,T("NumberHelp"));
-            if (changed) { config.SetMinimum(min); settings.Update(config); }
-            ImGui.SetNextItemWidth(200);
-            var maxChanged = PlaybackControls.Number(T("Max") + "###Maximum", ref max,20,5000,5,T("NumberHelp"));
-            if (maxChanged) { config.SetMaximum(max); settings.Update(config); }
-            ImGui.TextWrapped(T("RangeHelp"));
-            var between=config.BetweenWordsMs;
-            ImGui.SetNextItemWidth(200);
-            if(PlaybackControls.Number(T("BetweenWordsMs")+"###BetweenWordsMs",ref between,0,60000,50,T("NumberHelp")))
-            {config.BetweenWordsMs=Math.Clamp(between,0,60000);settings.Update(config);}
-            ImGui.TextWrapped(T("BetweenWordsHelp"));
-            ImGui.Spacing();
-            var mistype=config.MistypeEnabled;
-            if(ImGui.Checkbox(T("MistypeEnabled")+"###MistypeEnabled",ref mistype)){config.MistypeEnabled=mistype;settings.Update(config);}
-            ImGui.BeginDisabled(!config.MistypeEnabled);
-            var interval=config.MistypeInterval;ImGui.SetNextItemWidth(200);
-            if(PlaybackControls.Number(T("MistypeInterval")+"###MistypeInterval",ref interval,1,9999,1,T("NumberHelp")))
-            {config.MistypeInterval=interval;settings.Update(config);}
-            ImGui.EndDisabled();ImGui.TextWrapped(T("MistypeHelp"));
-        }
+        SettingsPanel.Draw(config,T,()=>settings.Update(config),StopByUser);
         if (settings.Recovered) ImGui.TextWrapped(T("Recovered"));
         if (settings.LoadWarning != null || settings.LastError != null || settings.Stopped)
         {
