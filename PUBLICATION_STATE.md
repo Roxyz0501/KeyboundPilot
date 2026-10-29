@@ -1,3 +1,11 @@
+## 2026-10-30 — Keybound Pilot 1.0.16.12 rematching acceptance
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.12
+- Source/tag 1413a79e6ef628f6ca48e5d43c64bdbb230e12c5; distribution index b62b2a6589f5775248389c103f7d5fea8f7a8514.
+- Reset acceptance after the owned queue returns to Pending/Queued without a ready confirmation in the lobby, including observation during pause/input blocking. Preserve duplicate-response, loading, unrelated-duty, manual-stop and total-timeout guards. Repeated withdrawals do not advance round counters.
+- Clean Release zero warnings/errors; 493 offline checks including 22 rematch regressions pass. Package metadata, canonical tabs, icon and 136 localization keys in seven languages pass. No added polling, network or persistence. Actual live withdrawal/rematch remains unverified.
+- Public repository/icon/ZIP and main/pinned index verified; both indices 1.0.16.12. ZIP 196043 bytes; SHA-256 0bb53d2422b5a29cf5c98a37125b6810b2cd719100f4fed48d163b3c99557a0d.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.11 exit countdown and personal score history
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.11
