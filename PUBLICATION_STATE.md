@@ -1,3 +1,12 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.9 configurable exit wait
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.9
+- Source/tag e6e126a012303f64b2d3a5daeb9959ca96d63dfb; distribution index 478d354faf5faa7d351e0dad197f086aa3d9378a.
+- Add Settings → Loop → Wait before exit, 0–60000 ms, default 0, drag/double-click control and information tooltip. Measure from the actual enabled exit button after results, alongside the bounded score-recording wait rather than after it. Pause prevents exit, Stop clears pending exit, loss of readiness/loading restarts the timestamp, runtime edits use the original readiness time. Existing single exit/confirmation and finish-current-run behavior retained.
+- Configuration includes the field in snapshots, validation, retry restoration and old-config default; existing changed-only autosave and lifecycle flush preserved. No extra network, timers, tasks or history I/O.
+- Clean Release zero warnings/errors; 440 offline checks including 25 new state/configuration cases. Native score/callback/timer fixtures, seven languages (133 keys), four-font 1028-character coverage, numeric editing and Japanese/English settings rendering pass. README lint/diff/hash verification completed. Live gameplay exit timing remains unverified.
+- Public repository/icon/ZIP/source README/pinned index verified. GitHub main index also confirmed at 1.0.16.9 through connector; anonymous raw main initially cached 1.0.16.8. ZIP 193067 bytes; SHA-256 4db8959cb6157ad18be11f8e6770380d5c6147ef357754ef123d99541250cd39.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.8 cancellable stop and score history
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.8
