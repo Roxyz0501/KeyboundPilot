@@ -27,6 +27,12 @@ public sealed class Configuration
     public bool ShowDebug { get; set; }
     public bool RecordDiagnostics { get; set; }
     public int ExitDelayMs { get; set; }
+    public int? ExitDelayMinimumMs { get; set; }
+    public int? ExitDelayMaximumMs { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore] public int ExitMin => ExitDelayMinimumMs ?? ExitDelayMs;
+    [System.Text.Json.Serialization.JsonIgnore] public int ExitMax => ExitDelayMaximumMs ?? ExitDelayMs;
+    public void SetExitMinimum(int value) {ExitDelayMaximumMs=ExitMax;ExitDelayMinimumMs=Math.Clamp(value,0,ExitMax);}
+    public void SetExitMaximum(int value) {ExitDelayMinimumMs=ExitMin;ExitDelayMaximumMs=Math.Clamp(value,ExitMin,60000);}
     public int LoopCount { get; set; } = 1;
     public bool AutoStart { get; set; } = true;
     public int Version { get; set; } = 1;

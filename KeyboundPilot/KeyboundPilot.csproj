@@ -5,7 +5,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks><PlatformTarget>x64</PlatformTarget>
     <RepoUrl>https://github.com/Roxyz0501/KeyboundPilot</RepoUrl>
     <IconUrl>https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png</IconUrl>
-    <Version>1.0.16.9</Version><Authors>Roxyz0501</Authors>
+    <Version>1.0.16.10</Version><Authors>Roxyz0501</Authors>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <IsPackable>false</IsPackable><AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile><NuGetAudit>false</NuGetAudit>

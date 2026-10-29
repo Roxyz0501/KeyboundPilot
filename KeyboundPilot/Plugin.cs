@@ -249,7 +249,7 @@ public sealed class Plugin : IDalamudPlugin
         var blocked=!InputAllowed || ModifierPressed || UiBlocked;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
-        var action=loop.Tick(now,snapshot,blocked,config.ExitDelayMs,scoresReady);
+        var action=loop.Tick(now,snapshot,blocked,config.ExitMin,scoresReady,config.ExitMax);
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
         if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){loopUi.CancelQueuePreparation();automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}

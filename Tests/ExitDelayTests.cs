@@ -31,6 +31,31 @@ internal static class ExitDelayTests
   check(loop.Tick(60100,result,exitDelayMs:60000)==LoopAction.Leave,"maximum wait exits before existing timeout");
   loop.Start(0,2,true);loop.Tick(100,result,exitDelayMs:5000);check(loop.Tick(1100,result,exitDelayMs:1000)==LoopAction.Leave,"edited delay applies immediately to original readiness time");
   loop.Start(0,2,true);loop.Tick(100,result,exitDelayMs:2000);loop.Stop();check(loop.Tick(10000,result,exitDelayMs:2000)==LoopAction.None,"manual stop cancels pending exit");
+  var draws=new List<(int,int)>();var randomLoop=new RoundLoop((min,max)=>{draws.Add((min,max));return max-1;});
+  randomLoop.Start(0,3,true);randomLoop.Tick(0,game,exitDelayMs:1000,exitMaximumMs:3000);
+  check(draws.Count==0,"no random draw before readiness");
+  randomLoop.Tick(100,result,exitDelayMs:1000,scoresReady:false,exitMaximumMs:3000);
+  check(draws.SequenceEqual(new[]{(1000,3001)}),"draw includes both requested endpoints");
+  for(var n=200;n<3100;n+=100)randomLoop.Tick(n,result,exitDelayMs:1000,exitMaximumMs:3000);
+  check(draws.Count==1,"polling and score wait do not redraw deadline");
+  check(randomLoop.Tick(3100,result,exitDelayMs:1000,exitMaximumMs:3000)==LoopAction.Leave,"drawn maximum governs actual exit");
+  randomLoop.Tick(3200,result,exitDelayMs:2000,exitMaximumMs:4000);check(draws.Count==1,"no redraw after dispatch");
+  randomLoop.Start(4000,3,true);randomLoop.Tick(4000,result,exitDelayMs:1000,exitMaximumMs:3000);check(draws.Count==2,"new run draws independently");
+  randomLoop.Pause();randomLoop.Tick(4500,result,exitDelayMs:1000,exitMaximumMs:3000);randomLoop.Resume();randomLoop.Tick(4600,result,exitDelayMs:1000,exitMaximumMs:3000);
+  check(draws.Count==2,"pause and resume preserve sampled wait");
+  randomLoop.Tick(4700,result,exitDelayMs:1000,exitMaximumMs:60000);check(draws.Count==3 && draws[^1]==(1000,60001),"range edit redraws once and supports maximum endpoint");
+  randomLoop.Tick(4800,result,exitDelayMs:1000,exitMaximumMs:60000);check(draws.Count==3,"unchanged edited range is stable");
+  randomLoop.Tick(4900,result with {LeaveReady=false},exitDelayMs:1000,exitMaximumMs:60000);randomLoop.Tick(5000,result,exitDelayMs:1000,exitMaximumMs:60000);
+  check(draws.Count==4,"readiness reacquisition draws a new wait");
+  randomLoop.Start(0,1,true);randomLoop.Tick(0,result,exitDelayMs:2000,exitMaximumMs:2000);check(draws.Count==4,"equal endpoints use fixed wait without RNG");
+  check(randomLoop.Tick(2000,result,exitDelayMs:2000,exitMaximumMs:2000)==LoopAction.Leave,"equal endpoints exit at exact fixed time");
+  var minimumLoop=new RoundLoop((min,max)=>min);minimumLoop.Start(0,1,true);check(minimumLoop.Tick(0,result,exitDelayMs:0,exitMaximumMs:60000)==LoopAction.Leave,"sampled zero minimum may exit immediately");
+  var migrated=System.Text.Json.JsonSerializer.Deserialize<Configuration>("{\"ExitDelayMs\":12300}")!;
+  check(migrated.ExitMin==12300 && migrated.ExitMax==12300,"fixed setting migrates to equal endpoints");
+  migrated.SetExitMaximum(5000);check(migrated.ExitMin==12300 && migrated.ExitMax==12300,"upper endpoint cannot lower existing minimum");
+  migrated.SetExitMinimum(5000);migrated.SetExitMaximum(60000);check(migrated.ExitMin==5000 && migrated.ExitMax==60000,"upper endpoint changes without moving minimum");
+  migrated.SetExitMinimum(70000);check(migrated.ExitMin==60000 && migrated.ExitMax==60000,"lower endpoint cannot move upper");
+  migrated.SetExitMinimum(-5);check(migrated.ExitMin==0 && migrated.ExitMax==60000,"lower endpoint clamps independently");
   var root=Path.Combine(AppContext.BaseDirectory,"exit-delay-"+Guid.NewGuid());Directory.CreateDirectory(root);
   try
   {
@@ -42,7 +67,12 @@ internal static class ExitDelayTests
     clock.Advance(1);store.Tick();check(store.SaveCount==1,"exit delay included in snapshot validation and save");
     clock.Advance(60);store.Tick();check(store.SaveCount==1,"unchanged delay does not write again");
    }
-   using(var store=new ConfigurationStore(path))check(store.Configuration.ExitDelayMs==12300,"exit delay restored on reload");
+   using(var store=new ConfigurationStore(path))
+   {
+    check(store.Configuration.ExitDelayMs==12300 && store.Configuration.ExitMin==12300 && store.Configuration.ExitMax==12300,"exit delay restored on reload");
+    store.Configuration.SetExitMinimum(7000);store.Configuration.SetExitMaximum(18000);store.Update(store.Configuration);
+   }
+   using(var store=new ConfigurationStore(path))check(store.Configuration.ExitMin==7000 && store.Configuration.ExitMax==18000,"both exit endpoints survive lifecycle flush and reload");
   }
   finally {Directory.Delete(root,true);}
  }

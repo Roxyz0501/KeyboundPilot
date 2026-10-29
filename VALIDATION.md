@@ -1,3 +1,10 @@
+# Validation — 1.0.16.10 / 2026-10-29
+
+- Replace fixed exit delay UI with independent minimum/maximum DragInt fields, 0–60000 ms. Nullable stored endpoints fall back to the previous ExitDelayMs, preserving existing fixed timing on upgrade. Editing either endpoint clamps that endpoint only. Include both in configuration snapshot, validation, retry restoration and lifecycle flush; keep changed-only 60-second autosave.
+- Draw an inclusive integer delay when exit becomes ready, using Random.Shared.Next(min, max + 1). Equal limits use a fixed delay. Retain the selected value across polling, score waiting, pause/resume and blocked input; no post-dispatch redraw. A changed range redraws once against the original readiness timestamp; loss of readiness resets the wait and redraws on reacquisition. Existing score-wait overlap and exit/confirmation guards remain unchanged.
+- 459 offline checks pass, including 19 additional checks for exact RNG bounds, minimum/maximum endpoints, no draws before readiness/after dispatch, stable deadline across updates/pause, new game/reacquisition/range edits, fixed-value migration, endpoint independence and persistence. Existing score/history and loop tests remain passing. No new network calls, polling, tasks or disk writes outside changed configuration persistence.
+- Clean Release zero warnings/errors. Native score, callback and timer fixtures pass; 133 localization keys, seven languages, four-font coverage of 1030 characters. Native Japanese/English settings render and drag/double-click behavior reviewed. README lint/diff/verify run 20261029T110556Z-3d0b3743, final hash prefix afb43b6960e8, no meaning-risk candidates. Live game timing remains unverified.
+
 # Validation — 1.0.16.9 / 2026-10-29
 
 - Added Settings → Loop → Wait before exit, 0–60000 ms, default 0; same drag/double-click numeric control and information tooltip as existing settings. Seven localized languages, 133 keys.

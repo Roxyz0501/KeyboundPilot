@@ -21,7 +21,8 @@ internal static class SettingsPanel
         if(ImGui.CollapsingHeader(t("LoopButton")+"###LoopSettings",ImGuiTreeNodeFlags.DefaultOpen))
         {
             Title("ExitDelay","ExitDelayHelp");
-            Number("Milliseconds","ExitDelay",config.ExitDelayMs,0,60000,100,value=>config.ExitDelayMs=value);
+            Number("MinimumMs","ExitMinimum",config.ExitMin,0,60000,100,config.SetExitMinimum);
+            Number("MaximumMs","ExitMaximum",config.ExitMax,0,60000,100,config.SetExitMaximum);
         }
         ImGui.Spacing();
         if(!ImGui.CollapsingHeader(t("InputAdjustment")+"###InputAdjustment",ImGuiTreeNodeFlags.DefaultOpen))return;

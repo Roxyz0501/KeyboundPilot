@@ -39,7 +39,7 @@ Open “Score history” and select a date to review past games. Expand a result
 
 The results screen indicates that only the first-place player’s score and your own score are shown. Other players’ scores are recorded only when readable on that screen; their scores during play are not available here.
 
-Set “Settings → Loop → Wait before exit” to choose how long to wait after the exit button becomes enabled (0–60000 ms; default 0). Drag the value or double-click to enter it. This wait runs alongside score recording; the plugin exits when both are finished. Pausing prevents exit, and Stop cancels it.
+Set the minimum and maximum under “Settings → Loop → Wait before exit” (0–60000 ms; both default to 0). A delay is drawn from the inclusive range when exit becomes available. Equal limits give a fixed delay. Drag either value or double-click to enter it. Changing the limits while waiting draws a new delay from the original readiness time. This wait runs alongside score recording; the plugin exits when both are finished. Pausing prevents exit, and Stop cancels it.
 
 ## Input behavior
 
@@ -128,7 +128,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 結果画面には「1位のプレイヤーと自分のスコアのみ表示されます」と案内されています。他の参加者のスコアはその画面で読み取れたものを記録します。味方のプレイ中のスコアは表示できません。
 
-「設定 → 周回 → 退出までの待機時間」で、退出ボタンが有効になってから待つ時間を0〜60000msで指定できます。初期値は0です。数値はドラッグまたはダブルクリックで変更してください。スコア記録待ちとは同時に数え、両方が終わってから退出します。一時停止中は退出せず、停止ボタンで退出待ちも終了します。
+「設定 → 周回 → 退出までの待機時間」で下限と上限を0〜60000msで指定できます。初期値はどちらも0です。退出可能になると、その範囲から待機時間を抽選します。同じ値なら固定時間になります。数値はドラッグまたはダブルクリックで変更してください。待機中に範囲を変えると再抽選し、最初に退出可能になった時点から数え直します。スコア記録待ちとは同時に数え、両方が終わってから退出します。一時停止中は退出せず、停止ボタンで退出待ちも終了します。
 
 ### 入力中の動作
 

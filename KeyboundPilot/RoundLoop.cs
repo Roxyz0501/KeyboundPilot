@@ -8,6 +8,9 @@ public readonly record struct LoopSnapshot(bool LoggedIn,bool Lobby,bool InGame,
 /// <summary>One request per round and one response per confirmation; never retry uncertain mutations.</summary>
 public sealed class RoundLoop
 {
+    private readonly Func<int,int,int> random;
+    private int sampledExitDelay,sampledExitMin,sampledExitMax;
+    public RoundLoop(Func<int,int,int>? random=null) {this.random=random??Random.Shared.Next;}
     public LoopPhase Phase {get;private set;}
     public bool Active=>Phase is LoopPhase.Requesting or LoopPhase.Waiting or LoopPhase.Playing or LoopPhase.Leaving;
     public bool Paused {get;private set;}
@@ -25,14 +28,23 @@ public sealed class RoundLoop
     public void Pause() {if(Active)Paused=true;}
     public void Resume() {Paused=false;}
     private void Set(LoopPhase phase,long now) {Phase=phase;since=now;}
-    public LoopAction Tick(long now,LoopSnapshot state,bool blocked=false,int exitDelayMs=0,bool scoresReady=true)
+    public LoopAction Tick(long now,LoopSnapshot state,bool blocked=false,int exitDelayMs=0,bool scoresReady=true,int? exitMaximumMs=null)
     {
         if(!Active)return LoopAction.None;
         if(!state.LoggedIn || state.OtherQueue) {Stop(true);return LoopAction.None;}
+        var minimum=Math.Clamp(exitDelayMs,0,60000);
+        var maximum=Math.Clamp(exitMaximumMs??minimum,minimum,60000);
         if(state.InGame && state.Result && state.LeaveReady && !state.Loading)
-        {if(exitReadyAt<0)exitReadyAt=now;}
+        {
+            if(!left && (exitReadyAt<0 || minimum!=sampledExitMin || maximum!=sampledExitMax))
+            {
+                sampledExitMin=minimum;sampledExitMax=maximum;
+                sampledExitDelay=minimum==maximum?minimum:random(minimum,maximum+1);
+            }
+            if(exitReadyAt<0)exitReadyAt=now;
+        }
         else exitReadyAt=-1;
-        var canLeave=state.LeaveReady && exitReadyAt>=0 && now-exitReadyAt>=Math.Clamp(exitDelayMs,0,60000) && scoresReady;
+        var canLeave=state.LeaveReady && exitReadyAt>=0 && now-exitReadyAt>=sampledExitDelay && scoresReady;
         if(Paused || blocked || state.Loading) {if(blockedAt<0)blockedAt=now;return LoopAction.None;}
         if(blockedAt>=0) {since+=now-blockedAt;blockedAt=-1;}
         switch(Phase)
