@@ -2,6 +2,9 @@ namespace KeyboundPilot;
 
 public sealed class ActivityKeeper
 {
+    public bool Requested {get;private set;}
+    public void Begin() {Requested=true;Reset();}
+    public void End() {Requested=false;Reset();}
     private long next;
     private int failures;
     public bool Failed=>failures>=3;

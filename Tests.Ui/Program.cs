@@ -8,6 +8,7 @@ unsafe partial class Program
  static void Main(string[] args)
  {
   NativeLibrary.SetDllImportResolver(typeof(ImGui).Assembly,(name,_,_)=>name.Contains("cimgui")?NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory,"cimgui.dll")):0);
+  CheckInputSubmission();
   ImGui.CreateContext();var io=ImGui.GetIO();io.IniFilename=null;io.DisplaySize=new Vector2(1440,900);io.DeltaTime=1f/60;
   var coverage=new GlyphCoverage();coverage.Include([Loc.FontText,GlyphCoverage.TypingCharacters]);
   var synthetic="くえ ぶれいんぽっど ～ 〜 記録場所/霧の谷";

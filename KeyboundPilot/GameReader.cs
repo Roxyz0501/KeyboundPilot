@@ -36,9 +36,14 @@ internal sealed unsafe class GameReader(IGameGui gui)
         if(current==null || current.Length>384)return false;
         if(value=='\r')
         {
-            var device=FFXIVClientStructs.FFXIV.Client.System.Input.InputDeviceManager.Instance();
-            if(device==null || device->KeyboardDevice==null)return false;
-            device->KeyboardDevice->SendKey(FFXIVClientStructs.FFXIV.Client.System.Input.SeVirtualKey.RETURN);
+            // Use the input component's own Enter callback, not the foreground-dependent keyboard queue.
+            if(current.Length==0 || !InputSubmission.TryInvoke(input,addon,out var result))return false;
+            // Honor the same cleanup result as the text input; re-resolve after the callback.
+            if(result==InputCallbackResult.ClearText)
+            {
+                var after=Input(out var owner);
+                if(owner==addon && after==input)after->SetText("");
+            }
             return true;
         }
         if(value!='\b' && char.IsControl(value))return false;

@@ -1,3 +1,10 @@
+# Validation — 1.0.16.1 / 2026-10-29
+
+- User reports non-active background submission not accepted and subsequent inactivity removal. The previous path dispatched KeyboardDevice.SendKey(RETURN); a failed answer led to NoProgress stop after three seconds, which also disabled activity updates. This explains a possible chain; it is not a confirmed live trace of the reported run.
+- Replace background answer dispatch with the exact dedicated component's registered Enter callback: validate input owner/enabled/active/callback/string pointers, pass its raw/evaluated strings and existing event kind, honor ClearText only after re-resolving the same addon/component. No keyboard queue, OS input, focus stealing or guessed addon callback numbers. Existing prompt/content/prohibition/focus checks remain.
+- Activity session begins at Play, survives input errors, and is serviced before keyboard-release/loop early returns. Manual pause/stop, logout, disposal, content results/exit end it; resume restarts it. Continue reading completion state while input is stopped. Stop remains enabled and UI explains retained protection. Keep existing ten-second timer refresh and three-failure bound; this is not a guarantee against server-side inactivity removal.
+- 310 offline checks pass. Additional native-ABI test uses a fabricated component and local unmanaged callback, verifying owner, Enter type, raw/evaluated pointer ordering, event kind, ClearText result and rejection of invalid inputs. It does not call the game or OS input APIs. Native font/render checks pass: seven languages, four faces, 906 requested characters. Live inactive/minimized submission and inactivity removal are NOT verified.
+
 # Validation — 1.0.16.0 / 2026-10-29
 
 - Settings order: background mode, auto start, debug display, then Input adjustment. Each option/section has a unique scoped information icon tooltip. Numeric rows have minimum/maximum labels in ms or answer counts. No explanatory paragraphs remain inline. SettingsPanel is shared between live UI and offscreen preview.

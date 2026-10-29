@@ -282,6 +282,11 @@ keeper.Tick(20001,true,Touch);Check(touches==3,"resumed typing refreshes activit
 keeper.Reset();var attempts=0;for(var i=0;i<10;i++)keeper.Tick(i*10000,true,()=>{attempts++;return false;});
 Check(attempts==3 && keeper.Failed,"activity failures bounded to three attempts");
 keeper.Reset();keeper.Tick(0,true,Touch);Check(!keeper.Failed,"explicit start permits activity retry");
+keeper.Begin();Check(keeper.Requested,"play starts activity session independently of typing status");
+var heldTouches=0;keeper.Tick(0,keeper.Requested,()=>{heldTouches++;return true;});keeper.Tick(10000,keeper.Requested,()=>{heldTouches++;return true;});
+Check(heldTouches==2 && keeper.Requested,"activity session continues across a typing failure until explicit end");
+keeper.End();Check(!keeper.Requested,"manual pause stop or exit ends activity session");
+keeper.Begin();Check(keeper.Requested && !keeper.Failed,"resume restarts protection and retry budget");keeper.End();
 var logOffRoot=Path.Combine(AppContext.BaseDirectory,"logs-off-"+Guid.NewGuid().ToString("N"));
 using(var inactiveLog=new DiagnosticRecorder(logOffRoot)){
  inactiveLog.Observe("{}");inactiveLog.Event("test",new{});inactiveLog.Mark("cast");inactiveLog.Tick();inactiveLog.Stop();

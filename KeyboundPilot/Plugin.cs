@@ -89,8 +89,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true;loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true;activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -107,7 +107,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void StartTyping(long now,string source)
     {
-        automation.Start(now);activity.Reset();failures=0;scanned=0;reader.ResetFocus();
+        activity.Begin();automation.Start(now);activity.Reset();failures=0;scanned=0;reader.ResetFocus();
         if(typing.Running && typing.ManualPaused)typing.ResumeByUser();
         else {preparedWord="";currentEntity=0;typing.Start(now);}
         controlGate="Starting";
@@ -115,7 +115,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void StopByUser()
     {
-        loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
+        activity.End();loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
     }
     private void UpdateCore()
     {
@@ -125,14 +125,17 @@ public sealed class Plugin : IDalamudPlugin
         {
             var now=Environment.TickCount64;
             typing.ConfigureMistypes(config.MistypeEnabled,config.TypoMin,config.TypoMax);
+            if(activity.Requested && EscapePressed){StopByUser();return;}
+            var inGame=IsContent();
+            if(!inGame)activity.End();
+            activity.Tick(now,inGame && activity.Requested && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
             UpdateLoop(now);
-            var inGame=IsContent();
-            activity.Tick(now,inGame && typing.Running && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
+
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
-            var needsRead=inGame && (typing.Running || loop.Active || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
+            var needsRead=inGame && (typing.Running || loop.Active || activity.Requested || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
             if(needsRead && now-scanned>=50) {reader.Refresh();scanned=now;}
-            if(reader.ContentComplete) {automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
+            if(reader.ContentComplete) {activity.End();automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
             if(encounter.Update(now,reader.Enemies))diagnostics.Event("input_prohibition_cast_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
             if(!typing.Running)
             {
@@ -269,11 +272,12 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     ImGui.TextUnformatted(T("Status") + ": " + T(typing.Status));
                     if(activity.Failed)ImGui.TextWrapped(T("ActivityUnavailable"));
+                    if(activity.Requested && !typing.Running)ImGui.TextWrapped(T("ActivityHeld"));
                     if(typing.Running && !typing.ManualPaused && typing.CurrentWord.Length>0)
                         ImGui.TextWrapped(T("Current") + ": " + typing.CurrentWord);
-                    PlaybackControls.Draw(typing.Running||loop.Active,loop.Active?loop.Paused:typing.ManualPaused,T,
-                        ()=>{if(loop.Active){loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
-                        ()=>{loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
+                    PlaybackControls.Draw(typing.Running||loop.Active||activity.Requested,loop.Active?loop.Paused:typing.ManualPaused || (activity.Requested && !typing.Running),T,
+                        ()=>{if(loop.Active){activity.Begin();loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
+                        ()=>{activity.End();loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
                     ImGui.SameLine();
                     PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();

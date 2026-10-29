@@ -35,7 +35,7 @@ The normal Pause, Play and Stop buttons also control loops. Stopping does not ca
 - Phase transitions from 1 through 3 and temporary loss of input focus put typing on hold. Typing stops at the result screen or on leaving. Normal input waits while you use another application. Both modes wait while another game text field is active.
 - If a target disappears during typing, the plugin clears the remaining text and checks that the field is empty and moves to the next target. It supports “ゔ” and the wave characters “~”, “～” and “〜”.
 - For the Japanese-named abilities “動体感知ジャマー” and “呪いの視線”, it estimates activation from the cast display and pauses input for four seconds. It keeps waiting if the input field is still disabled. Other ability names and other input-prohibition mechanics are not supported.
-- While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. It sends no extra keystrokes or movement for this purpose and stops those updates after manual pause, stop or exit.
+- While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. It sends no extra keystrokes or movement for this purpose. Protection continues if typing stops on an error, and ends on manual pause, Stop, results or exit. A status message indicates when protection is continuing; Stop remains available.
 
 Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text and checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
 
@@ -72,7 +72,7 @@ Optional support: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
 ---
 
-Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the use of the game keyboard interface for submission. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
+Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the game-local input approach. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
 
 ## 日本語
 
@@ -109,7 +109,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 - フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。通常モードでは別アプリの操作中も待機します。ゲーム内の他の入力欄を操作している間は、どちらのモードも待機します。
 - 入力途中で対象が消えたら、残った文字を消し、空欄を確認して次の対象へ進みます。「ゔ」と波線「~」「～」「〜」にも対応しています。
 - 「動体感知ジャマー」「呪いの視線」の発動を詠唱表示から推定し、4秒間入力を止めます。入力欄が無効な間は4秒後も待機します。他言語の技名と、その他の入力禁止技は未対応です。
-- 自動入力中は無操作退出を防ぐため、対象コンテンツの操作状態を定期更新します。追加のキー入力や移動はせず、手動一時停止・停止・退出後には更新しません。
+- 自動入力中は無操作退出を防ぐため、対象コンテンツの操作状態を定期更新します。追加のキー入力や移動はしません。入力エラーで自動入力が止まっても退出対策は継続し、継続中であることを表示します。手動一時停止・停止ボタン・結果画面・退出で終了します。
 
 読み仮名はローマ字キーで入力し、ひらがなの確定と回答の送信を分けて行います。IMEの状態や確定した読みを確認できない場合は、入力済みの文字をBackspaceで消し、空欄を確認してから再開します。削除中も入力禁止・フォーカス待ち・手動停止を優先します。
 
@@ -144,4 +144,4 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
-バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内キーボード経由で送信する方式を参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。
+バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内で入力を処理する方式を参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。
