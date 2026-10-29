@@ -1,3 +1,13 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.6 dedicated inactivity fix
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.6
+- Source/tag 5d851d1c3608d01f710dce6cffd0784b2ff9b558; distribution index d909bf197f2681bfc1bffdb858f748741d2fb66c.
+- User confirmed forced inactivity exit after about 1–2 minutes with 1.0.16.5 loaded. Saucy comparison (PunishXIV/Saucy ec18e30459c1ad3b1a42fec53fc2e1e99471043d, BSD-3-Clause) exposed dedicated input-agent counters separate from InputTimerModule. Independently inspected installed client: agent 398, HUD owner at +0x28, two floats at +0x50/+0x54, 60-second withdrawal branch and repeated-key restoration between counters.
+- Reset both dedicated counters on existing 3-second schedule and successful answer submission in both modes. Validate agent/HUD identity, shared UI owner and finite nonnegative values. Retain general/device timers; remove redundant OS/window mouse pulses and their success dependency. Debug shows dedicated idle/key-history counters and reset status. Preserve territory/loading/pause/stop/result guards. README/NOTICE credit Saucy and contain its full BSD notice.
+- Clean Release zero warnings/errors; 349 offline checks; native callback, generic timers and dedicated-counter fixtures pass. Dedicated fixture reproduces the old 60-second failure and survives a three-minute periodic/submission/repeated-key replay after the change; invalid owners/values/nulls and stopped lifecycle do not write. Seven languages, four font faces, 964 characters; numeric interactions pass. Removed eight obsolete pulse scheduling checks. README lint/diff/final hash verify completed.
+- Anonymous public repo/icon/ZIP/source README/main and pinned index verified. Both indices 1.0.16.6. ZIP 171521 bytes; SHA-256 770c4b3b47ffeccd3dc26fed410e798ab457b1a3cce304c0584d2de54e589a28.
+- Live play after this fix remains unverified. Static/native inspection establishes the missing dedicated timer and threshold; offline replay is not a live gameplay result.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.5 visual obstruction and background activity
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.5
