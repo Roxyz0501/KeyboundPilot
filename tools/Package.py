@@ -4,7 +4,7 @@ r=Path(__file__).resolve().parents[1]
 p=r/"KeyboundPilot"
 out=p/"bin/Release"
 m=json.loads((out/"KeyboundPilot.json").read_text(encoding="utf-8-sig"))
-assert m["Author"]=="Roxyz0501" and m["AssemblyVersion"]=="1.0.16.14"
+assert m["Author"]=="Roxyz0501" and m["AssemblyVersion"]=="1.0.16.15"
 assert m["RepoUrl"]=="https://github.com/Roxyz0501/KeyboundPilot"
 assert m["IconUrl"]=="https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png"
 loc=(p/"Loc.cs").read_text(encoding="utf-8")

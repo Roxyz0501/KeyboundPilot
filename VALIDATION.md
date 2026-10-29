@@ -1,3 +1,8 @@
+# Validation — 1.0.16.15 / 2026-10-30
+
+- Unify both condition-profile enable labels as Use custom settings / 固有の設定を使用する, with corresponding seven-language translations. No mode-selection or typing behavior changes.
+- Help icons now scale to 0.32 of font size instead of a fixed 8 px radius. Settings hit regions use the standard frame height instead of 30 px, removing the extra height imposed on checkbox and title rows. Transport help explicitly retains its 30 px alignment while using the smaller icon. Tooltip text and interaction remain unchanged. Fixed auto-typing rows remain unchanged.
+- Native Japanese/English normal/condition settings and auto-typing renders reviewed. Existing 555 offline checks, 147 localization keys/seven languages, four-font 1073-character coverage, native callback/HP/activity and fixed-row/numeric-interaction fixtures pass. Clean Release/public checks recorded in PUBLICATION_STATE.md. No new live gameplay verification; changes are labels and layout only.
 # Validation — 1.0.16.14 / 2026-10-30
 
 - Background input defaults on for new configurations. Explicit saved true/false choices remain unchanged. Input adjustment contains Normal, Visual obstruction and Low HP editing tabs and a persisted two-choice priority list. Condition checkboxes independently enable the complete interval/wait/typo profile; disabled fields show current normal values and cannot be edited. Existing obstruction intervals migrate with inherited normal extras frozen when already enabled. Shared numeric controls retain independent endpoints, drag and double-click input.

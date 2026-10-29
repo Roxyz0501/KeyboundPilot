@@ -19,7 +19,7 @@ unsafe partial class Program
      if(ImGui.BeginTabItem(T("Main")))
      {
       PlaybackControls.StableText(T("Status")+": "+T(panel==0?"Waiting":"UserPaused"));PlaybackControls.StableText(T("InputMode")+": "+T(panel==0?"NormalProfile":"LowHpProfile"));PlaybackControls.StableText(panel==0?T("Current")+": じゅんぱくのていおうヴぁいす":"");PlaybackControls.StableText("");
-      PlaybackControls.Draw(true,false,T,()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
+      PlaybackControls.Draw(true,false,T,()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"),30);
       ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
       PlaybackControls.StableText(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T(panel==0?"LoopLeaving":"UserPaused")+" / "+(panel==0?string.Format(T("ExitCountdown"),12):T("ExitScoreWait")));
       PlaybackControls.StableText(panel==1?T("StopAfterCurrentPending"):"");var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
@@ -78,10 +78,10 @@ unsafe partial class Program
   {var io=ImGui.GetIO();io.AddMousePosEvent(x,y);Frame();io.AddMouseButtonEvent(0,true);Frame();io.AddMouseButtonEvent(0,false);Frame();Frame();}
   void Capture(string name){ImGui.GetIO().AddMousePosEvent(-1000,-1000);Frame();Render(ImGui.GetDrawData(),textures,Path.Combine(path,name+".bmp"));}
   Frame();Frame();Frame();Capture("settings");
-  Click(110,375);Click(830,375);Capture("obstruction-disabled");
+  Click(110,341);Click(830,341);Capture("obstruction-disabled");
   foreach(var config in configs){config.ObstructionIntervalEnabled=true;config.ObstructionSettings=new(150,250,100,300,true,15,25);}
   Frame();Capture("obstruction-enabled");
-  Click(180,375);Click(918,375);Capture("hp-disabled");
+  Click(180,341);Click(918,341);Capture("hp-disabled");
   foreach(var config in configs){config.LowHpEnabled=true;config.LowHpSettings=new(40,70,50,100,false,15,25);}
   Frame();Capture("hp-enabled");
  }

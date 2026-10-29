@@ -44,15 +44,17 @@ internal static class PlaybackControls
         if(ImGui.IsItemHovered())ImGui.SetTooltip(tooltip);
         return changed;
     }
-    public static void Help(string text)
+    public static void Help(string text,float rowHeight=0)
     {
-        ImGui.InvisibleButton("###PlaybackHelp",new Vector2(24,30));
-        var center=ImGui.GetItemRectMin()+new Vector2(12,15);var draw=ImGui.GetWindowDrawList();
+        var height=rowHeight>0?rowHeight:ImGui.GetFrameHeight();
+        var width=ImGui.GetFrameHeight();var radius=ImGui.GetFontSize()*0.32f;
+        ImGui.InvisibleButton("###PlaybackHelp",new Vector2(width,height));
+        var center=ImGui.GetItemRectMin()+new Vector2(width/2,height/2);var draw=ImGui.GetWindowDrawList();
         var color=ImGui.GetColorU32(ImGuiCol.TextDisabled);
-        draw.AddCircleFilled(center,8,color);
+        draw.AddCircleFilled(center,radius,color);
         var ink=ImGui.GetColorU32(ImGuiCol.WindowBg);
-        draw.AddCircleFilled(center+new Vector2(0,-4),1,ink);
-        draw.AddLine(center+new Vector2(0,-1),center+new Vector2(0,5),ink,2);
+        draw.AddCircleFilled(center+new Vector2(0,-radius*0.5f),radius*0.13f,ink);
+        draw.AddLine(center+new Vector2(0,-radius*0.12f),center+new Vector2(0,radius*0.55f),ink,radius*0.25f);
         if(ImGui.IsItemHovered())
         {
             ImGui.BeginTooltip();ImGui.PushTextWrapPos(ImGui.GetFontSize()*28);

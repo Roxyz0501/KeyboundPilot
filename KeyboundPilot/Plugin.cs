@@ -322,7 +322,7 @@ public sealed class Plugin : IDalamudPlugin
                         ()=>{if(loop.Active){activity.Begin();loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
                         ()=>{activity.End();loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
                     ImGui.SameLine();
-                    PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
+                    PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"),30);
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
                     PlaybackControls.StableText(T("LoopStatus")+": "+(loop.Total>0
                         ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":loop.Phase==LoopPhase.Complete && loop.StopAfterCurrentRequested?"LoopStopped":"Loop"+loop.Phase)
