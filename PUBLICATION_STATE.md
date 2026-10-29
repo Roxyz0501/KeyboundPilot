@@ -1,3 +1,13 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.5 visual obstruction and background activity
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.5
+- Source/tag 0637d487c5e95d8ce4eb7b9864f79bc71e47aea0; distribution index 15d862083d492bcc33f0839ca4392f316bf1aa8a.
+- Add Visual obstruction section under Input adjustment: default-on unseen-prompt exclusion preserves prior observations; separate interval defaults off, 150–250 ms, adjustable 20–5000 ms, applied for Status 5348/5472 including visible portions. Shared by normal and background input. Persist through changed-only 60-second saves and lifecycle flush.
+- Compare AutoKeyboundBrawler 429937e6d8ced7d26a9df57a98aa5590618fc4fe. Add independently implemented process-validated game mouse notifications, zero-distance OS input and controller/mouse timer resets. Periodic attempts every 3 s; window/OS routes rate-limited 3/5 s. Answer submission retains immediate timer reset. Debug separates timer values from notification acceptance. Attribution updated; no code copied.
+- Clean Release zero warnings/errors, 357 offline checks, native callback/device-timer fixtures, seven-language/four-font 962-character coverage and numeric interaction checks pass. Reviewed Japanese/English settings render. README lint/diff/verify completed; detected new values match implemented bounds and submission behavior.
+- Anonymous public repository/icon/ZIP/source README/main and pinned index verified: both indices 1.0.16.5. ZIP 168385 bytes; SHA-256 d23d8973af03c4e9dab56ea472f062cb540f2f5c1b71d65bcec6d3f4691ad798.
+- Live visual-effect duration, background game notification consumption, zero-motion OS behavior and server inactivity removal remain unverified. The user-reported forced exit is not claimed resolved solely from timer reset or API acceptance.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.4 follow-up audit
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.4
