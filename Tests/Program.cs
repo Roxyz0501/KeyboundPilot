@@ -1,6 +1,7 @@
 using KeyboundPilot;
 var checks = 0;
 void Check(bool value, string what) { checks++; if (!value) throw new Exception(what); }
+ObstructionTests.Run(Check);ActivityPulseTests.Run(Check);
 var samples = new List<(int, int)>();
 var sent = new List<char>();
 var s = new TypingSession((a,b) => { samples.Add((a,b)); return b-1; });
@@ -275,8 +276,8 @@ rounds.Start(0,1,false);rounds.Tick(0,lobby);Check(rounds.Tick(100,warning with 
 rounds.Start(0,1,true);Check(rounds.Tick(100,playing with {KeyboardWarning=true})==LoopAction.None,"in-game loop never confirms entry warning");
 var keeper=new ActivityKeeper();var touches=0;bool Touch(){touches++;return true;}
 keeper.Tick(0,false,Touch);Check(touches==0,"inactive content has no activity writes");
-keeper.Tick(0,true,Touch);keeper.Tick(9999,true,Touch);Check(touches==1,"activity write limited to once per ten seconds");
-keeper.Tick(10000,true,Touch);Check(touches==2,"active content refreshes on schedule");
+keeper.Tick(0,true,Touch);keeper.Tick(2999,true,Touch);Check(touches==1,"activity write limited to once per three seconds");
+keeper.Tick(3000,true,Touch);Check(touches==2,"active content refreshes on schedule");
 keeper.Tick(20000,false,Touch);Check(touches==2,"paused or stopped typing never refreshes activity");
 keeper.Tick(20001,true,Touch);Check(touches==3,"resumed typing refreshes activity");
 keeper.Reset();var attempts=0;for(var i=0;i<10;i++)keeper.Tick(i*10000,true,()=>{attempts++;return false;});

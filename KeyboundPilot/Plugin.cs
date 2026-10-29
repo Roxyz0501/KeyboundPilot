@@ -30,6 +30,8 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ActivityKeeper activity=new();
     private readonly LoopGameUi loopUi;
     private readonly ICondition condition;
+    private readonly IObjectTable objects;
+    private bool visuallyObstructed;
     private long loopSample;
     private string controlGate="Idle";
     private string preparedWord="";
@@ -55,7 +57,7 @@ public sealed class Plugin : IDalamudPlugin
         IClientState client, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
     {
         this.pi = pi; this.commands = commands; this.framework = framework;
-        this.client = client; this.data = data; this.log = log;this.condition=condition;loopUi=new LoopGameUi(gui,data,objects,pi);
+        this.client = client; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
         Loc.CheckCompleteness();
         settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => { log.Error(ex, "Configuration saving stopped"); open = true; },
             onFinalFailure: ex => { log.Error(ex, "Final configuration flush failed"); open = true; });
@@ -132,13 +134,13 @@ public sealed class Plugin : IDalamudPlugin
             if(activity.Requested && EscapePressed){StopByUser();return;}
             var inGame=IsContent();
             if(!inGame)activity.End();
-            activity.Tick(now,inGame && activity.Requested && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
+            activity.Tick(now,inGame && !Loading && !reader.ContentComplete && activity.Requested && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
             UpdateLoop(now);
 
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
             var needsRead=inGame && (typing.Running || loop.Active || activity.Requested || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
-            if(needsRead && now-scanned>=50) {reader.Refresh();scanned=now;}
+            if(needsRead && now-scanned>=50) {reader.Refresh(config.ExcludeUnseenPrompts);visuallyObstructed=objects.LocalPlayer?.StatusList.Any(s=>VisualObstruction.IsStatus(s.StatusId)) == true;scanned=now;}
             if(reader.ContentComplete) {activity.End();automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
             if(encounter.Update(now,reader.Enemies))diagnostics.Event("input_prohibition_cast_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
             if(!typing.Running)
@@ -178,8 +180,9 @@ public sealed class Plugin : IDalamudPlugin
             {controlGate="ImeState";typing.RecoverIme(now);return;}
             var previousWord=typing.CurrentWord;
             controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
+            var interval=config.InputInterval(visuallyObstructed);
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
-                config.MinimumMs,config.MaximumMs,c=>!stopping && !Loading && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
+                interval.Min,interval.Max,c=>!stopping && !Loading && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
                 paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax,onSubmitted:()=>activity.OnSubmission(Environment.TickCount64,ContentActivity.Touch));
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
@@ -306,6 +309,7 @@ public sealed class Plugin : IDalamudPlugin
                         ImGui.TextUnformatted(T("InputFocused")+": "+T(reader.InputFocused?"Yes":"No"));
                         ImGui.TextUnformatted(T("Sent")+": "+typing.Sent);
                         ImGui.TextWrapped(activitySnapshot.Available?string.Format(T("ActivityTimers"),activitySnapshot.Content,activitySnapshot.Input,activitySnapshot.Afk,activitySnapshot.Limit):T("ActivityNoData"));
+                        if(activitySnapshot.Available)ImGui.TextWrapped(string.Format(T("ActivityDevices"),activitySnapshot.Controller,activitySnapshot.Mouse,T(ContentActivity.WindowAccepted?"Yes":"No"),T(ContentActivity.SystemAccepted?"Yes":"No")));
                         ImGui.TextWrapped(string.Format(T("ActivityReset"),ContentActivity.LastAttempt==0?"—":T(ContentActivity.LastSucceeded?"Yes":"No"),ContentActivity.ResetCount,ContentActivity.LastAttempt==0?"—":((Environment.TickCount64-ContentActivity.LastAttempt)/1000d).ToString("F1"),activitySnapshot.Territory,activitySnapshot.Status));
                     }
                     ImGui.EndTabItem();

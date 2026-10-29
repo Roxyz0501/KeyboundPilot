@@ -15,5 +15,6 @@ public sealed class SeenPrompts
             if(observation.TextVisible && current.Any(x=>x.Visible && x.EntityId==observation.EntityId && x.Word==observation.Word))
                 seen[observation.EntityId]=observation.Word;
     }
+    public bool Eligible(KtgWord word,bool excludeUnseen) => word.Visible && word.Word.Length>0 && (!excludeUnseen || Contains(word));
     public bool Contains(KtgWord word)=>seen.TryGetValue(word.EntityId,out var text) && text==word.Word;
 }

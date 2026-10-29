@@ -8,3 +8,4 @@ diagnostics/
 *.jsonl
 
 tools/Inspect/
+.yomiyasu/

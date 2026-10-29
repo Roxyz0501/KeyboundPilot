@@ -23,6 +23,8 @@ internal static class Keyboard
     [DllImport("user32.dll")] private static extern nint GetKeyboardLayout(uint threadId);
     [DllImport("user32.dll")] private static extern short GetAsyncKeyState(int key);
     public static int InputSize => Marshal.SizeOf<Input>();
+    // Relative move of zero pixels: update OS input activity without keys, clicks or cursor displacement.
+    internal static bool PulseActivity() => SendInput(1,[new Input {Type=0,Data=new InputUnion {Mouse=new MouseInput {Flags=1}}}],InputSize)==1;
     public static bool ForegroundGame
     {
         get { GetWindowThreadProcessId(GetForegroundWindow(), out var pid); return pid == (uint)Environment.ProcessId; }

@@ -49,7 +49,7 @@ unsafe partial class Program
    for(var panel=0;panel<2;panel++)
    {
     var language=panel==0?"ja":"en";
-    ImGui.SetNextWindowPos(new Vector2(20+panel*700,20));ImGui.SetNextWindowSize(new Vector2(680,620));
+    ImGui.SetNextWindowPos(new Vector2(20+panel*700,20));ImGui.SetNextWindowSize(new Vector2(680,840));
     ImGui.Begin("Keybound Pilot - "+Loc.Get(language,"Settings")+"###SettingsPreview"+panel,ImGuiWindowFlags.NoResize|ImGuiWindowFlags.NoSavedSettings);
     var config=new Configuration{DirectInput=true,AutoStart=true,ShowDebug=false,MinimumMs=70,MaximumMs=125,BetweenWordsMinimumMs=50,BetweenWordsMaximumMs=150,MistypeEnabled=true,MistypeMinimum=22,MistypeMaximum=32};
     SettingsPanel.Draw(config,key=>Loc.Get(language,key),()=>{},()=>{});
@@ -82,3 +82,4 @@ unsafe partial class Program
   Console.WriteLine("PASS: double-click direct number entry, Enter commit, horizontal drag");
  }
 }
+

@@ -50,7 +50,7 @@ internal static class RangeTests
   protection.OnSubmission(0,Reset);check(resetCalls==0,"stopped session does not reset on callback");
   protection.Begin();for(int n=0;n<3;n++)protection.Tick(n*10000,true,()=>false);
   protection.OnSubmission(30000,Reset);check(resetCalls==1 && !protection.Failed,"successful answer retries failed periodic protection");
-  protection.Tick(39999,true,Reset);check(resetCalls==1,"submission reset postpones redundant periodic write");protection.Tick(40000,true,Reset);check(resetCalls==2,"periodic protection continues after submission");
+  protection.Tick(32999,true,Reset);check(resetCalls==1,"submission reset postpones redundant periodic write");protection.Tick(33000,true,Reset);check(resetCalls==2,"periodic protection continues after submission");
   var dir=Path.Combine(AppContext.BaseDirectory,"ranges-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);var file=Path.Combine(dir,"config.json");
   try
   {

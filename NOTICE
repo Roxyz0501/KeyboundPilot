@@ -15,3 +15,5 @@ Reference scope: game-local KeyboardDeviceInterface.SendKey for answer submissio
 FFXIVClientStructs API documentation reference: aers and contributors, MIT. https://github.com/aers/FFXIVClientStructs (KeyboardDeviceInterface.SendKey and AtkComponentTextInput.SetText). Runtime reference only; no library source copied.
 
 Current background submission uses the input component registered callback with InputCallbackType.Enter and its CallbackEventKind, raw and evaluated strings, honoring InputCallbackResult.ClearText. API reference: FFXIVClientStructs AtkComponentInputBase (aers and contributors, MIT); independently implemented with no source copying.
+
+Inactivity prevention conceptual/API comparison: AutoKeyboundBrawler KTGAntiAfk, 1Stalk, AGPL-3.0-or-later, commit 429937e6d8ced7d26a9df57a98aa5590618fc4fe. The comparison identified missing window/OS notifications and per-device timer resets. Independently implemented using Win32 PostMessageW/SendInput and FFXIVClientStructs InputTimerModule APIs; no source code copied.

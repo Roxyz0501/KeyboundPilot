@@ -80,7 +80,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
         var raw=input->EvaluatedString.AsSpan();if(raw.Length>1024)return null;
         return SeString.Parse(raw).TextValue;
     }
-    public void Refresh()
+    public void Refresh(bool excludeUnseen=true)
     {
         var result=gui.GetAddonByName<AtkUnitBase>("KTGResult");
         ContentComplete=result!=null && result->IsVisible && Visible(result->RootNode);
@@ -93,7 +93,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
         // In-flight identity is held by Plugin; rebuild candidate sources in priority order.
         sources.Clear();
         var words=new List<string>();
-        foreach(var candidate in EncounterPolicy.Prioritize(enemies.Where(x=>x.Visible && x.Word.Length>0 && seen.Contains(x))))
+        foreach(var candidate in EncounterPolicy.Prioritize(enemies.Where(x=>seen.Eligible(x,excludeUnseen))))
         {sources.TryAdd(candidate.Word,candidate.EntityId);if(!words.Contains(candidate.Word))words.Add(candidate.Word);}
         Words=words;
     }

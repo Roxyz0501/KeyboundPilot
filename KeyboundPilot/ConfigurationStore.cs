@@ -5,10 +5,10 @@ namespace KeyboundPilot;
 /// <summary>One synchronous writer for small configuration snapshots; no timers/tasks survive disposal.</summary>
 public sealed class ConfigurationStore : IDisposable
 {
-    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug, bool MistypeEnabled, int MistypeInterval, bool DirectInput, int? BetweenWordsMinimumMs, int? BetweenWordsMaximumMs, int? MistypeMinimum, int? MistypeMaximum)
+    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug, bool MistypeEnabled, int MistypeInterval, bool DirectInput, int? BetweenWordsMinimumMs, int? BetweenWordsMaximumMs, int? MistypeMinimum, int? MistypeMaximum, bool ExcludeUnseenPrompts, bool ObstructionIntervalEnabled, int ObstructionMinimumMs, int ObstructionMaximumMs)
     {
-        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug, c.MistypeEnabled, c.MistypeInterval, c.DirectInput, c.BetweenWordsMinimumMs, c.BetweenWordsMaximumMs, c.MistypeMinimum, c.MistypeMaximum);
-        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug, MistypeEnabled = MistypeEnabled, MistypeInterval = MistypeInterval, DirectInput = DirectInput, BetweenWordsMinimumMs = BetweenWordsMinimumMs, BetweenWordsMaximumMs = BetweenWordsMaximumMs, MistypeMinimum = MistypeMinimum, MistypeMaximum = MistypeMaximum };
+        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug, c.MistypeEnabled, c.MistypeInterval, c.DirectInput, c.BetweenWordsMinimumMs, c.BetweenWordsMaximumMs, c.MistypeMinimum, c.MistypeMaximum, c.ExcludeUnseenPrompts, c.ObstructionIntervalEnabled, c.ObstructionMinimumMs, c.ObstructionMaximumMs);
+        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug, MistypeEnabled = MistypeEnabled, MistypeInterval = MistypeInterval, DirectInput = DirectInput, BetweenWordsMinimumMs = BetweenWordsMinimumMs, BetweenWordsMaximumMs = BetweenWordsMaximumMs, MistypeMinimum = MistypeMinimum, MistypeMaximum = MistypeMaximum, ExcludeUnseenPrompts = ExcludeUnseenPrompts, ObstructionIntervalEnabled = ObstructionIntervalEnabled, ObstructionMinimumMs = ObstructionMinimumMs, ObstructionMaximumMs = ObstructionMaximumMs };
     }
 
     private readonly object gate = new();
@@ -104,6 +104,10 @@ public sealed class ConfigurationStore : IDisposable
                 Configuration.BetweenWordsMaximumMs = loaded.BetweenWordsMaximumMs;
                 Configuration.MistypeMinimum = loaded.MistypeMinimum;
                 Configuration.MistypeMaximum = loaded.MistypeMaximum;
+                Configuration.ExcludeUnseenPrompts = loaded.ExcludeUnseenPrompts;
+                Configuration.ObstructionIntervalEnabled = loaded.ObstructionIntervalEnabled;
+                Configuration.ObstructionMinimumMs = loaded.ObstructionMinimumMs;
+                Configuration.ObstructionMaximumMs = loaded.ObstructionMaximumMs;
                 current = Snapshot.From(loaded);
             }
             failures = 0;
@@ -290,7 +294,7 @@ public sealed class ConfigurationStore : IDisposable
             if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("Version", out var version)
                 || version.ValueKind != JsonValueKind.Number || !version.TryGetInt32(out var v) || v != 1) return false;
             config = root.Deserialize<Configuration>();
-            return config is not null && config.WaitMin >= 0 && config.WaitMax <= 60000 && config.WaitMin <= config.WaitMax && config.TypoMin >= 1 && config.TypoMax <= 10004 && config.TypoMin <= config.TypoMax && config.MistypeInterval is >= 1 and <= 9999 && config.LoopCount is >= 1 and <= 9999 && config.BetweenWordsMs is >= 0 and <= 60000 && config.MinimumMs >= 20 && config.MaximumMs <= 5000 && config.MinimumMs <= config.MaximumMs && (config.Language is null || Loc.IsSupported(config.Language));
+            return config is not null && config.ObstructionMinimumMs >= 20 && config.ObstructionMaximumMs <= 5000 && config.ObstructionMinimumMs <= config.ObstructionMaximumMs && config.WaitMin >= 0 && config.WaitMax <= 60000 && config.WaitMin <= config.WaitMax && config.TypoMin >= 1 && config.TypoMax <= 10004 && config.TypoMin <= config.TypoMax && config.MistypeInterval is >= 1 and <= 9999 && config.LoopCount is >= 1 and <= 9999 && config.BetweenWordsMs is >= 0 and <= 60000 && config.MinimumMs >= 20 && config.MaximumMs <= 5000 && config.MinimumMs <= config.MaximumMs && (config.Language is null || Loc.IsSupported(config.Language));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException) { error = ex; return false; }
     }

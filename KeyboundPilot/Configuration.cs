@@ -13,6 +13,14 @@ public sealed class Configuration
     public void SetWaitMaximum(int value) {BetweenWordsMinimumMs=WaitMin;BetweenWordsMaximumMs=Math.Clamp(value,WaitMin,60000);}
     public void SetTypoMinimum(int value) {MistypeMaximum=TypoMax;MistypeMinimum=Math.Clamp(value,1,TypoMax);}
     public void SetTypoMaximum(int value) {MistypeMinimum=TypoMin;MistypeMaximum=Math.Clamp(value,TypoMin,10004);}
+    public bool ExcludeUnseenPrompts { get; set; } = true;
+    public bool ObstructionIntervalEnabled { get; set; }
+    public int ObstructionMinimumMs { get; set; } = 150;
+    public int ObstructionMaximumMs { get; set; } = 250;
+    public void SetObstructionMinimum(int value) => ObstructionMinimumMs = Math.Clamp(value,20,ObstructionMaximumMs);
+    public void SetObstructionMaximum(int value) => ObstructionMaximumMs = Math.Clamp(value,ObstructionMinimumMs,5000);
+    public (int Min,int Max) InputInterval(bool obstructed) => ObstructionIntervalEnabled && obstructed
+        ? (ObstructionMinimumMs,ObstructionMaximumMs) : (MinimumMs,MaximumMs);
     public bool DirectInput { get; set; }
     public bool MistypeEnabled { get; set; }
     public int MistypeInterval { get; set; } = 20;

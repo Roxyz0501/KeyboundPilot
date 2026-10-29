@@ -33,5 +33,23 @@ internal static class SettingsPanel
         Number("MinimumCount","TypoMinimum",config.TypoMin,1,10004,1,config.SetTypoMinimum);
         Number("MaximumCount","TypoMaximum",config.TypoMax,1,10004,1,config.SetTypoMaximum);
         ImGui.EndDisabled();
+        ImGui.Spacing();ImGui.Spacing();ImGui.Indent(12);
+        if(ImGui.CollapsingHeader(t("VisualObstruction")+"###VisualObstruction",ImGuiTreeNodeFlags.DefaultOpen))
+        {
+            ImGui.PushID("ObstructionSettings");
+            var exclude=config.ExcludeUnseenPrompts;
+            if(ImGui.Checkbox(t("ExcludeUnseen")+"###ExcludeUnseen",ref exclude)){config.ExcludeUnseenPrompts=exclude;save();}
+            Help("ExcludeUnseenHelp");ImGui.Spacing();
+            var custom=config.ObstructionIntervalEnabled;
+            if(ImGui.Checkbox(t("ObstructionInterval")+"###ObstructionInterval",ref custom)){config.ObstructionIntervalEnabled=custom;save();}
+            Help("ObstructionIntervalHelp");
+            Title("InputInterval","RangeHelp");
+            ImGui.BeginDisabled(!custom);
+            Number("MinimumMs","ObstructionMinimum",config.ObstructionMinimumMs,20,5000,5,config.SetObstructionMinimum);
+            Number("MaximumMs","ObstructionMaximum",config.ObstructionMaximumMs,20,5000,5,config.SetObstructionMaximum);
+            ImGui.EndDisabled();
+            ImGui.PopID();
+        }
+        ImGui.Unindent(12);
     }
 }
