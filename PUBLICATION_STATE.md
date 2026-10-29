@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.0 settings and ranges
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.0
+- Source/tag: aea933e7f9f3bc1163f4c9ababe2bc8ef9139ead. Shared index: 2dceff2126523f30994771d57105f297fe719d9c.
+- Background/auto-start/debug controls above Input adjustment, scoped information-icon tooltips, separate min/max rows. Post-submit waits and typo counts sampled inclusively; endpoint edits do not change the other endpoint. Legacy fixed delay and N±5 typo ranges retained via fallback, including persistence/retry.
+- Clean Release with zero warnings/errors, 306 offline checks, four-font 897-character coverage, seven-language native rendering and numeric interactions pass. Settings preview uses the production SettingsPanel. Live game behavior not tested in this update.
+- Public repository/icon/ZIP/source README and both main/pinned index verified at 1.0.16.0. ZIP 155687 bytes; SHA-256: 7b27b91897352d43f9d5f806ffd24f4a564a2214fca6c74076c1de66bbe84853.
+
 ## 2026-10-29 — Keybound Pilot 1.0.15.0 background mode
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.15.0
