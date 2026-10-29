@@ -1,3 +1,11 @@
+## 2026-10-30 — Keybound Pilot 1.0.16.13 documentation cleanup
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.13
+- Source/tag 091aad55f1e128c44e6233b69abe06d268274b89; distribution index 641d67b1f252444412300b4cede5fa7276cf1883.
+- Simplify README and NOTICE; preserve usage and optional-navigation requirements. No runtime or settings changes.
+- Clean Release zero warnings/errors; 493 regression checks and package metadata, canonical tabs, icon and 136 localization keys/seven languages pass. Live gameplay not newly verified.
+- Public repository/icon/ZIP/source README and pinned index verified. GitHub main index is 1.0.16.13; anonymous raw main still returned cached 1.0.16.12 at verification. ZIP 193805 bytes; SHA-256 af67a3a8d229fabeb600d10b5848842889c98f76a71980270c7c23e82b21b0e3.
+
 ## 2026-10-30 — Keybound Pilot 1.0.16.12 rematching acceptance
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.12
