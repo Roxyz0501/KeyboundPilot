@@ -321,6 +321,7 @@ if(args.Length>0)
     Check(!stopped,"recording replay preserves waiting across disabled input transitions");
 }
 MistypeTests.Run(Check);
+BackgroundTests.Run(Check);
 Console.WriteLine($"PASS {checks} checks; no real keyboard events sent.");
 namespace KeyboundPilot { internal static class Loc { public static bool IsSupported(string? s)=>s is "ja" or "en" or "de" or "fr" or "ko" or "zh-Hans" or "zh-Hant"; } }
 sealed class TestClock:TimeProvider {long ticks;public override long TimestampFrequency=>1000;public override long GetTimestamp()=>ticks;public override DateTimeOffset GetUtcNow()=>new DateTimeOffset(2026,10,28,14,59,59,TimeSpan.Zero).AddMilliseconds(ticks);public void Advance(int seconds)=>ticks+=seconds*1000;}

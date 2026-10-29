@@ -2,7 +2,7 @@
 
 [日本語](#日本語)
 
-Keybound Pilot is a Dalamud plugin that reads Keybound Brawler prompts and answers them using keyboard input. It can automate a single game or repeat registration, play and exit for a set number of runs. Created by Roxyz0501.
+Keybound Pilot is a Dalamud plugin that reads Keybound Brawler prompts and answers them using keyboard input or background mode. It can automate a single game or repeat registration, play and exit for a set number of runs. Created by Roxyz0501.
 
 ## Installation and updates
 
@@ -14,7 +14,7 @@ Individual downloads are available on [GitHub Releases](https://github.com/Roxyz
 
 ## Auto typing
 
-1. Make sure a Japanese IME is available. Open the plugin with `/keyboundpilot`.
+1. For normal input, make sure a Japanese IME is available. Open the plugin with `/keyboundpilot`.
 2. In Settings, set the minimum and maximum key intervals and the delay after submitting an answer. Drag a numeric field left or right to adjust it, or double-click to type a value.
 3. Press Play inside the content to start. “Start automatically when the game begins” is enabled by default.
 4. Press Pause to wait and Play to resume. Use Stop, Esc or `/keyboundpilot stop` to end the session.
@@ -32,16 +32,18 @@ The normal Pause, Play and Stop buttons also control loops. Stopping does not ca
 ## Input behavior
 
 - Answers prioritize barrier reinforcement, then casting enemies, then the nearest moving enemy, then other targets. Distance is approximated from screen position. Prompts whose text has never been seen are excluded.
-- Phase transitions from 1 through 3 and temporary loss of input focus put typing on hold. Typing stops at the result screen or on leaving. It also waits while you use another application or text field.
-- If a target disappears during typing, the plugin clears the remaining text with Backspace, checks that the field is empty and moves to the next target. It supports “ゔ” and the wave characters “~”, “～” and “〜”.
+- Phase transitions from 1 through 3 and temporary loss of input focus put typing on hold. Typing stops at the result screen or on leaving. Normal input waits while you use another application. Both modes wait while another game text field is active.
+- If a target disappears during typing, the plugin clears the remaining text and checks that the field is empty and moves to the next target. It supports “ゔ” and the wave characters “~”, “～” and “〜”.
 - For the Japanese-named abilities “動体感知ジャマー” and “呪いの視線”, it estimates activation from the cast display and pauses input for four seconds. It keeps waiting if the input field is still disabled. Other ability names and other input-prohibition mechanics are not supported.
 - While auto typing is active, the plugin periodically updates activity state to prevent inactivity removal from the content. It sends no extra keystrokes or movement for this purpose and stops those updates after manual pause, stop or exit.
 
-Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text with Backspace, checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
+Readings are entered using romaji keys, with hiragana confirmation and answer submission handled separately. If the IME state or confirmed reading cannot be verified, the plugin clears the text and checks for an empty field and restarts typing. Input prohibition, focus waiting and manual stop still take priority during clearing.
 
 When typo submission is enabled, one character in an answer is changed before sending. The plugin checks and clears any remaining text, then continues typing. “レッドXIII” is entered as katakana “レッド” followed by uppercase ASCII “XIII”.
 
 The four-second pause for “呪いの視線” is a precautionary waiting period, not a measured effect duration.
+
+With “Background mode” enabled, the plugin sends converted characters directly to the dedicated game input field, including hiragana and the exact spelling “レッドXIII”. You can use another application while it runs. It simulates each romaji key interval and the confirmation waits used by normal input; actual IME processing time varies by system and is not reproduced exactly. The same pauses, target checks, typo settings and post-submit delay apply. Escape stops playback only when FF14 is active.
 
 ## Settings
 
@@ -49,6 +51,7 @@ Key intervals, the delay after submission and typo options are grouped under “
 
 | Setting | Behavior |
 | --- | --- |
+| Background mode | Disabled by default. Enable under Input adjustment to type and loop while FF14 is inactive, without an IME. Switching modes stops playback; press Play to restart. Finish any existing IME composition first. |
 | Key interval | Set minimum and maximum values from 20–5000 ms. An interval is chosen for each character. Equal values give a fixed interval. |
 | Delay after submission | Time before typing the next target, from 0–60000 ms. |
 | Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
@@ -68,6 +71,8 @@ Parts of configuration saving and font support use code from [BaitBeacon](https:
 Optional support: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
 ---
+
+Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the use of the game keyboard interface for submission. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
 
 ## 日本語
 
@@ -101,8 +106,8 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 ### 入力中の動作
 
 - バリア強化、詠唱中、最も手前の移動中の敵、その他の順に回答します。近さは画面上の位置による近似です。一度も文字の表示を確認していない出題は選びません。
-- フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。別アプリや他の入力欄を操作している間もキー送信を待ちます。
-- 入力途中で対象が消えたら、残った文字をBackspaceで消し、空欄を確認して次の対象へ進みます。「ゔ」と波線「~」「～」「〜」にも対応しています。
+- フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。通常モードでは別アプリの操作中も待機します。ゲーム内の他の入力欄を操作している間は、どちらのモードも待機します。
+- 入力途中で対象が消えたら、残った文字を消し、空欄を確認して次の対象へ進みます。「ゔ」と波線「~」「～」「〜」にも対応しています。
 - 「動体感知ジャマー」「呪いの視線」の発動を詠唱表示から推定し、4秒間入力を止めます。入力欄が無効な間は4秒後も待機します。他言語の技名と、その他の入力禁止技は未対応です。
 - 自動入力中は無操作退出を防ぐため、対象コンテンツの操作状態を定期更新します。追加のキー入力や移動はせず、手動一時停止・停止・退出後には更新しません。
 
@@ -112,12 +117,15 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 「呪いの視線」の4秒は予防のための待機時間で、効果時間の実測値ではありません。
 
+「バックグラウンドモード」をオンにすると、ひらがななどの変換済み文字を専用入力欄へ直接渡します。「レッドXIII」もその表記のまま入力します。別アプリを操作している間も入力と周回を続けます。入力速度はローマ字の各キーに相当する間隔と、通常モードの確定待ち時間に合わせます。実際のIME処理時間は環境によって変わるため、完全には一致しません。入力禁止時の待機・対象確認・タイプミス設定・送信後の待ち時間も適用します。Escで停止できるのはFF14がアクティブな間です。
+
 ### 設定
 
 キー入力間隔・送信後の待ち時間・タイプミスの設定は「入力調整」にまとめています。
 
 | 項目 | 内容 |
 | --- | --- |
+| バックグラウンドモード | 初期値はオフ。「入力調整」でオンにすると、IMEを使わず非アクティブ時も入力・周回します。切り替えると停止するため、再生で再開してください。入力途中のIME変換がある場合は、先に確定してください。 |
 | キー入力間隔 | 20〜5000msの範囲で下限・上限を指定します。各文字で間隔を抽選し、上下限を同じにすると固定間隔になります。 |
 | 送信後の待ち時間 | 次の対象を入力し始めるまでの時間です。0〜60000msで指定します。 |
 | ゲーム開始時に自動実行 | ゲーム開始に合わせて自動入力を始めます。初期値はオンです。 |
@@ -135,3 +143,5 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 設定保存とフォント表示の一部に [BaitBeacon](https://github.com/Roxyz0501/BaitBeacon)（Roxyz0501、Apache-2.0）のコードを使用しています。受付への自動移動は [vnavmesh](https://github.com/awgil/ffxiv_navmesh)（awgil と各コントリビューター）と連携します。
 
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
+
+バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内キーボード経由で送信する方式を参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。

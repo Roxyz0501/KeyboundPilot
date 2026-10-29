@@ -1,3 +1,12 @@
+# Validation — 1.0.15.0 / 2026-10-29
+
+- Background mode defaults off and persists through the existing changed-only 60-second snapshot/flush/backups. Toggle stops both playback and looping, releases existing physical keys and restores owned IME state before changing transport.
+- Convert supported prompt readings internally. Per-romaji-key scheduling is simulated before writing each final Unicode character through the validated KTGInput text component. Preserve レッドXIII exact spelling, typo answers, simulated conversion/commit delays and post-submit delay. Submit once via the game keyboard interface; never fall back to OS keyboard input. Full evaluated text must match before submission.
+- Keep content identity, input availability, in-game focus, other text input, pause, vanished target, unseen prompt and prohibition gates. Background mode allows lifecycle and loop progress without foreground activation. Escape/modifier/ImGui capture from another application do not interrupt it. An existing game IME composition blocks background typing until finished. No HWND activation or OS text events are sent by the background transport.
+- 284 offline checks pass; clean Release build has zero warnings/errors. Four CJK font faces cover all 887 requested characters; seven-language native rendering and number editing checks pass. Tests include timing, Unicode output, no intermediate Enter, exact verification, target removal, prohibition, typo identity and persistence.
+- Game-specific SetText/SendKey behavior, non-active/minimized rendering, registration and actual answer acceptance are not live-game verified. No real game input was performed. No claim of exact OS IME latency; timers reproduce configured key intervals and plugin confirmation waits, subject to framework updates.
+- Reference is conceptual/API-only (1Stalk AutoKeyboundBrawler, AGPL-3.0-or-later); no code copied. Implementation uses FFXIVClientStructs APIs; references recorded in README/NOTICE. Existing standalone classification and Apache-2.0 source license retained.
+
 # Validation — 1.0.14.0 / 2026-10-29
 
 - Optional typo submission defaults off; interval defaults to 20, configurable 1–9999. Draw inclusive [max(1,N-5),N+5] for each interval. Count only a successful answer-Enter dispatch, not IME commits, keys, abandoned targets or failed sends. Reset on session start or typo-setting changes. Retain pause/stop/input-prohibition and focus gates. Disable or reconfigure clears an in-flight planned typo before sending it.

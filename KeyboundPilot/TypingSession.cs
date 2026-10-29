@@ -4,6 +4,8 @@ namespace KeyboundPilot;
 /// <summary>At most one physical key per tick. IME confirmation and game submission are separate steps.</summary>
 public sealed class TypingSession
 {
+    public const char InternalWaitKey='\0'; // One simulated romaji key interval; never dispatched.
+    public const char InternalCommitKey='\u0001'; // Simulated IME conversion/commit.
     public const char HiraganaKey='\u0006'; // Internal key command, mapped to physical F6.
     public const char KatakanaKey='\u0007'; // Physical F7, before committing the katakana prefix.
     public const char LatinModeKey='\u000f'; // Change IME mode only after the prefix is committed.
@@ -39,7 +41,7 @@ public sealed class TypingSession
     public void PauseByUser() {if(Running){ManualPaused=true;Status="UserPaused";}}
     public void ResumeByUser() {if(Running){ManualPaused=false;Status="Waiting";}}
     public void Tick(long now,bool ready,string? candidate,bool currentStillVisible,int min,int max,Func<char,bool> send,
-        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0)
+        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0,bool directInput=false)
     {
         if(!Running)return;
         if(cancelMistake){cancelMistake=false;RecoverIme(now);}
@@ -71,7 +73,7 @@ public sealed class TypingSession
                 if(plan.Japanese && composing)
                 {
                     if(committing) {if(now-commitAt>2000)RecoverIme(now);return;}
-                    if(!hiraganaRequested && plan.Expected.Contains('ゔ'))
+                    if(!directInput && !hiraganaRequested && plan.Expected.Contains('ゔ'))
                     {
                         if(!send(HiraganaKey)) {Stop("SendFailed");return;}
                         hiraganaRequested=true;due=now+Math.Max(max,150);Status="Confirming";return;
@@ -96,17 +98,18 @@ public sealed class TypingSession
             if(plan==null) {Stop("Unsupported");return;}
             targetWord=candidate.Trim();plannedMistake=mistakes.Due;
             if(plannedMistake)plan=MistypeSchedule.WithMistake(plan)??plan;
+            if(directInput)plan=plan with {Keys=BackgroundInput.Steps(plan),Japanese=true,ExactCase=true};
             index=0;submitted=committing=hiraganaRequested=clearing=false;AnswerCheck="None";due=now+random(min,max+1);Status="Typing";return;
         }
         var key=plan.Keys[index];
-        if(plan.ExactCase && key is KatakanaKey or '\r' && !composing)
+        if(!directInput && plan.ExactCase && key is KatakanaKey or '\r' && !composing)
         {RecoverIme(now);return;}
         if(key==LatinModeKey && composing)
         {if(now-commitAt>2000)RecoverIme(now);else Status="Confirming";return;}
         if(key==LatinModeKey && evaluated!=plan.Expected[..^4])
         {RecoverIme(now);return;}
-        if(!send(key)) {Stop("SendFailed");return;}
+        if(key is not (InternalWaitKey or InternalCommitKey) && !send(key)) {Stop("SendFailed");return;}
         if(key=='\r')commitAt=now;
-        index++;if(key>=32)Sent++;Status="Typing";due=now+Math.Max(random(min,max+1),key is KatakanaKey or '\r' or LatinModeKey?150:0);
+        index++;if(key>=32)Sent++;Status="Typing";due=now+(key==InternalCommitKey?Math.Max(max,150):Math.Max(random(min,max+1),key is KatakanaKey or '\r' or LatinModeKey?150:0));
     }
 }

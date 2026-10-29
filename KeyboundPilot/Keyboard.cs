@@ -27,6 +27,17 @@ internal static class Keyboard
     {
         get { GetWindowThreadProcessId(GetForegroundWindow(), out var pid); return pid == (uint)Environment.ProcessId; }
     }
+    private static nint gameWindow;
+    public static nint GameWindow
+    {
+        get
+        {
+            GetWindowThreadProcessId(gameWindow,out var pid);
+            if(pid!=(uint)Environment.ProcessId)
+            {using var process=System.Diagnostics.Process.GetCurrentProcess();gameWindow=process.MainWindowHandle;}
+            return gameWindow;
+        }
+    }
     public static bool Escape => (GetAsyncKeyState(0x1B) & 0x8000) != 0;
     public static bool Modifier => new[] {0x11,0x12,0x5B,0x5C,0xA1}.Any(k=>(GetAsyncKeyState(k)&0x8000)!=0)
         || (!heldShift && (GetAsyncKeyState(0xA0)&0x8000)!=0);

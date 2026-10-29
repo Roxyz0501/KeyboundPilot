@@ -83,6 +83,10 @@ public sealed class Plugin : IDalamudPlugin
         shutdown = lifecycle.GameShuttingDownToken.Register(Stop);
         unload = lifecycle.DalamudUnloadingToken.Register(Stop);
     }
+    private bool UiBlocked => Keyboard.ForegroundGame && uiCaptures;
+    private bool InputAllowed => config.DirectInput || Keyboard.ForegroundGame;
+    private bool EscapePressed => Keyboard.ForegroundGame && Keyboard.Escape;
+    private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
     private void Logout(int type, int code) { lock (executionGate) { loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
@@ -133,16 +137,16 @@ public sealed class Plugin : IDalamudPlugin
             if(!typing.Running)
             {
                 ime.Restore();preparedWord="";currentEntity=0;
-                if(inGame && Keyboard.Escape)automation.Suppress();
+                if(inGame && EscapePressed)automation.Suppress();
                 if(loop.Active || !config.AutoStart || automation.Consumed)return;
                 var playable=reader.Available && reader.InputEnabled && reader.Words.Count>0;
                 if(automation.TryAutoStart(inGame,config.AutoStart,playable,
-                    !uiCaptures && Keyboard.ForegroundGame && !Keyboard.Modifier && !Keyboard.Escape && !reader.CompetingFocus()))
+                    !UiBlocked && InputAllowed && !ModifierPressed && !EscapePressed && !reader.CompetingFocus()))
                     StartTyping(now,"game_started");
                 else return;
             }
-            var gate=automation.Evaluate(now,inGame,Keyboard.Escape,Keyboard.ForegroundGame,Keyboard.Modifier,
-                reader.InputEnabled && reader.Available,uiCaptures,reader.CompetingFocus());
+            var gate=automation.Evaluate(now,inGame,EscapePressed,InputAllowed,ModifierPressed,
+                reader.InputEnabled && reader.Available,UiBlocked,reader.CompetingFocus());
             controlGate=gate.ToString();
             if(gate==RunGate.Escape) {StopByUser();return;}
             if(gate!=RunGate.Run)
@@ -151,24 +155,26 @@ public sealed class Plugin : IDalamudPlugin
                 Keyboard.Release(true);
                 typing.Tick(now,true,null,false,config.MinimumMs,config.MaximumMs,_=>false,paused:true);return;
             }
-            var paused=encounter.Paused(now) || typing.ManualPaused;
+            var paused=encounter.Paused(now) || typing.ManualPaused || (config.DirectInput && ime.Inspect(true).Composing);
             var focused=typing.Submitted || (!paused && reader.EnsureFocus(now));
             if(typing.CurrentWord.Length==0) {preparedWord="";currentEntity=0;}
-            if(!paused && focused && !typing.Recovering && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
+            if(!config.DirectInput && !paused && focused && !typing.Recovering && typing.NeedsPreparation && preparedWord!=typing.CurrentWord)
             {
                 if(!string.IsNullOrEmpty(reader.EvaluatedText())) {controlGate="ExistingInput";typing.RecoverIme(now);return;}
                 if(!ime.Prepare(typing.Japanese)) {controlGate="ImePreparation";typing.RecoverIme(now);return;}
                 preparedWord=typing.CurrentWord;controlGate="ImeSettling";return;
             }
-            var imeState=ime.Inspect();
-            if(!paused && focused && !typing.Recovering && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
+            if(config.DirectInput && focused && !paused && typing.NeedsPreparation && !string.IsNullOrEmpty(reader.EvaluatedText()))
+            {typing.RecoverIme(now);return;}
+            var imeState=config.DirectInput?default:ime.Inspect();
+            if(!config.DirectInput && !paused && focused && !typing.Recovering && typing.Japanese && !typing.Submitted && preparedWord.Length>0 && (!imeState.Available || !imeState.Open || (imeState.Conversion&3)!=1))
             {controlGate="ImeState";typing.RecoverIme(now);return;}
             var previousWord=typing.CurrentWord;
             controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
-                config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !uiCaptures && !encounter.Paused(Environment.TickCount64)
-                    && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase)),
-                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.BetweenWordsMs);
+                config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
+                    && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.BetweenWordsMs,directInput:config.DirectInput);
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
         }
@@ -192,9 +198,9 @@ public sealed class Plugin : IDalamudPlugin
         if(Keyboard.ForegroundGame && Keyboard.Escape){StopByUser();return;}
         if(now-loopSample<200)return;loopSample=now;
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
-        if(loop.Paused || loading || !Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures)loopUi.SuspendTravel();
+        if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
-        var blocked=!Keyboard.ForegroundGame || Keyboard.Modifier || uiCaptures;
+        var blocked=!InputAllowed || ModifierPressed || UiBlocked;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
         var action=loop.Tick(now,snapshot,blocked);
@@ -311,6 +317,10 @@ public sealed class Plugin : IDalamudPlugin
         ImGui.Spacing();
         if(ImGui.CollapsingHeader(T("InputAdjustment")+"###InputAdjustment",ImGuiTreeNodeFlags.DefaultOpen))
         {
+            var direct=config.DirectInput;
+            if(ImGui.Checkbox(T("DirectInput")+"###DirectInput",ref direct))
+            {StopByUser();config.DirectInput=direct;settings.Update(config);}
+            ImGui.TextWrapped(T("DirectInputHelp"));
             var min = config.MinimumMs; var max = config.MaximumMs;
             ImGui.SetNextItemWidth(200);
             var changed = PlaybackControls.Number(T("Min") + "###Minimum", ref min,20,5000,5,T("NumberHelp"));

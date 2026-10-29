@@ -9,3 +9,7 @@ FINAL FANTASY XIV and related game content belong to Square Enix. No game execut
 
 Historical reference (no longer used): AutoDuty QueueHelper UI queue flow, ffxivcode and contributors. No code copied. https://github.com/ffxivcode/AutoDuty/blob/53f4e7400f9791f4534f803a2ec2d2ff709375ba/AutoDuty/Helpers/QueueHelper.cs
 Optional navigation uses vnavmesh public IPC; no code copied. Author: awgil and contributors. https://github.com/awgil/ffxiv_navmesh
+
+Conceptual/API reference: AutoKeyboundBrawler by 1Stalk, AGPL-3.0-or-later, commit 113eb58839ab4da93ff931d213c4cef1fe19f235. https://github.com/1Stalk/AutoKeyboundBrawler
+Reference scope: game-local KeyboardDeviceInterface.SendKey for answer submission. No code copied or adapted. Background conversion, scheduling and component text operations independently implemented against the FFXIVClientStructs API.
+FFXIVClientStructs API documentation reference: aers and contributors, MIT. https://github.com/aers/FFXIVClientStructs (KeyboardDeviceInterface.SendKey and AtkComponentTextInput.SetText). Runtime reference only; no library source copied.

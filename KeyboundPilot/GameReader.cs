@@ -28,6 +28,24 @@ internal sealed unsafe class GameReader(IGameGui gui)
         var component=addon->GetComponentByNodeId(7);
         return component!=null && (int)component->GetComponentType()==7 ? (AtkComponentTextInput*)component:null;
     }
+    public bool SendDirect(char value)
+    {
+        var input=Input(out var addon);
+        if(input==null || !addon->IsReady || !input->Enabled || !input->IsActive || CompetingFocus())return false;
+        var current=EvaluatedText();
+        if(current==null || current.Length>384)return false;
+        if(value=='\r')
+        {
+            var device=FFXIVClientStructs.FFXIV.Client.System.Input.InputDeviceManager.Instance();
+            if(device==null || device->KeyboardDevice==null)return false;
+            device->KeyboardDevice->SendKey(FFXIVClientStructs.FFXIV.Client.System.Input.SeVirtualKey.RETURN);
+            return true;
+        }
+        if(value!='\b' && char.IsControl(value))return false;
+        var next=value=='\b' ? (current.Length==0 ? "" : current[..^1]) : current+value;
+        input->SetText(next);
+        return EvaluatedText()==next;
+    }
     public bool FocusedNow() {var input=Input(out _);return input!=null && input->Enabled && input->IsActive;}
     public bool CompetingFocus()
     {

@@ -5,6 +5,8 @@ internal static class Loc
     public static readonly string[] Codes = ["ja", "en", "de", "fr", "ko", "zh-Hans", "zh-Hant"];
     private static readonly Dictionary<string, string[]> Text = new()
     {
+        ["DirectInput"] = ["バックグラウンドモード", "Background mode", "Hintergrundmodus", "Mode arrière-plan", "백그라운드 모드", "后台模式", "背景模式"],
+        ["DirectInputHelp"] = ["初期値はオフ。オンではIMEを使わず、変換済みの文字を専用入力欄へ渡します。切り替えると停止するため、再生で再開してください。", "Off by default. Sends converted characters to the dedicated field without IME. Switching stops playback; press Play to restart.", "Standardmäßig aus. Überträgt umgewandelte Zeichen ohne IME. Umschalten stoppt die Wiedergabe; mit Start fortsetzen.", "Désactivé par défaut. Transmet les caractères convertis sans IME. Le changement arrête la lecture ; relancez avec Lecture.", "기본값은 꺼짐. IME 없이 변환된 문자를 전용 입력란에 보냅니다. 변경하면 중지되므로 재생으로 다시 시작하세요.", "默认关闭。不使用输入法，将转换后的字符送入专用输入框。切换后停止，请点击播放重新开始。", "預設關閉。不使用輸入法，將轉換後的字元送入專用輸入框。切換後停止，請點擊播放重新開始。"],
         ["ShowDebug"] = ["デバッグ表示", "Show debug information", "Debug-Informationen anzeigen", "Afficher le débogage", "디버그 정보 표시", "显示调试信息", "顯示偵錯資訊"],
         ["LoopButton"] = ["周回", "Loop", "Wiederholen", "Boucle", "반복", "循环", "循環"],
         ["LoopStatus"] = ["周回ステータス", "Loop status", "Wiederholungsstatus", "État de la boucle", "반복 상태", "循环状态", "循環狀態"],

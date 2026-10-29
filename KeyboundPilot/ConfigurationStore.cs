@@ -5,10 +5,10 @@ namespace KeyboundPilot;
 /// <summary>One synchronous writer for small configuration snapshots; no timers/tasks survive disposal.</summary>
 public sealed class ConfigurationStore : IDisposable
 {
-    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug, bool MistypeEnabled, int MistypeInterval)
+    private sealed record Snapshot(int Version, string? Language, int MinimumMs, int MaximumMs, bool AutoStart, int BetweenWordsMs, bool RecordDiagnostics, int LoopCount, bool ShowDebug, bool MistypeEnabled, int MistypeInterval, bool DirectInput)
     {
-        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug, c.MistypeEnabled, c.MistypeInterval);
-        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug, MistypeEnabled = MistypeEnabled, MistypeInterval = MistypeInterval };
+        public static Snapshot From(Configuration c) => new(c.Version, c.Language, c.MinimumMs, c.MaximumMs, c.AutoStart, c.BetweenWordsMs, c.RecordDiagnostics, c.LoopCount, c.ShowDebug, c.MistypeEnabled, c.MistypeInterval, c.DirectInput);
+        public Configuration ToConfig() => new() { Version = Version, Language = Language, MinimumMs = MinimumMs, MaximumMs = MaximumMs, AutoStart = AutoStart, BetweenWordsMs = BetweenWordsMs, RecordDiagnostics = RecordDiagnostics, LoopCount = LoopCount, ShowDebug = ShowDebug, MistypeEnabled = MistypeEnabled, MistypeInterval = MistypeInterval, DirectInput = DirectInput };
     }
 
     private readonly object gate = new();
@@ -99,6 +99,7 @@ public sealed class ConfigurationStore : IDisposable
                 Configuration.ShowDebug = loaded.ShowDebug;
                 Configuration.MistypeEnabled = loaded.MistypeEnabled;
                 Configuration.MistypeInterval = loaded.MistypeInterval;
+                Configuration.DirectInput = loaded.DirectInput;
                 current = Snapshot.From(loaded);
             }
             failures = 0;

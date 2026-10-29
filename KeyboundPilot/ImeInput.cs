@@ -16,10 +16,10 @@ internal sealed class ImeInput
     private nint window,savedContext;
     private bool originalOpen,owned;
     private uint originalConversion,originalSentence;
-    public ImeState Inspect()
+    public ImeState Inspect(bool background=false)
     {
-        if(!Keyboard.ForegroundGame)return default;
-        var hwnd=GetForegroundWindow();var context=ImmGetContext(hwnd);if(context==0)return default;
+        if(!background && !Keyboard.ForegroundGame)return default;
+        var hwnd=background?Keyboard.GameWindow:GetForegroundWindow();if(hwnd==0)return default;var context=ImmGetContext(hwnd);if(context==0)return default;
         try {var valid=ImmGetConversionStatus(context,out var conversion,out _);var length=CompositionLength(context,8,0,0);
             return new(valid && length>=-1,ImmGetOpenStatus(context),conversion,length>0);}
         finally {ImmReleaseContext(hwnd,context);}
