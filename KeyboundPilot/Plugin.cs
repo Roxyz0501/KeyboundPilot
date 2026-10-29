@@ -141,7 +141,6 @@ public sealed class Plugin : IDalamudPlugin
         {
             var now=Environment.TickCount64;
             if(open && config.ShowDebug && now-activitySample>=250){activitySnapshot=ContentActivity.Read();activitySample=now;}
-            typing.ConfigureMistypes(config.MistypeEnabled,config.TypoMin,config.TypoMax);
             if(activity.Requested && EscapePressed){StopByUser();return;}
             var inGame=IsContent();
             UpdateScores(now,inGame);
@@ -152,7 +151,7 @@ public sealed class Plugin : IDalamudPlugin
 
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
             var needsRead=inGame && (typing.Running || loop.Active || activity.Requested || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
-            if(needsRead && now-scanned>=50) {reader.Refresh(config.ExcludeUnseenPrompts);visuallyObstructed=objects.LocalPlayer?.StatusList.Any(s=>VisualObstruction.IsStatus(s.StatusId)) == true;scanned=now;}
+            if(needsRead && !Loading && now-scanned>=50) {reader.Refresh(config.ExcludeUnseenPrompts,config.LowHpEnabled);visuallyObstructed=objects.LocalPlayer?.StatusList.Any(s=>VisualObstruction.IsStatus(s.StatusId)) == true;scanned=now;}
             if(reader.ContentComplete) {activity.End();automation.Suppress();typing.Stop("Completed");controlGate="ContentComplete";Keyboard.Release(true);return;}
             if(encounter.Update(now,reader.Enemies))diagnostics.Event("input_prohibition_cast_end",new {waitMs=4000,source="cast_disappeared_after_90_percent"});
             if(!typing.Running)
@@ -192,11 +191,12 @@ public sealed class Plugin : IDalamudPlugin
             {controlGate="ImeState";typing.RecoverIme(now);return;}
             var previousWord=typing.CurrentWord;
             controlGate=typing.ManualPaused?"ManualPause":paused?"JammerWait":!focused?"FocusWait":"Typing";
-            var interval=config.InputInterval(visuallyObstructed);
+            var inputSettings=config.ResolveInput(visuallyObstructed,reader.HealthPercent);
+            typing.ConfigureMistypes(inputSettings.MistypeEnabled,inputSettings.TypoMin,inputSettings.TypoMax);
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
-                interval.Min,interval.Max,c=>!stopping && !Loading && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
+                inputSettings.MinimumMs,inputSettings.MaximumMs,c=>!stopping && !Loading && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
-                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax,onSubmitted:()=>activity.OnSubmission(Environment.TickCount64,ContentActivity.Touch));
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:inputSettings.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:inputSettings.WaitMax,onSubmitted:()=>activity.OnSubmission(Environment.TickCount64,ContentActivity.Touch));
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
         }
@@ -313,21 +313,21 @@ public sealed class Plugin : IDalamudPlugin
             {
                 if (ImGui.BeginTabItem(T("Main") + "###Main"))
                 {
-                    ImGui.TextUnformatted(T("Status") + ": " + T(typing.Status));
-                    if(activity.Failed)ImGui.TextWrapped(T("ActivityUnavailable"));
-                    if(activity.Requested && !typing.Running)ImGui.TextWrapped(T("ActivityHeld"));
-                    if(typing.Running && !typing.ManualPaused && typing.CurrentWord.Length>0)
-                        ImGui.TextWrapped(T("Current") + ": " + typing.CurrentWord);
+                    PlaybackControls.StableText(T("Status") + ": " + T(typing.Status));
+                    var mode=typing.Running && !Loading?config.ResolveMode(visuallyObstructed,reader.HealthPercent):InputMode.Normal;
+                    PlaybackControls.StableText(T("InputMode")+": "+T(mode switch {InputMode.Obstruction=>"ObstructionProfile",InputMode.LowHp=>"LowHpProfile",_=>"NormalProfile"}));
+                    PlaybackControls.StableText(typing.Running && !typing.ManualPaused && typing.CurrentWord.Length>0?T("Current")+": "+typing.CurrentWord:"");
+                    PlaybackControls.StableText(activity.Failed?T("ActivityUnavailable"):activity.Requested && !typing.Running?T("ActivityHeld"):"");
                     PlaybackControls.Draw(typing.Running||loop.Active||activity.Requested,loop.Active?loop.Paused:typing.ManualPaused || (activity.Requested && !typing.Running),T,
                         ()=>{if(loop.Active){activity.Begin();loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
                         ()=>{activity.End();loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
                     ImGui.SameLine();
                     PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
-                    ImGui.TextWrapped(T("LoopStatus")+": "+(loop.Total>0
+                    PlaybackControls.StableText(T("LoopStatus")+": "+(loop.Total>0
                         ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":loop.Phase==LoopPhase.Complete && loop.StopAfterCurrentRequested?"LoopStopped":"Loop"+loop.Phase)
                         :T("LoopIdle"))+ExitWaitText());
-                    if(loop.Active && loop.StopAfterCurrentRequested)ImGui.TextWrapped(T("StopAfterCurrentPending"));
+                    PlaybackControls.StableText(loop.Active && loop.StopAfterCurrentRequested?T("StopAfterCurrentPending"):"");
                     ImGui.BeginDisabled(loop.Active);
                     var count=config.LoopCount;ImGui.SetNextItemWidth(Math.Min(400,ImGui.GetContentRegionAvail().X));
                     if(PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp")))
@@ -346,10 +346,10 @@ public sealed class Plugin : IDalamudPlugin
                         ImGui.TextUnformatted(T("InputVisible")+": "+T(reader.InputVisible?"Yes":"No"));
                         ImGui.TextUnformatted(T("InputFocused")+": "+T(reader.InputFocused?"Yes":"No"));
                         ImGui.TextUnformatted(T("Sent")+": "+typing.Sent);
-                        ImGui.TextWrapped(activitySnapshot.Available?string.Format(T("ActivityTimers"),activitySnapshot.Content,activitySnapshot.Input,activitySnapshot.Afk,activitySnapshot.Limit):T("ActivityNoData"));
-                        if(activitySnapshot.Available)ImGui.TextWrapped(string.Format(T("ActivityDevices"),activitySnapshot.Controller,activitySnapshot.Mouse));
-                        ImGui.TextWrapped(activitySnapshot.Ktg.Available?string.Format(T("KtgActivity"),activitySnapshot.Ktg.IdleSeconds,activitySnapshot.Ktg.SameKeySeconds,ContentActivity.LastAttempt==0?"—":T(ContentActivity.DedicatedSucceeded?"Yes":"No")):T("KtgActivityUnavailable"));
-                        ImGui.TextWrapped(string.Format(T("ActivityReset"),ContentActivity.LastAttempt==0?"—":T(ContentActivity.LastSucceeded?"Yes":"No"),ContentActivity.ResetCount,ContentActivity.LastAttempt==0?"—":((Environment.TickCount64-ContentActivity.LastAttempt)/1000d).ToString("F1"),activitySnapshot.Territory,activitySnapshot.Status));
+                        PlaybackControls.StableText(activitySnapshot.Available?string.Format(T("ActivityTimers"),activitySnapshot.Content,activitySnapshot.Input,activitySnapshot.Afk,activitySnapshot.Limit):T("ActivityNoData"));
+                        PlaybackControls.StableText(activitySnapshot.Available?string.Format(T("ActivityDevices"),activitySnapshot.Controller,activitySnapshot.Mouse):"");
+                        PlaybackControls.StableText(activitySnapshot.Ktg.Available?string.Format(T("KtgActivity"),activitySnapshot.Ktg.IdleSeconds,activitySnapshot.Ktg.SameKeySeconds,ContentActivity.LastAttempt==0?"—":T(ContentActivity.DedicatedSucceeded?"Yes":"No")):T("KtgActivityUnavailable"));
+                        PlaybackControls.StableText(string.Format(T("ActivityReset"),ContentActivity.LastAttempt==0?"—":T(ContentActivity.LastSucceeded?"Yes":"No"),ContentActivity.ResetCount,ContentActivity.LastAttempt==0?"—":((Environment.TickCount64-ContentActivity.LastAttempt)/1000d).ToString("F1"),activitySnapshot.Territory,activitySnapshot.Status));
                     }
                     ImGui.EndTabItem();
                 }

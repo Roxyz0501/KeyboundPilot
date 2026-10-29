@@ -59,16 +59,23 @@ With “Background mode” enabled, the plugin sends converted characters direct
 
 ## Settings
 
-Background mode, automatic start and debug display appear above “Input adjustment”, in that order. Hover over the information icon beside a title for details. Input adjustment contains separate minimum and maximum fields for key intervals, post-submit waits and typo counts. Equal limits give a fixed value.
+Background mode, automatic start and debug display appear above “Input adjustment”, in that order. Hover over the information icon beside a title for details.
+
+Input adjustment has Normal, Visual obstruction and Low HP tabs. Each has its own key intervals, post-submit waits and typo settings. Drag a value or double-click to enter it; equal limits give a fixed value. Enable the separate settings in a condition tab to edit and use them. When disabled, its fields show the normal values and cannot be edited.
+
+Enabled profiles switch automatically with the game state; selecting an editing tab does not activate it. The priority list decides which profile to use when both conditions apply. Visual obstruction takes priority by default, and you can reverse the order. When neither condition applies, input returns to Normal. Changing the active typo settings restarts its answer count.
+
+Auto typing shows the current mode below Status. These rows and the controls keep their positions when the state or target changes. Hover over clipped text to read its full value.
 
 | Setting | Behavior |
 | --- | --- |
-| Background mode | Disabled by default. Enable in Settings to type and loop while FF14 is inactive, without an IME. Switching modes stops playback; press Play to restart. Finish any existing IME composition first. |
+| Background mode | Enabled by default for new configurations; saved choices are preserved. Types and loops while FF14 is inactive, without an IME. Switching modes stops playback; press Play to restart. Finish any existing IME composition first. |
 | Key interval | Set minimum and maximum values from 20–5000 ms. An interval is chosen for each character. Equal values give a fixed interval. |
 | Wait after submission | Set minimum and maximum values from 0–60000 ms. A new delay is drawn after each answer submission. |
 | Start automatically when the game begins | Starts auto typing when a game begins. Enabled by default. |
 | Occasionally submit a typo | Disabled by default. Set the minimum and maximum number of submitted answers between typos (defaults 15–25). Each interval is drawn from that range. IME confirmations do not count. Starting a session or changing the typo settings resets the count. |
-| Visual obstruction | “Exclude prompts that have never been visible” is on by default. “Use a separate key interval” is off by default; when enabled, its 20–5000 ms range applies for the whole effect, including periods when text is visible. Normal intervals resume when the effect ends. |
+| Visual obstruction | “Exclude prompts that have never been visible” is on by default. Separate input settings are off by default. When enabled, they apply throughout the effect, including periods when text is visible. |
+| Low HP | Separate input settings are off by default. Set an allied content HP threshold from 1–100% (default 50%). The profile activates below that value and ends when HP recovers to it or above. Unavailable HP does not activate it. |
 | Show debug information | Displays the detected prompt count and text list, input-field visibility and focus, and sent-character count. Disabled by default. Includes the Brawler-specific inactivity timers and reset result. |
 
 Input preparation and frame delays can make actual key intervals longer than configured.
@@ -97,7 +104,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 ### 自動入力の使い方
 
-1. 日本語IMEを使用できる状態にしてください。`/keyboundpilot` でプラグインを開きます。
+1. 通常入力を使う場合は日本語IMEを使用できる状態にしてください。`/keyboundpilot` でプラグインを開きます。
 2. 「設定」でキー入力間隔の下限・上限と、送信後の待ち時間を指定します。数値は左右へのドラッグで調整でき、ダブルクリックすると直接入力できます。
 3. コンテンツ内で再生ボタンを押すと、自動入力が始まります。「ゲーム開始時に自動実行」は初期値オンです。
 4. 一時停止ボタンで待機、再生ボタンで再開します。終了するには停止ボタン、Esc、または `/keyboundpilot stop` を使います。
@@ -126,7 +133,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 ### 入力中の動作
 
-- バリア強化、詠唱中、最も手前の移動中の敵、その他の順に回答します。近さは画面上の位置による近似です。初期設定では、一度も文字の表示を確認していない出題は選びません。「入力調整」内の「視界妨害」で切り替えられます。
+- バリア強化、詠唱中、最も手前の移動中の敵、その他の順に回答します。近さは画面上の位置による近似です。初期設定では、一度も文字の表示を確認していない出題は選びません。「入力調整」内の「視界妨害時」で切り替えられます。
 - フェーズ1〜3の切替や入力欄のフォーカス喪失では待機し、結果画面・退出時に自動入力を終了します。通常モードでは別アプリの操作中も待機します。ゲーム内の他の入力欄を操作している間は、どちらのモードも待機します。
 - 入力途中で対象が消えたら、残った文字を消し、空欄を確認して次の対象へ進みます。「ゔ」と波線「~」「～」「〜」にも対応しています。
 - 「動体感知ジャマー」「呪いの視線」の発動を詠唱表示から推定し、4秒間入力を止めます。入力欄が無効な間は4秒後も待機します。他言語の技名と、その他の入力禁止技は未対応です。
@@ -142,16 +149,23 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 ### 設定
 
-「入力調整」の上に、バックグラウンドモード・ゲーム開始時に自動実行・デバッグ表示を並べています。各タイトル右側の「i」にマウスを合わせると詳細説明を表示します。入力間隔・送信後待機時間・タイプミス抽選候補は、それぞれ下限と上限を設定してください。同じ値なら固定になります。
+「入力調整」の上に、バックグラウンドモード・ゲーム開始時に自動実行・デバッグ表示を並べています。各タイトル右側の「i」にマウスを合わせると詳細説明を表示します。
+
+入力調整は「通常時」「視界妨害時」「HP減少時」の3タブに分かれています。それぞれで入力間隔・送信後待機時間・タイプミスを設定できます。数値はドラッグまたはダブルクリックで変更し、下限と上限が同じなら固定値になります。専用設定がオフのタブでは通常時の値を表示し、編集できません。
+
+専用設定をオンにすると、ゲームの状況に応じて自動で切り替わります。タブは値を編集するためのもので、選択しただけではモードは変わりません。両方の条件が重なった場合は、上部の「優先度」で選んだ順に適用します。初期値は「視界妨害時 ＞ HP減少時」です。HPが規定値以上に回復し、視界妨害もなければ通常時に戻ります。適用中のタイプミス設定が変わると、送信回数を数え直します。
+
+自動入力タブの「状態」の下に、現在の「モード」を表示します。状態や入力対象が変わっても、表示行とボタンの位置は動きません。長くて表示しきれない文は、マウスを合わせると全文を読めます。
 
 | 項目 | 内容 |
 | --- | --- |
-| バックグラウンドモード | 初期値はオフ。設定でオンにすると、IMEを使わず非アクティブ時も入力・周回します。切り替えると停止するため、再生で再開してください。入力途中のIME変換がある場合は、先に確定してください。 |
+| バックグラウンドモード | 新規設定では初期値オン。保存済みの選択は維持します。IMEを使わず、FF14が非アクティブでも入力と周回を続けます。切り替えると停止するため、再生で再開してください。切り替え前にIMEの変換を確定してください。 |
 | キー入力間隔 | 20〜5000msの範囲で下限・上限を指定します。各文字で間隔を抽選し、上下限を同じにすると固定間隔になります。 |
 | 送信後待機時間 | 0〜60000msの範囲で下限・上限を指定します。回答送信ごとに範囲内から待ち時間を抽選します。 |
 | ゲーム開始時に自動実行 | ゲーム開始に合わせて自動入力を始めます。初期値はオンです。 |
 | タイプミスをして送信する | 初期値はオフです。「タイプミス抽選候補」の下限・上限で、ミスするまでの送信回数を指定します（初期値15〜25回）。毎回、その範囲から回数を抽選します。IMEの確定は数えません。開始時とタイプミス設定の変更時に数え直します。 |
-| 視界妨害 | 「一度も表示されていない文字を候補から外す」は初期値オンです。「専用の入力間隔を使う」は初期値オフ。オンにすると、文字が見える時間も含め、効果中は専用の下限・上限（20〜5000 ms）を使います。効果が切れると通常の入力間隔に戻ります。 |
+| 視界妨害時 | 「一度も表示されていない文字を候補から外す」は初期値オンです。専用の入力設定は初期値オフ。オンにすると、文字が見える時間も含め、効果中は専用設定を使います。 |
+| HP減少時 | 専用の入力設定は初期値オフ。コンテンツ内の味方側HPが規定値未満の間だけ適用し、規定値以上に回復すると解除します。規定値は1〜100％、初期値50％です。HPを取得できない場合は適用しません。 |
 | デバッグ表示 | 検出した出題数・文字の一覧、専用入力欄の表示・フォーカス、送信文字数を表示します。キーバウンド専用の無操作タイマーとリセット結果も確認できます。初期値はオフです。 |
 
 入力準備やフレームの遅延によって、実際のキー間隔が設定より長くなる場合があります。

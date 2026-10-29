@@ -1,6 +1,35 @@
 namespace KeyboundPilot;
+public enum InputMode { Normal, Obstruction, LowHp }
+public sealed record InputSettings(int MinimumMs=80,int MaximumMs=150,int WaitMin=0,int WaitMax=0,
+    bool MistypeEnabled=false,int TypoMin=15,int TypoMax=25)
+{
+    [System.Text.Json.Serialization.JsonIgnore] public bool Valid => MinimumMs>=20 && MaximumMs<=5000 && MinimumMs<=MaximumMs
+        && WaitMin>=0 && WaitMax<=60000 && WaitMin<=WaitMax && TypoMin>=1 && TypoMax<=10004 && TypoMin<=TypoMax;
+}
 public sealed class Configuration
 {
+    public InputSettings? ObstructionSettings {get;set;}
+    public InputSettings LowHpSettings {get;set;} = new();
+    public bool LowHpEnabled {get;set;}
+    public bool LowHpFirst {get;set;}
+    public int LowHpThreshold {get;set;} = 50;
+    [System.Text.Json.Serialization.JsonIgnore] public InputSettings NormalInput => new(MinimumMs,MaximumMs,WaitMin,WaitMax,MistypeEnabled,TypoMin,TypoMax);
+    [System.Text.Json.Serialization.JsonIgnore] public InputSettings ObstructionInput => ObstructionSettings
+        ?? NormalInput with {MinimumMs=ObstructionMinimumMs,MaximumMs=ObstructionMaximumMs};
+    public InputMode ResolveMode(bool obstructed,float? hpPercent)
+    {
+        var low=LowHpEnabled && hpPercent is >=0 and <=100 && hpPercent<LowHpThreshold;
+        if(low && LowHpFirst)return InputMode.LowHp;
+        if(obstructed && ObstructionIntervalEnabled)return InputMode.Obstruction;
+        return low?InputMode.LowHp:InputMode.Normal;
+    }
+    public InputSettings ResolveInput(bool obstructed,float? hpPercent) => ResolveMode(obstructed,hpPercent) switch
+    {InputMode.Obstruction=>ObstructionInput,InputMode.LowHp=>LowHpSettings,_=>NormalInput};
+    public void SetNormalInput(InputSettings value)
+    {
+        MinimumMs=value.MinimumMs;MaximumMs=value.MaximumMs;BetweenWordsMinimumMs=value.WaitMin;BetweenWordsMaximumMs=value.WaitMax;
+        MistypeEnabled=value.MistypeEnabled;MistypeMinimum=value.TypoMin;MistypeMaximum=value.TypoMax;
+    }
     public int? BetweenWordsMinimumMs { get; set; }
     public int? BetweenWordsMaximumMs { get; set; }
     public int? MistypeMinimum { get; set; }
@@ -19,9 +48,9 @@ public sealed class Configuration
     public int ObstructionMaximumMs { get; set; } = 250;
     public void SetObstructionMinimum(int value) => ObstructionMinimumMs = Math.Clamp(value,20,ObstructionMaximumMs);
     public void SetObstructionMaximum(int value) => ObstructionMaximumMs = Math.Clamp(value,ObstructionMinimumMs,5000);
-    public (int Min,int Max) InputInterval(bool obstructed) => ObstructionIntervalEnabled && obstructed
-        ? (ObstructionMinimumMs,ObstructionMaximumMs) : (MinimumMs,MaximumMs);
-    public bool DirectInput { get; set; }
+    public (int Min,int Max) InputInterval(bool obstructed)
+    {var value=ResolveInput(obstructed,null);return (value.MinimumMs,value.MaximumMs);}
+    public bool DirectInput { get; set; } = true;
     public bool MistypeEnabled { get; set; }
     public int MistypeInterval { get; set; } = 20;
     public bool ShowDebug { get; set; }

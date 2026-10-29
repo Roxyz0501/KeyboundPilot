@@ -18,13 +18,13 @@ unsafe partial class Program
     {
      if(ImGui.BeginTabItem(T("Main")))
      {
-      ImGui.TextUnformatted(T("Status")+": 自動入力中");ImGui.TextUnformatted(T("Current")+": じゅんぱくのていおうヴぁいす");
+      PlaybackControls.StableText(T("Status")+": "+T(panel==0?"Waiting":"UserPaused"));PlaybackControls.StableText(T("InputMode")+": "+T(panel==0?"NormalProfile":"LowHpProfile"));PlaybackControls.StableText(panel==0?T("Current")+": じゅんぱくのていおうヴぁいす":"");PlaybackControls.StableText("");
       PlaybackControls.Draw(true,false,T,()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
       ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
-      ImGui.TextUnformatted(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T(panel==0?"LoopLeaving":"UserPaused")+" / "+(panel==0?string.Format(T("ExitCountdown"),12):T("ExitScoreWait")));
-      var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
+      PlaybackControls.StableText(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T(panel==0?"LoopLeaving":"UserPaused")+" / "+(panel==0?string.Format(T("ExitCountdown"),12):T("ExitScoreWait")));
+      PlaybackControls.StableText(panel==1?T("StopAfterCurrentPending"):"");var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
       PlaybackControls.DrawLoop(false,T("LoopButton"),()=>{});PlaybackControls.DrawStopAfterCurrent(true,T,()=>{},panel==1);
-      if(panel==1)ImGui.TextUnformatted(T("StopAfterCurrentPending"));
+      
       if(panel==1)
       {
        ImGui.Spacing();ImGui.Separator();ImGui.Spacing();ImGui.TextUnformatted(T("Words")+": 3");ImGui.TextUnformatted(T("DetectedList"));
@@ -60,7 +60,8 @@ unsafe partial class Program
  }
  static void SettingsPreview(List<ImFontPtr> fonts,Dictionary<ulong,(nint,int,int)> textures,string path)
  {
-  for(var frame=0;frame<3;frame++)
+  var configs=Enumerable.Range(0,2).Select(_=>new Configuration{DirectInput=true,AutoStart=true,ShowDebug=false,MinimumMs=70,MaximumMs=125,BetweenWordsMinimumMs=50,BetweenWordsMaximumMs=150,MistypeEnabled=true,MistypeMinimum=22,MistypeMaximum=32}).ToArray();
+  void Frame()
   {
    ImGui.NewFrame();ImGui.PushFont(fonts[0]);
    for(var panel=0;panel<2;panel++)
@@ -68,13 +69,21 @@ unsafe partial class Program
     var language=panel==0?"ja":"en";
     ImGui.SetNextWindowPos(new Vector2(20+panel*700,20));ImGui.SetNextWindowSize(new Vector2(680,840));
     ImGui.Begin("Keybound Pilot - "+Loc.Get(language,"Settings")+"###SettingsPreview"+panel,ImGuiWindowFlags.NoResize|ImGuiWindowFlags.NoSavedSettings);
-    var config=new Configuration{DirectInput=true,AutoStart=true,ShowDebug=false,MinimumMs=70,MaximumMs=125,BetweenWordsMinimumMs=50,BetweenWordsMaximumMs=150,MistypeEnabled=true,MistypeMinimum=22,MistypeMaximum=32};
-    SettingsPanel.Draw(config,key=>Loc.Get(language,key),()=>{},()=>{});
+    SettingsPanel.Draw(configs[panel],key=>Loc.Get(language,key),()=>{},()=>{});
     ImGui.End();
    }
    ImGui.PopFont();ImGui.Render();
   }
-  Render(ImGui.GetDrawData(),textures,Path.Combine(path,"settings.bmp"));
+  void Click(float x,float y)
+  {var io=ImGui.GetIO();io.AddMousePosEvent(x,y);Frame();io.AddMouseButtonEvent(0,true);Frame();io.AddMouseButtonEvent(0,false);Frame();Frame();}
+  void Capture(string name){ImGui.GetIO().AddMousePosEvent(-1000,-1000);Frame();Render(ImGui.GetDrawData(),textures,Path.Combine(path,name+".bmp"));}
+  Frame();Frame();Frame();Capture("settings");
+  Click(110,375);Click(830,375);Capture("obstruction-disabled");
+  foreach(var config in configs){config.ObstructionIntervalEnabled=true;config.ObstructionSettings=new(150,250,100,300,true,15,25);}
+  Frame();Capture("obstruction-enabled");
+  Click(180,375);Click(918,375);Capture("hp-disabled");
+  foreach(var config in configs){config.LowHpEnabled=true;config.LowHpSettings=new(40,70,50,100,false,15,25);}
+  Frame();Capture("hp-enabled");
  }
  static void CheckNumberEditing()
  {

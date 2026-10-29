@@ -4,6 +4,15 @@ namespace KeyboundPilot;
 
 internal static class PlaybackControls
 {
+    // Reserve one row even for empty content. Long text cannot change width/height;
+    // its complete value remains available on hover.
+    public static void StableText(string text)
+    {
+        var p=ImGui.GetCursorScreenPos();var size=new Vector2(Math.Max(1,ImGui.GetContentRegionAvail().X),ImGui.GetTextLineHeight());
+        ImGui.Dummy(size);var draw=ImGui.GetWindowDrawList();
+        draw.PushClipRect(p,p+size,true);draw.AddText(p,ImGui.GetColorU32(ImGuiCol.Text),text);draw.PopClipRect();
+        if(text.Length>0 && ImGui.IsItemHovered())ImGui.SetTooltip(text);
+    }
     // Geometry avoids depending on icon-font coverage for the transport buttons.
     public static void Draw(bool running,bool paused,Func<string,string> text,Action start,Action pause,Action stop)
     {

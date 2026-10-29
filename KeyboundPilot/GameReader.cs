@@ -17,6 +17,7 @@ internal sealed unsafe class GameReader(IGameGui gui)
     public bool InputEnabled {get;private set;}
     public bool Available {get;private set;}
     public bool ContentComplete {get;private set;}
+    public float? HealthPercent {get;private set;}
     public void ResetFocus() {focus.Reset();FocusState="Idle";FocusRequestAccepted=null;}
     public IReadOnlyList<string> Words {get;private set;}=[];
     public IReadOnlyList<KtgWord> Enemies {get;private set;}=[];
@@ -80,8 +81,9 @@ internal sealed unsafe class GameReader(IGameGui gui)
         var raw=input->EvaluatedString.AsSpan();if(raw.Length>1024)return null;
         return SeString.Parse(raw).TextValue;
     }
-    public void Refresh(bool excludeUnseen=true)
+    public void Refresh(bool excludeUnseen=true,bool readHealth=false)
     {
+        HealthPercent=readHealth?HealthReader.Read(gui):null;
         var result=gui.GetAddonByName<AtkUnitBase>("KTGResult");
         ContentComplete=result!=null && result->IsVisible && Visible(result->RootNode);
         var input=Input(out _);InputVisible=input!=null;InputEnabled=input!=null && input->Enabled;InputFocused=input!=null && input->IsActive;

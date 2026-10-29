@@ -38,8 +38,8 @@ internal static class BackgroundTests
         try
         {
             using(var store=new ConfigurationStore(path))
-            {check(!store.Configuration.DirectInput,"background defaults off");store.Configuration.DirectInput=true;store.Update(store.Configuration);check(!File.Exists(path),"background toggle does not write immediately");store.Flush();check(store.LastError==null,"background save: "+store.LastError);}
-            using(var store=new ConfigurationStore(path))check(store.Configuration.DirectInput,"background persists across restart");
+            {check(store.Configuration.DirectInput,"background defaults on");store.Configuration.DirectInput=false;store.Update(store.Configuration);check(!File.Exists(path),"background toggle does not write immediately");store.Flush();check(store.LastError==null,"background save: "+store.LastError);}
+            using(var store=new ConfigurationStore(path))check(!store.Configuration.DirectInput,"explicit foreground choice persists across restart");
         }
         finally{if(File.Exists(path))File.Delete(path);}
     }

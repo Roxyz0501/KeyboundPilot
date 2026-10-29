@@ -3,7 +3,7 @@ var checks = 0;
 void Check(bool value, string what) { checks++; if (!value) throw new Exception(what); }
 ObstructionTests.Run(Check);FinishRoundTests.Run(Check);
 ScoreTests.Run(Check);ExitDelayTests.Run(Check);
-RematchTests.Run(Check);
+RematchTests.Run(Check);InputProfileTests.Run(Check);
 var samples = new List<(int, int)>();
 var sent = new List<char>();
 var s = new TypingSession((a,b) => { samples.Add((a,b)); return b-1; });
