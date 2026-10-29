@@ -27,6 +27,13 @@ public sealed class Plugin : IDalamudPlugin
     private readonly EncounterPolicy encounter = new();
     private readonly AutomationLifecycle automation = new();
     private readonly RoundLoop loop=new();
+    private readonly ScoreSession scores=new();
+    private readonly ScoreReader scoreReader;
+    private readonly ScoreHistory scoreHistory;
+    private readonly ScorePanel scorePanel;
+    private long scoreSample,scoreExitWait=-1;
+    private int scoreFailures;
+    private bool scoreErrorShown;
     private readonly ActivityKeeper activity=new();
     private readonly LoopGameUi loopUi;
     private readonly ICondition condition;
@@ -69,6 +76,10 @@ public sealed class Plugin : IDalamudPlugin
             settings.Update(config);
         }
         reader = new GameReader(gui);
+        scoreReader=new ScoreReader(gui);
+        scoreHistory=new ScoreHistory(Path.Combine(pi.GetPluginConfigDirectory(),"scores"));
+        scorePanel=new ScorePanel(scoreHistory);
+        if(client.TerritoryType!=LoopGameUi.GameTerritory)scoreHistory.EndSession();
         diagnostics = new DiagnosticRecorder(Path.Combine(pi.GetPluginConfigDirectory(),"diagnostics"));
         diagnosticReader = new DiagnosticReader(gui);
         fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas,log,[diagnostics.DirectoryPath]);
@@ -94,8 +105,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true;activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true;scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -133,6 +144,7 @@ public sealed class Plugin : IDalamudPlugin
             typing.ConfigureMistypes(config.MistypeEnabled,config.TypoMin,config.TypoMax);
             if(activity.Requested && EscapePressed){StopByUser();return;}
             var inGame=IsContent();
+            UpdateScores(now,inGame);
             if(!inGame)activity.End();
             activity.Tick(now,inGame && !Loading && !reader.ContentComplete && activity.Requested && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
@@ -195,11 +207,28 @@ public sealed class Plugin : IDalamudPlugin
         }
         finally {if(!typing.Running){ime.Restore();if(loop.Active && loop.Phase==LoopPhase.Playing && typing.Status!="Completed")loop.Stop(true);}}
     }
+    private void UpdateScores(long now,bool inGame)
+    {
+        if(scoreHistory.Error!=null && !scoreErrorShown){scoreErrorShown=true;open=true;log.Warning("Score history saving stopped; use Retry in Score history.");}
+        if(scoreHistory.Error==null)scoreErrorShown=false;
+        if(!inGame){if(scores.Active){scores.End(scoreHistory.Add);scoreHistory.EndSession();}scoreFailures=0;return;}
+        if(Loading || now-scoreSample<250 || scoreFailures>=3)return;
+        scoreSample=now;
+        try
+        {
+            var name=objects.LocalPlayer?.Name.TextValue;
+            if(string.IsNullOrWhiteSpace(name))return;
+            if(!scores.Active){var marker=scoreHistory.BeginSession(name);scores.Begin(name,marker.Id,marker.Result);}
+            var sample=scoreReader.Read(name);
+            scores.Observe(now,sample.Live,sample.ResultVisible,sample.Rows,scoreHistory.Add);scoreFailures=0;
+        }
+        catch(Exception ex){if(++scoreFailures==3){log.Error(ex,"Score reading stopped for this game");open=true;}}
+    }
     private void StartLoop()
     {
         if(!loopUi.Supported || !client.IsLoggedIn || client.TerritoryType is not (LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory))return;
         var now=Environment.TickCount64;
-        StopByUser();loop.Start(now,config.LoopCount,IsContent());loopSample=0;
+        StopByUser();loop.Start(now,config.LoopCount,IsContent());loopSample=0;scoreExitWait=-1;
         if(IsContent())StartTyping(now,"loop_current_game");
     }
     private void UpdateLoop(long now)
@@ -210,6 +239,12 @@ public sealed class Plugin : IDalamudPlugin
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
         if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
+        if(!snapshot.Result)scoreExitWait=-1;
+        else
+        {
+            if(scoreExitWait<0)scoreExitWait=now;
+            if(now-scoreExitWait<5000 && scoreFailures<3 && (!scores.ResultSeen || !scores.ReadyToLeave(now)))snapshot=snapshot with {LeaveReady=false};
+        }
         var blocked=!InputAllowed || ModifierPressed || UiBlocked;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
@@ -263,7 +298,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         uiCaptures = ImGui.GetIO().WantTextInput || ImGui.IsAnyItemActive();
         if (stopping || !open) return;
-        fonts.Ensure(reader.Words.Append(typing.CurrentWord));
+        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(scores.Result.Select(x=>x.Name)));
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(650, 440), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Keybound Pilot###KeyboundPilot", ref open))
@@ -298,7 +333,12 @@ public sealed class Plugin : IDalamudPlugin
                     {config.LoopCount=count;settings.Update(config);}
                     ImGui.EndDisabled();
                     PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
-                    PlaybackControls.DrawStopAfterCurrent(loop.Active && !loop.StopAfterCurrentRequested,T,loop.RequestStopAfterCurrent);
+                    PlaybackControls.DrawStopAfterCurrent(loop.Active,T,loop.ToggleStopAfterCurrent,loop.StopAfterCurrentRequested);
+                    ImGui.Spacing();ImGui.Separator();
+                    ImGui.TextUnformatted(T("ScoreOwn")+": "+(scores.LiveScore?.ToString("N0")??"—"));
+                    if(scores.ResultSeen){ImGui.TextUnformatted(T("ScoreFinal"));ScorePanel.DrawRows(scores.Result,T);}
+                    ImGui.TextWrapped(T("ScoreScope"));
+                    if(scoreHistory.Error!=null || scoreFailures>=3)ImGui.TextWrapped(T("ScoreHistoryError"));
                     if(config.ShowDebug)
                     {
                         ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
@@ -317,6 +357,7 @@ public sealed class Plugin : IDalamudPlugin
                     }
                     ImGui.EndTabItem();
                 }
+                if(ImGui.BeginTabItem(T("ScoreHistory")+"###ScoreHistory")){scorePanel.Draw(T,scoreFailures>=3,()=>scoreFailures=0);ImGui.EndTabItem();}
                 StandardPluginTabs.DrawStandardTrailingTabs(T("Settings"), "Settings", DrawSettings,
                     T("Language"), DrawLanguage, T("Support"), () =>
                     StandardPluginTabs.DrawSupportContent(T("Support"), T("SupportText"), T("Recipient"), T("Donate")));

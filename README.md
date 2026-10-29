@@ -27,9 +27,17 @@ In the Square, choose 1–9999 runs and press “▶ Loop” below the numeric f
 
 Automatic travel to reception requires [vnavmesh](https://github.com/awgil/ffxiv_navmesh). Without it, the plugin can still register if you are close enough to talk to reception; otherwise, it stops with an error. If reception has not loaded yet, it waits for up to 120 seconds. It does not travel or teleport from another area.
 
-To finish the current run and stop, press “Stop after this run” to the right of the Loop button. Typing and the return to the Square continue, then the loop stops without another registration. A pending stop is shown in the loop status.
+To finish the current run and stop, press “Stop after this run” to the right of the Loop button. Typing and the return to the Square continue, then the loop stops without another registration. A pending stop is shown in the loop status. The button changes to “Cancel scheduled stop”; press it again to continue looping.
 
 The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. It does not confirm other dialogs or act while paused or stopped.
+
+## Scores
+
+Your current score appears on the Auto typing tab during play. At the end, the plugin records the finish time, character names and final scores it can read from the results screen. Recording also works during manual play. Looping waits briefly for the result display before exiting.
+
+Open “Score history” and select a date to review past games. Expand a result to see the available participant scores. Records stay on this PC, and timestamps use the PC’s time zone at recording. Missing values appear as “—”, not zero. If the game abbreviates your name so it cannot be matched, your score is listed under the displayed name without a separate personal-score value.
+
+The results screen indicates that only the first-place player’s score and your own score are shown. Other players’ scores are recorded only when readable on that screen; their scores during play are not available here.
 
 ## Input behavior
 
@@ -106,9 +114,17 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 受付への自動移動には [vnavmesh](https://github.com/awgil/ffxiv_navmesh) が必要です。入れていなくても受付に話しかけられる距離なら申請でき、離れている場合はエラーで停止します。受付がまだ読み込まれていない場合は最大120秒待機します。別エリアからの移動やテレポートはしません。
 
-今の周回を終えてから止めるには、周回ボタン右側の「この周回で停止」を押してください。入力とスクウェアへの退出は続け、次の参加申請をせずに終了します。押した後は「この周回で停止予定」と表示します。
+今の周回を終えてから止めるには、周回ボタン右側の「この周回で停止」を押してください。入力とスクウェアへの退出は続け、次の参加申請をせずに終了します。押した後は「この周回で停止予定」と表示します。ボタンは「停止予約を取り消す」に変わり、もう一度押すと周回を続けられます。
 
 周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。一時停止・停止中や別の確認画面では押しません。
+
+### スコア
+
+プレイ中は「自動入力」タブに自分のスコアを表示します。終了時には結果画面から取得できた最終スコアを終了日時・キャラクター名とともに保存します。手動プレイでも記録でき、周回中は結果の表示を少し待ってから退出します。
+
+「スコア履歴」で日付を選ぶと過去の結果を見直せます。各結果を開くと、取得できた参加者のスコアを表示します。記録はこのPCに保存し、時刻には記録時のPCの時間帯を使います。取得できなかった値は「—」で表示します。キャラクター名が省略されて自分と照合できない場合は、表示名ごとのスコアだけを載せます。
+
+結果画面には「1位のプレイヤーと自分のスコアのみ表示されます」と案内されています。他の参加者のスコアはその画面で読み取れたものを記録します。味方のプレイ中のスコアは表示できません。
 
 ### 入力中の動作
 

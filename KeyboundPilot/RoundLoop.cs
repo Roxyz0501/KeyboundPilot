@@ -13,6 +13,7 @@ public sealed class RoundLoop
     public bool Paused {get;private set;}
     public bool StopAfterCurrentRequested {get;private set;}
     public void RequestStopAfterCurrent() {if(Active)StopAfterCurrentRequested=true;}
+    public void ToggleStopAfterCurrent() {if(Active)StopAfterCurrentRequested=!StopAfterCurrentRequested;}
     public int Total {get;private set;}
     public int Completed {get;private set;}
     public int Current=>Total==0?0:Math.Min(Total,Phase is LoopPhase.Leaving or LoopPhase.Complete?Completed:Completed+1);

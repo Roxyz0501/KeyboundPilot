@@ -23,8 +23,10 @@ unsafe partial class Program
       ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
       ImGui.TextUnformatted(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T("LoopPlaying"));
       var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
-      PlaybackControls.DrawLoop(false,T("LoopButton"),()=>{});PlaybackControls.DrawStopAfterCurrent(panel==0,T,()=>{});
+      PlaybackControls.DrawLoop(false,T("LoopButton"),()=>{});PlaybackControls.DrawStopAfterCurrent(true,T,()=>{},panel==1);
       if(panel==1)ImGui.TextUnformatted(T("StopAfterCurrentPending"));
+      ImGui.Spacing();ImGui.Separator();ImGui.TextUnformatted(T("ScoreOwn")+": 12,345");
+      ImGui.TextWrapped(T("ScoreScope"));
       if(panel==1)
       {
        ImGui.Spacing();ImGui.Separator();ImGui.Spacing();ImGui.TextUnformatted(T("Words")+": 3");ImGui.TextUnformatted(T("DetectedList"));
@@ -33,7 +35,7 @@ unsafe partial class Program
       }
       ImGui.EndTabItem();
      }
-     foreach(var key in new[]{"Settings","Language","Support"})if(ImGui.BeginTabItem(T(key)))ImGui.EndTabItem();
+     foreach(var key in new[]{"ScoreHistory","Settings","Language","Support"})if(ImGui.BeginTabItem(T(key)))ImGui.EndTabItem();
      ImGui.EndTabBar();
     }
     ImGui.End();
@@ -41,6 +43,22 @@ unsafe partial class Program
    ImGui.PopFont();ImGui.Render();
   }
   Render(ImGui.GetDrawData(),textures,Path.Combine(path,"layout.bmp"));
+ }
+ static void ScorePreview(List<ImFontPtr> fonts,Dictionary<ulong,(nint,int,int)> textures,string path)
+ {
+  var folder=Path.Combine(path,"history-fixture-"+Guid.NewGuid().ToString("N"));
+  using var history=new ScoreHistory(folder);
+  history.Add(new(Guid.NewGuid(),new DateTimeOffset(2026,10,29,18,30,0,TimeSpan.FromHours(9)),"Sample Player",12345,
+   [new(1,"Sample Ally",16000,false),new(4,"Sample Player",12345,true)]));history.Flush();
+  using var panel=new ScorePanel(history);
+  for(var frame=0;frame<6;frame++)
+  {
+   ImGui.NewFrame();ImGui.PushFont(fonts[0]);ImGui.SetNextWindowPos(new Vector2(20,20));ImGui.SetNextWindowSize(new Vector2(680,510));
+   ImGui.Begin("Keybound Pilot - スコア履歴",ImGuiWindowFlags.NoResize|ImGuiWindowFlags.NoSavedSettings);
+   panel.Draw(key=>Loc.Get("ja",key),false,()=>{});ImGui.End();ImGui.PopFont();ImGui.Render();
+   Thread.Sleep(30);
+  }
+  Render(ImGui.GetDrawData(),textures,Path.Combine(path,"scores.bmp"));
  }
  static void SettingsPreview(List<ImFontPtr> fonts,Dictionary<ulong,(nint,int,int)> textures,string path)
  {

@@ -19,10 +19,10 @@ internal static class PlaybackControls
         ImGui.EndDisabled();if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(tooltip);
         if(pressed)action();
     }
-    public static void DrawStopAfterCurrent(bool enabled,Func<string,string> text,Action action)
+    public static void DrawStopAfterCurrent(bool enabled,Func<string,string> text,Action action,bool pending=false)
     {
         ImGui.SameLine();ImGui.BeginDisabled(!enabled);
-        var pressed=ImGui.Button(text("StopAfterCurrent")+"###LoopStopAfterCurrent",new Vector2(0,30));
+        var pressed=ImGui.Button(text(pending?"CancelStopAfterCurrent":"StopAfterCurrent")+"###LoopStopAfterCurrent",new Vector2(0,30));
         ImGui.EndDisabled();
         if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(text("StopAfterCurrentHelp"));
         if(pressed)action();

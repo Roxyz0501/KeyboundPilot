@@ -8,7 +8,7 @@ unsafe partial class Program
  static void Main(string[] args)
  {
   NativeLibrary.SetDllImportResolver(typeof(ImGui).Assembly,(name,_,_)=>name.Contains("cimgui")?NativeLibrary.Load(Path.Combine(AppContext.BaseDirectory,"cimgui.dll")):0);
-  CheckInputSubmission();CheckActivityTimers();CheckKtgActivity();
+  CheckScoreReader();CheckInputSubmission();CheckActivityTimers();CheckKtgActivity();
   ImGui.CreateContext();var io=ImGui.GetIO();io.IniFilename=null;io.DisplaySize=new Vector2(1440,900);io.DeltaTime=1f/60;
   var coverage=new GlyphCoverage();coverage.Include([Loc.FontText,GlyphCoverage.TypingCharacters]);
   var synthetic="くえ ぶれいんぽっど ～ 〜 記録場所/霧の谷";
@@ -40,7 +40,7 @@ unsafe partial class Program
   }
   Directory.CreateDirectory(args[1]);Render(ImGui.GetDrawData(),textures,Path.Combine(args[1],"fonts.bmp"));
   Console.WriteLine("PASS: 4 font faces, dynamic glyph additions/coalescing, 7-language native ImGui rendering");
-  Preview(fonts,textures,args[1]);SettingsPreview(fonts,textures,args[1]);CheckNumberEditing();
+  Preview(fonts,textures,args[1]);SettingsPreview(fonts,textures,args[1]);ScorePreview(fonts,textures,args[1]);CheckNumberEditing();
   ImGui.DestroyContext();
  }
 }
