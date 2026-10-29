@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.1 background submit and activity
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.1
+- Source/tag: f5411ba93864f97f931c71cc50d041787e51277a. Shared index: 82904d4740eacda178e680dcfbf8f6dce6035434.
+- Replace background keyboard Enter with validated dedicated input Enter callback, preserving raw/evaluated text, event kind and ClearText result. No OS fallback. Retain activity session on input errors; manual pause/stop/Escape, results, exit and lifecycle end it. Stop stays enabled and retained activity is displayed. Keep ten-second updates and three-failure bound.
+- Clean Release zero warnings/errors; 310 offline checks plus fabricated native callback ABI/ownership/argument/cleanup tests pass. Seven-language/four-font coverage (906 characters) and numeric UI checks pass. Live inactive/minimized submission and prevention of inactivity removal remain unverified; suspected previous NoProgress-to-activity-stop chain is not a confirmed live trace.
+- Public repository/icon/ZIP/source README and pinned index verified. ZIP 157352 bytes; SHA-256 a997caaf8d87cc48dd0927ef50380a890842eaffd8a2adaa2a2c8fcad4abad69. Main raw index initially cached 1.0.16.0.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.0 settings and ranges
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.0
