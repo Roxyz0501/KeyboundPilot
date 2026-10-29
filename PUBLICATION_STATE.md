@@ -1,3 +1,18 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.3 activity reset and diagnostics
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.3
+- Source/tag a8ed2deea42de5373fabbb3dc297cf9a1355a8b6; index 2e94711bd720596f897e07db0e1ef7a1db9733f7.
+- Reset activity on each successful answer dispatch in both modes, excluding IME confirmation. Read back fields to verify reset; successful submission restores failed periodic protection and coalesces next periodic write. Cached debug timers/limit/reset result/count/age/territory/status at most 4 Hz only while open with debug enabled. No new disk/network activity.
+- Clean Release, 325 offline checks, native callback ABI and seven-language/four-font 919-character coverage pass. Continued background inactivity removal reported; root cause and live effectiveness remain unconfirmed. Client timer resets are not proof of server activity.
+- Public repo/icon/ZIP/source README and pinned index verified. ZIP 160888 bytes, SHA-256 4ec08ed0b7d88e131489b8f58c2e44f211eb58f89c9aae4c252b82befd2ec1e3. Main raw index initially cached 1.0.16.1.
+
+## 2026-10-29 — Keybound Pilot 1.0.16.2 audit
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.2
+- Source/tag 985dd325b1da39604ae684c531c3dbf76ac31eed; index 52152034f7d0113effa13795b862e2f5ef04b20c.
+- Fixed premature NoProgress stop after a consumed answer when target survives: observe empty input, preserve post-submit delay and continue. Unconfirmed answers are not automatically retried. Reviewed typing/loop/activity/persistence flows. 315 offline checks and native checks passed, clean Release; live game not verified.
+- Public ZIP 157787 bytes, SHA-256 a42999a1ed28b72fc8e8d2fbb1ed2cd78e4afa3dd7cf1882a2d1107ec8ff0082 verified with public source/icon and pinned index. Superseded by 1.0.16.3 in the same task.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.1 background submit and activity
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.1
