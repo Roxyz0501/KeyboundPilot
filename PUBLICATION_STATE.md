@@ -1,3 +1,12 @@
+## 2026-10-30 — Keybound Pilot 1.0.16.14 conditional input modes
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.14
+- Source/tag b7dcb18813d93ec90a82888cfc3c062f18ef7658; distribution index 5cc28db995718d0873275645ee2f177f9c9435bd.
+- New configurations default to background input; preserve saved choices. Input adjustment has Normal/Visual obstruction/Low HP tabs, full interval/wait/typo profiles and persisted priority. Automatically select enabled profiles; low HP uses allied content gauge below the chosen threshold (1–100%, default 50%), releases on recovery, and falls back on missing data. Tab selection only edits settings. Default priority favors obstruction.
+- Show current mode below Status and keep state/target/loop/debug rows at fixed heights, with clipped full-text hover, so controls remain stationary. Preserve changed-only autosave/backups; old enabled obstruction profiles retain old intervals and freeze normal extras at migration. No new external calls/tasks; optional HP read reuses the existing content scan at at most 20 Hz.
+- Clean Release zero warnings/errors; 555 offline checks, native HP/row-position/callback/activity fixtures, 147 localization keys/seven languages, four-font 1071-character coverage and native numeric edits pass. Japanese/English normal and enabled/disabled condition tabs reviewed. README lint/diff/hash verification recorded in VALIDATION.md. Actual live HP detection and automatic mode transitions remain unverified.
+- Anonymous repository/icon/ZIP/source README/main and pinned index verified; both indices 1.0.16.14. ZIP 202789 bytes; SHA-256 c945fc467cd5818760462ecc3b6d97a77ef2d72d54de0fa47fcfb5574c5e756d.
+
 ## 2026-10-30 — Keybound Pilot 1.0.16.13 documentation cleanup
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.13
