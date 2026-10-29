@@ -93,6 +93,14 @@ public sealed class TypingSession
                 if(!send('\r')) {Stop("SendFailed");return;}
                 submitted=true;mistakeSubmitted=plannedMistake;mistakes.Submitted();var waitMin=Math.Clamp(betweenWordsMs,0,60000);var waitMax=Math.Clamp(betweenWordsMaximumMs??waitMin,waitMin,60000);nextWordAt=now+(waitMin==waitMax?waitMin:random(waitMin,waitMax+1));due=now+Math.Max(max,plannedMistake?150:0);Status="Waiting";return;
             }
+            // A consumed answer may leave the same enemy/prompt visible (for example multiple hits).
+            // A cleared field is observable progress; do not require target disappearance as well.
+            if(!composing && evaluated=="")
+            {
+                plan=null;targetWord="";plannedMistake=false;index=clearKeys=0;
+                submitted=committing=hiraganaRequested=clearing=false;
+                due=Math.Max(now,nextWordAt);Status=now<nextWordAt?"BetweenWords":"Waiting";return;
+            }
             Status="Waiting";if(now-due>3000)Stop("NoProgress");return;
         }
         if(plan==null)

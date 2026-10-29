@@ -25,6 +25,19 @@ internal static class RangeTests
    var count=waits.Count;Tick(60);check(waits.Count==count,"submission wait never resampled while waiting");
    Tick(80,false);text="";Tick(339);check(t.CurrentWord=="","upper sampled wait blocks next target");Tick(340);check(t.CurrentWord=="a","next target starts at sampled deadline");
   }
+  foreach(var background in new[]{false,true})
+  {
+   var t=new TypingSession((a,b)=>a);t.Start(0);string text="";int sends=0;
+   bool Send(char c){if(c=='\r'){sends++;text="";}else text+=c;return true;}
+   void Tick(long n)=>t.Tick(n,true,"a",true,20,20,Send,evaluated:text,betweenWordsMs:500,directInput:background);
+   Tick(0);Tick(20);Tick(40);Tick(60);Tick(539);
+   check(t.Running && t.CurrentWord=="" && sends==1,"cleared submitted field advances even with unchanged target, respecting delay");
+   Tick(540);Tick(560);Tick(580);check(sends==2 && t.Running,"same surviving target can receive another answer in both modes");
+  }
+  var unconfirmed=new TypingSession((a,b)=>a);unconfirmed.Start(0);
+  unconfirmed.Tick(0,true,"a",true,20,20,_=>true);unconfirmed.Tick(20,true,"a",true,20,20,_=>true);unconfirmed.Tick(40,true,"a",true,20,20,_=>true);
+  unconfirmed.Tick(4000,true,"a",true,20,20,_=>throw new Exception("unexpected retry"),evaluated:"a");
+  check(!unconfirmed.Running && unconfirmed.Status=="NoProgress","uncertain uncleared answer is not retried");
   var dir=Path.Combine(AppContext.BaseDirectory,"ranges-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);var file=Path.Combine(dir,"config.json");
   try
   {

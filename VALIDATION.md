@@ -1,3 +1,10 @@
+# Validation — 1.0.16.2 / 2026-10-29
+
+- Reviewed typing/IME/background transitions, submission and cleanup, explicit range sampling/migration, pause/stop/lifecycle, activity retention, queue state machine, NPC travel cancellation, scoped confirmations, and persistence retry/backup behavior. Existing tests cover those state machines; native in-game pointers/behavior cannot be certified offline.
+- Found reproducible premature NoProgress stop: the normal submitted-answer branch required target disappearance even after the evaluated input field was cleared. A surviving target with the same text could therefore stop typing after three seconds. Treat a non-composing empty field after submission as progress, retire the plan and preserve the post-submit deadline before choosing the next prompt.
+- Added five regression checks: unchanged target plus cleared field continues in normal/background modes, configured delay remains in force, second answer is possible, and an uncleared/unconfirmed answer is not retried. 315 offline checks pass. No automatic retries for uncertain submissions were added.
+- Existing native callback ABI, font rendering and numeric interaction checks also run for this release. Live game submission, acceptance, inactivity removal, NPC routing and optional IPC remain unverified; this audit is not a claim that all runtime bugs are eliminated.
+
 # Validation — 1.0.16.1 / 2026-10-29
 
 - User reports non-active background submission not accepted and subsequent inactivity removal. The previous path dispatched KeyboardDevice.SendKey(RETURN); a failed answer led to NoProgress stop after three seconds, which also disabled activity updates. This explains a possible chain; it is not a confirmed live trace of the reported run.
