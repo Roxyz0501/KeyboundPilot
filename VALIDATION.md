@@ -1,3 +1,7 @@
+# Validation — 1.0.16.13 / 2026-10-30
+
+- Documentation-only update: remove six English/Japanese README paragraphs about implementation references and code reuse at the user's request. Preserve operating instructions, including optional vnavmesh requirements. NOTICE is reduced to the plugin copyright/license and runtime/game-content notices. Existing provenance records identify external plugin references as conceptual/API/layout comparisons rather than source copying; the activity layout was independently cross-checked against the installed client. Remove those voluntary descriptions and their reference-only license appendix. LICENSE remains unchanged. Both files are included in the package. No runtime behavior, UI, settings, data access or persistence changes.
+- Clean Release passes with zero warnings/errors and all 493 existing regression checks pass. Package metadata, canonical tabs, icon and 136 localization keys across seven languages are verified. No new tests are necessary for this text-only deletion. Live game behavior is not newly verified.
 # Validation — 1.0.16.12 / 2026-10-30
 
 - Reset the per-match acceptance guard when the owned duty queue returns to Pending/Queued with no ready confirmation in the lobby. A hidden or disabled confirmation after acceptance alone never resets it. Observe withdrawal during pause/input blocking, but never dispatch until resumed/unblocked. Loading and unrelated-duty guards remain in place. Repeated rematches do not increment rounds or restart the total queue timeout.

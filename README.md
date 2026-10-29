@@ -79,15 +79,9 @@ Change the display language in Language settings. Japanese, English, German, Fre
 
 Author: Roxyz0501. License: [Apache-2.0](LICENSE).
 
-Parts of configuration saving and font support use code from [BaitBeacon](https://github.com/Roxyz0501/BaitBeacon) by Roxyz0501, licensed under Apache-2.0. Automatic travel to reception integrates with [vnavmesh](https://github.com/awgil/ffxiv_navmesh) by awgil and contributors.
-
 Optional support: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
 
 ---
-
-Background input concept reference: [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler) by 1Stalk (AGPL-3.0-or-later), specifically the game-local input approach and per-device timers for inactivity prevention. No source code was copied. Text conversion and input scheduling are implemented in Keybound Pilot using FFXIVClientStructs APIs.
-
-The Brawler-specific inactivity timer handling references [Saucy](https://github.com/PunishXIV/Saucy) by Puni.sh and contributors (BSD-3-Clause). See [NOTICE](NOTICE) for attribution and license terms.
 
 ## 日本語
 
@@ -168,11 +162,5 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 作者: Roxyz0501。ライセンス: [Apache-2.0](LICENSE)。
 
-設定保存とフォント表示の一部に [BaitBeacon](https://github.com/Roxyz0501/BaitBeacon)（Roxyz0501、Apache-2.0）のコードを使用しています。受付への自動移動は [vnavmesh](https://github.com/awgil/ffxiv_navmesh)（awgil と各コントリビューター）と連携します。
-
 任意の開発支援: [Roxyz0501 / Ko-fi](https://ko-fi.com/roxyz0501)
-
-バックグラウンド入力は [AutoKeyboundBrawler](https://github.com/1Stalk/AutoKeyboundBrawler)（1Stalk、AGPL-3.0-or-later）のゲーム内で入力を処理する方式と、退出対策の機器別タイマーの扱いを参考にしています。コードのコピーはせず、文字変換と入力間隔の制御はKeybound Pilot側で実装しています。
-
-キーバウンド専用の無操作タイマーへの対応は、[Saucy](https://github.com/PunishXIV/Saucy)（Puni.sh と貢献者、BSD-3-Clause）を参考にしています。帰属表示とライセンス全文は [NOTICE](NOTICE) に記載しています。
 

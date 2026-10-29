@@ -2,50 +2,5 @@ Keybound Pilot
 Copyright 2026 Roxyz0501
 Licensed under the Apache License, Version 2.0.
 
-Selected configuration and font helper code reused from Roxyz0501/BaitBeacon (in-house, Apache-2.0).
-StandardPluginTabs.cs is the shared Roxyz0501 workspace template, copied unchanged.
 Dalamud, Dalamud.Bindings.ImGui, FFXIVClientStructs, Lumina and Lumina.Excel are runtime references supplied by Dalamud and are not included in the ZIP.
 FINAL FANTASY XIV and related game content belong to Square Enix. No game executable, art, font file, game text dictionary or game data is included.
-
-Historical reference (no longer used): AutoDuty QueueHelper UI queue flow, ffxivcode and contributors. No code copied. https://github.com/ffxivcode/AutoDuty/blob/53f4e7400f9791f4534f803a2ec2d2ff709375ba/AutoDuty/Helpers/QueueHelper.cs
-Optional navigation uses vnavmesh public IPC; no code copied. Author: awgil and contributors. https://github.com/awgil/ffxiv_navmesh
-
-Conceptual/API reference: AutoKeyboundBrawler by 1Stalk, AGPL-3.0-or-later, commit 113eb58839ab4da93ff931d213c4cef1fe19f235. https://github.com/1Stalk/AutoKeyboundBrawler
-Reference scope: game-local KeyboardDeviceInterface.SendKey for answer submission. No code copied or adapted. Background conversion, scheduling and component text operations independently implemented against the FFXIVClientStructs API.
-FFXIVClientStructs API documentation reference: aers and contributors, MIT. https://github.com/aers/FFXIVClientStructs (KeyboardDeviceInterface.SendKey and AtkComponentTextInput.SetText). Runtime reference only; no library source copied.
-
-Current background submission uses the input component registered callback with InputCallbackType.Enter and its CallbackEventKind, raw and evaluated strings, honoring InputCallbackResult.ClearText. API reference: FFXIVClientStructs AtkComponentInputBase (aers and contributors, MIT); independently implemented with no source copying.
-
-Inactivity prevention conceptual/API comparison: AutoKeyboundBrawler KTGAntiAfk, 1Stalk, AGPL-3.0-or-later, commit 429937e6d8ced7d26a9df57a98aa5590618fc4fe. The comparison identified missing window/OS notifications and per-device timer resets. Independently implemented using Win32 PostMessageW/SendInput and FFXIVClientStructs InputTimerModule APIs; no source code copied.
-
-Keybound-specific inactivity timer layout/behavior reference: Saucy by Puni.sh and contributors, BSD-3-Clause, commit ec18e30459c1ad3b1a42fec53fc2e1e99471043d. https://github.com/PunishXIV/Saucy/blob/ec18e30459c1ad3b1a42fec53fc2e1e99471043d/Saucy/Games/KeyboundBrawler/KeyboundBrawlerAutomation.cs
-Reference scope: input agent 398 ownership by HUD agent 397 and its two inactivity counters at 0x50/0x54. Independently cross-checked against the installed client constructor/update; implemented with typed layout, owner/value validation, existing submission/periodic lifecycle and native fixtures. The following upstream license is retained for this selected functionality reference.
-
-BSD 3-Clause License
-
-Copyright (c) 2023, Puni.sh
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
