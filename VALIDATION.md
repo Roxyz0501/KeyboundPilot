@@ -1,3 +1,10 @@
+# Validation — 1.0.16.3 / 2026-10-29
+
+- User reports inactivity removal continues in background mode. Cause remains unconfirmed. Add an immediate activity reset after every successfully dispatched answer in both physical and background modes; IME confirmations, failed sends, pause and stopped sessions do not trigger it. A submission permits another reset attempt after periodic retries were exhausted, and postpones the next periodic reset by ten seconds.
+- Read back ContentInputTimer, InputTimer and AfkTimer after resetting and record success only if content/input are zero and AFK is nonpositive. Retain exact territory guard; never change limits/status or send extra keys/movement.
+- Debug-only cached sampling at most four times/second while the UI is open: content/input/AFK timer seconds, configured instance limit, timer territory/status, last reset result/count/age. No log files, network calls or disk writes added. These are client fields, not proof of server inactivity state.
+- 325 offline checks pass, including successful submission callbacks in both modes, no IME/pause callbacks, retry recovery and periodic coalescing. Build clean. Live field values, actual inactivity removal and server behavior remain unverified. 1.0.16.2 audit fix for consumed answers on surviving targets is included.
+
 # Validation — 1.0.16.2 / 2026-10-29
 
 - Reviewed typing/IME/background transitions, submission and cleanup, explicit range sampling/migration, pause/stop/lifecycle, activity retention, queue state machine, NPC travel cancellation, scoped confirmations, and persistence retry/backup behavior. Existing tests cover those state machines; native in-game pointers/behavior cannot be certified offline.

@@ -8,6 +8,13 @@ public sealed class ActivityKeeper
     private long next;
     private int failures;
     public bool Failed=>failures>=3;
+    public void OnSubmission(long now,Func<bool> touch)
+    {
+        // A real answer is a new retry opportunity, even after periodic attempts failed.
+        if(!Requested)return;
+        if(touch())failures=0;else failures++;
+        next=now+10000;
+    }
     public void Reset() {next=0;failures=0;}
     public void Tick(long now,bool active,Func<bool> touch)
     {

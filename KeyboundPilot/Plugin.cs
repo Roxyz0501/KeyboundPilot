@@ -48,6 +48,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool inContent;
     private int failures;
     private bool uiCaptures;
+    private ActivitySnapshot activitySnapshot;
+    private long activitySample;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
         IClientState client, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
@@ -124,6 +126,7 @@ public sealed class Plugin : IDalamudPlugin
         try
         {
             var now=Environment.TickCount64;
+            if(open && config.ShowDebug && now-activitySample>=250){activitySnapshot=ContentActivity.Read();activitySample=now;}
             typing.ConfigureMistypes(config.MistypeEnabled,config.TypoMin,config.TypoMax);
             if(activity.Requested && EscapePressed){StopByUser();return;}
             var inGame=IsContent();
@@ -177,7 +180,7 @@ public sealed class Plugin : IDalamudPlugin
             typing.Tick(now,true,reader.Words.FirstOrDefault(),reader.StillVisible(typing.CurrentWord,currentEntity),
                 config.MinimumMs,config.MaximumMs,c=>!stopping && IsContent() && !UiBlocked && !encounter.Paused(Environment.TickCount64)
                     && reader.FocusedNow() && (c=='\b' || reader.StillVisible(typing.CurrentWord,currentEntity)) && (config.DirectInput?reader.SendDirect(c):(c==TypingSession.LatinModeKey?ime.Prepare(false):Keyboard.Send(c,typing.ExactCase))),
-                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax);
+                paused:paused || !focused,composing:imeState.Composing,evaluated:reader.EvaluatedText(),betweenWordsMs:config.WaitMin,directInput:config.DirectInput,betweenWordsMaximumMs:config.WaitMax,onSubmitted:()=>activity.OnSubmission(Environment.TickCount64,ContentActivity.Touch));
             if(previousWord.Length==0 && typing.CurrentWord.Length>0)currentEntity=reader.Source(typing.CurrentWord);
             failures=0;
         }
@@ -301,6 +304,8 @@ public sealed class Plugin : IDalamudPlugin
                         ImGui.TextUnformatted(T("InputVisible")+": "+T(reader.InputVisible?"Yes":"No"));
                         ImGui.TextUnformatted(T("InputFocused")+": "+T(reader.InputFocused?"Yes":"No"));
                         ImGui.TextUnformatted(T("Sent")+": "+typing.Sent);
+                        ImGui.TextWrapped(activitySnapshot.Available?string.Format(T("ActivityTimers"),activitySnapshot.Content,activitySnapshot.Input,activitySnapshot.Afk,activitySnapshot.Limit):T("ActivityNoData"));
+                        ImGui.TextWrapped(string.Format(T("ActivityReset"),ContentActivity.LastAttempt==0?"—":T(ContentActivity.LastSucceeded?"Yes":"No"),ContentActivity.ResetCount,ContentActivity.LastAttempt==0?"—":((Environment.TickCount64-ContentActivity.LastAttempt)/1000d).ToString("F1"),activitySnapshot.Territory,activitySnapshot.Status));
                     }
                     ImGui.EndTabItem();
                 }

@@ -45,7 +45,7 @@ public sealed class TypingSession
     public void PauseByUser() {if(Running){ManualPaused=true;Status="UserPaused";}}
     public void ResumeByUser() {if(Running){ManualPaused=false;Status="Waiting";}}
     public void Tick(long now,bool ready,string? candidate,bool currentStillVisible,int min,int max,Func<char,bool> send,
-        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0,bool directInput=false,int? betweenWordsMaximumMs=null)
+        bool paused=false,bool composing=false,string? evaluated=null,int betweenWordsMs=0,bool directInput=false,int? betweenWordsMaximumMs=null,Action? onSubmitted=null)
     {
         if(!Running)return;
         if(cancelMistake){cancelMistake=false;RecoverIme(now);}
@@ -91,7 +91,7 @@ public sealed class TypingSession
                     if(AnswerCheck is "Unavailable" or "DifferentText") {RecoverIme(now);return;}
                 }
                 if(!send('\r')) {Stop("SendFailed");return;}
-                submitted=true;mistakeSubmitted=plannedMistake;mistakes.Submitted();var waitMin=Math.Clamp(betweenWordsMs,0,60000);var waitMax=Math.Clamp(betweenWordsMaximumMs??waitMin,waitMin,60000);nextWordAt=now+(waitMin==waitMax?waitMin:random(waitMin,waitMax+1));due=now+Math.Max(max,plannedMistake?150:0);Status="Waiting";return;
+                submitted=true;onSubmitted?.Invoke();mistakeSubmitted=plannedMistake;mistakes.Submitted();var waitMin=Math.Clamp(betweenWordsMs,0,60000);var waitMax=Math.Clamp(betweenWordsMaximumMs??waitMin,waitMin,60000);nextWordAt=now+(waitMin==waitMax?waitMin:random(waitMin,waitMax+1));due=now+Math.Max(max,plannedMistake?150:0);Status="Waiting";return;
             }
             // A consumed answer may leave the same enemy/prompt visible (for example multiple hits).
             // A cleared field is observable progress; do not require target disappearance as well.

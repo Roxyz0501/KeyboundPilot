@@ -38,6 +38,19 @@ internal static class RangeTests
   unconfirmed.Tick(0,true,"a",true,20,20,_=>true);unconfirmed.Tick(20,true,"a",true,20,20,_=>true);unconfirmed.Tick(40,true,"a",true,20,20,_=>true);
   unconfirmed.Tick(4000,true,"a",true,20,20,_=>throw new Exception("unexpected retry"),evaluated:"a");
   check(!unconfirmed.Running && unconfirmed.Status=="NoProgress","uncertain uncleared answer is not retried");
+  foreach(var background in new[]{false,true})
+  {
+   var t=new TypingSession((a,b)=>a);t.Start(0);int reset=0;
+   void Tick(long n,bool composing=false,bool paused=false)=>t.Tick(n,true,"あ",true,20,20,_=>true,paused:paused,composing:composing,evaluated:"あ",directInput:background,onSubmitted:()=>reset++);
+   Tick(0);Tick(20);Tick(40,true);check(reset==0,"typing and IME confirmation never reset submission activity");
+   Tick(190,false,true);check(reset==0,"paused submission does not reset activity");Tick(290);Tick(390);
+   check(reset==1 && t.Submitted,"successful answer resets activity once in both modes");
+  }
+  var protection=new ActivityKeeper();var resetCalls=0;bool Reset(){resetCalls++;return true;}
+  protection.OnSubmission(0,Reset);check(resetCalls==0,"stopped session does not reset on callback");
+  protection.Begin();for(int n=0;n<3;n++)protection.Tick(n*10000,true,()=>false);
+  protection.OnSubmission(30000,Reset);check(resetCalls==1 && !protection.Failed,"successful answer retries failed periodic protection");
+  protection.Tick(39999,true,Reset);check(resetCalls==1,"submission reset postpones redundant periodic write");protection.Tick(40000,true,Reset);check(resetCalls==2,"periodic protection continues after submission");
   var dir=Path.Combine(AppContext.BaseDirectory,"ranges-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);var file=Path.Combine(dir,"config.json");
   try
   {
