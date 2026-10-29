@@ -1,3 +1,11 @@
+## 2026-10-29 — Keybound Pilot 1.0.15.0 background mode
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.15.0
+- Source/tag: 72d3b5d3d6f47cdce967f2e32f0b476842429dd8. Shared index: 557369811924eebebe31b9b3154cf3217657a5bc.
+- Optional Background mode (default off): internal converted Unicode text delivery, exact Red XIII, simulated romaji intervals/confirmation waits, final game-local Enter without OS fallback. Preserve target/visibility/prohibition/pause/clear/typo/delay guards. Mode changes stop playback; foreground-only Escape. Loop can progress in background.
+- Clean Release, 284 offline checks and seven-language/four-font (887 glyphs) native rendering/numeric interactions pass. Live non-active/minimized gameplay, game acceptance and loop behavior remain unverified. No actual game input performed.
+- Public repository/icon/ZIP, source README and commit-pinned index retrieved and verified. Main raw index initially cached 1.0.14.0. ZIP 151667 bytes; SHA-256: 37ea2f4f6e73aaea5d1a1ddd0aa7ffc615f4939843c44a6fd49950d358ac5c9a.
+
 ## 2026-10-29 — Keybound Pilot 1.0.14.0 input adjustment
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.14.0
