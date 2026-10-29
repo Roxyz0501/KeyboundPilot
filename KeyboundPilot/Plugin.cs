@@ -289,14 +289,16 @@ public sealed class Plugin : IDalamudPlugin
                     PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
                     ImGui.TextWrapped(T("LoopStatus")+": "+(loop.Total>0
-                        ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":"Loop"+loop.Phase)
+                        ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":loop.Phase==LoopPhase.Complete && loop.StopAfterCurrentRequested?"LoopStopped":"Loop"+loop.Phase)
                         :T("LoopIdle")));
+                    if(loop.Active && loop.StopAfterCurrentRequested)ImGui.TextWrapped(T("StopAfterCurrentPending"));
                     ImGui.BeginDisabled(loop.Active);
                     var count=config.LoopCount;ImGui.SetNextItemWidth(Math.Min(400,ImGui.GetContentRegionAvail().X));
                     if(PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp")))
                     {config.LoopCount=count;settings.Update(config);}
                     ImGui.EndDisabled();
                     PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
+                    PlaybackControls.DrawStopAfterCurrent(loop.Active && !loop.StopAfterCurrentRequested,T,loop.RequestStopAfterCurrent);
                     if(config.ShowDebug)
                     {
                         ImGui.Spacing();ImGui.Separator();ImGui.Spacing();

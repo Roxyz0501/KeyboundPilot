@@ -11,14 +11,16 @@ public sealed class RoundLoop
     public LoopPhase Phase {get;private set;}
     public bool Active=>Phase is LoopPhase.Requesting or LoopPhase.Waiting or LoopPhase.Playing or LoopPhase.Leaving;
     public bool Paused {get;private set;}
+    public bool StopAfterCurrentRequested {get;private set;}
+    public void RequestStopAfterCurrent() {if(Active)StopAfterCurrentRequested=true;}
     public int Total {get;private set;}
     public int Completed {get;private set;}
     public int Current=>Total==0?0:Math.Min(Total,Phase is LoopPhase.Leaving or LoopPhase.Complete?Completed:Completed+1);
     private long since,blockedAt=-1;
     private bool accepted,left,confirmed,wasPreparing,keyboardConfirmed;
     public void Start(long now,int count,bool inGame)
-    {Total=Math.Clamp(count,1,9999);Completed=0;Paused=false;blockedAt=-1;accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(inGame?LoopPhase.Playing:LoopPhase.Requesting,now);}
-    public void Stop(bool error=false) {Phase=error?LoopPhase.Error:LoopPhase.Stopped;Paused=false;blockedAt=-1;}
+    {Total=Math.Clamp(count,1,9999);Completed=0;Paused=StopAfterCurrentRequested=false;blockedAt=-1;accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(inGame?LoopPhase.Playing:LoopPhase.Requesting,now);}
+    public void Stop(bool error=false) {Phase=error?LoopPhase.Error:LoopPhase.Stopped;Paused=StopAfterCurrentRequested=false;blockedAt=-1;}
     public void Pause() {if(Active)Paused=true;}
     public void Resume() {Paused=false;}
     private void Set(LoopPhase phase,long now) {Phase=phase;since=now;}
@@ -31,6 +33,7 @@ public sealed class RoundLoop
         switch(Phase)
         {
             case LoopPhase.Requesting:
+                if(StopAfterCurrentRequested) {Set(LoopPhase.Complete,now);break;}
                 if(!state.Lobby || state.Queued || state.InGame) {Stop(true);break;}
                 accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(LoopPhase.Waiting,now);return LoopAction.Queue;
             case LoopPhase.Waiting:
@@ -48,7 +51,7 @@ public sealed class RoundLoop
                 break;
             case LoopPhase.Leaving:
                 if(!state.InGame && state.Lobby && !state.Queued)
-                {Set(Completed>=Total?LoopPhase.Complete:LoopPhase.Requesting,now);break;}
+                {Set(Completed>=Total || StopAfterCurrentRequested?LoopPhase.Complete:LoopPhase.Requesting,now);break;}
                 if(state.ExitConfirm && left && !confirmed) {confirmed=true;return LoopAction.ConfirmExit;}
                 if(state.Result && state.LeaveReady && !left) {left=true;return LoopAction.Leave;}
                 if(now-since>120000)Stop(true);

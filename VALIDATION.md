@@ -1,3 +1,9 @@
+# Validation — 1.0.16.7 / 2026-10-29
+
+- Add localized “Stop after this run” beside Loop. Enabled only for an active loop with no pending request; request leaves current typing and configured loop count unchanged. Pending state is visible; duplicate requests are harmless. Current game and result/exit confirmations complete, then return to lobby ends the loop without another queue. A request before queue dispatch sends no queue; an already requested run is allowed to enter and finish. Pause/resume retains the request; a new loop/manual stop clears it. State is transient and causes no config writes.
+- 365 offline checks pass, including 16 new state-machine cases for playing, requesting, already queued entry, result/leave, loading, pause/resume, duplicate/idle requests, restart, count and no extra registration. Existing input/activity tests unchanged. Native callback, generic/dedicated timers, seven-language/four-font 975-character coverage and drag/double-click checks pass. Japanese button layout and pending-disabled state rendered offscreen and reviewed; no UI takeover or real input was used.
+- No network calls, polling or persistent writes added by this control. Clean Release/package/public checks recorded in PUBLICATION_STATE.md. Live gameplay/queue transitions remain unverified.
+
 # Validation — 1.0.16.6 / 2026-10-29
 
 - User confirmed inactivity removal after about 1–2 minutes. Dalamud logs confirm 1.0.16.5 loaded and territory 1359 entry around 11:57, followed by return to 1360 at 11:58:33 JST. Diagnostic recording is off, so no runtime dedicated-counter trace was available. AutoKeyboundBrawler master remained 429937e6d8ced7d26a9df57a98aa5590618fc4fe; its generic reset/OS notifications do not address this dedicated counter.

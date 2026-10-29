@@ -19,6 +19,14 @@ internal static class PlaybackControls
         ImGui.EndDisabled();if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(tooltip);
         if(pressed)action();
     }
+    public static void DrawStopAfterCurrent(bool enabled,Func<string,string> text,Action action)
+    {
+        ImGui.SameLine();ImGui.BeginDisabled(!enabled);
+        var pressed=ImGui.Button(text("StopAfterCurrent")+"###LoopStopAfterCurrent",new Vector2(0,30));
+        ImGui.EndDisabled();
+        if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(text("StopAfterCurrentHelp"));
+        if(pressed)action();
+    }
     public static bool Number(string id,ref int value,int min,int max,float speed,string tooltip)
     {
         // Native DragInt supports double-click and Ctrl-click direct text editing.

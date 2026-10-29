@@ -23,7 +23,8 @@ unsafe partial class Program
       ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
       ImGui.TextUnformatted(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T("LoopPlaying"));
       var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
-      PlaybackControls.DrawLoop(true,T("LoopButton"),()=>{});
+      PlaybackControls.DrawLoop(false,T("LoopButton"),()=>{});PlaybackControls.DrawStopAfterCurrent(panel==0,T,()=>{});
+      if(panel==1)ImGui.TextUnformatted(T("StopAfterCurrentPending"));
       if(panel==1)
       {
        ImGui.Spacing();ImGui.Separator();ImGui.Spacing();ImGui.TextUnformatted(T("Words")+": 3");ImGui.TextUnformatted(T("DetectedList"));

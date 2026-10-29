@@ -27,6 +27,8 @@ In the Square, choose 1–9999 runs and press “▶ Loop” below the numeric f
 
 Automatic travel to reception requires [vnavmesh](https://github.com/awgil/ffxiv_navmesh). Without it, the plugin can still register if you are close enough to talk to reception; otherwise, it stops with an error. If reception has not loaded yet, it waits for up to 120 seconds. It does not travel or teleport from another area.
 
+To finish the current run and stop, press “Stop after this run” to the right of the Loop button. Typing and the return to the Square continue, then the loop stops without another registration. A pending stop is shown in the loop status.
+
 The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. It does not confirm other dialogs or act while paused or stopped.
 
 ## Input behavior
@@ -103,6 +105,8 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 キーバウンドスクウェアで回数を1〜9999回に設定し、数値欄の下の「▶ 周回」を押してください。「参加受付」への移動・会話・申請・プレイ・退出を繰り返し、指定回数で終了します。現在の周回と完了回数は「周回ステータス」に表示します。プレイ中に周回を開始した場合は、そのゲームを1周目に数えます。
 
 受付への自動移動には [vnavmesh](https://github.com/awgil/ffxiv_navmesh) が必要です。入れていなくても受付に話しかけられる距離なら申請でき、離れている場合はエラーで停止します。受付がまだ読み込まれていない場合は最大120秒待機します。別エリアからの移動やテレポートはしません。
+
+今の周回を終えてから止めるには、周回ボタン右側の「この周回で停止」を押してください。入力とスクウェアへの退出は続け、次の参加申請をせずに終了します。押した後は「この周回で停止予定」と表示します。
 
 周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。一時停止・停止中や別の確認画面では押しません。
 
