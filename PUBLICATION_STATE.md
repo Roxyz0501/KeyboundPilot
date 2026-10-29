@@ -1,3 +1,13 @@
+## 2026-10-29 — Keybound Pilot 1.0.16.8 cancellable stop and score history
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.8
+- Source/tag 4ddb88140283459c6ae17f088d39ccef913a93d0; distribution index 503e63c135230fb4506a995b08de97f6f4301ceb.
+- The finish-current-run button toggles to Cancel scheduled stop and can resume the planned loop without interrupting the current game or changing pause/count state.
+- Add personal live score display and date-selectable local result history. Read installed KTG HUD/result nodes at 4 Hz, retain only visible name/score pairs, preserve unavailable values as null, wait briefly for result rows before loop exit. Game text 17865 limits displayed scores to first-place and self; live ally scores have no verified data source and are not implemented. Abbreviated names are not guessed as self.
+- Date-partitioned immutable result files, bounded background writer, durable session/result journal for reload recovery, three attempts then explicit retry, logout/normal shutdown flush. One cached 50-result history page, no unchanged redraw I/O and no network. No diagnostic logging was re-enabled.
+- Clean Release zero warnings/errors; 415 offline checks. Native score-node fixture, callback/timer fixtures, seven-language completeness (130 keys), four-font 1020-character coverage, native UI rendering and numeric interactions pass. README English/Japanese lint/diff/final-hash verification completed. Live game score extraction and animation timing remain unverified.
+- Anonymous public repository/icon/ZIP/source README/main and pinned index verified, both indices 1.0.16.8. ZIP 191089 bytes; SHA-256 cdeac0337fd92799d8b435effbcdf95eb2dab2df8c31d017adf752a9f88191a8.
+
 ## 2026-10-29 — Keybound Pilot 1.0.16.7 finish-current-run control
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.7
