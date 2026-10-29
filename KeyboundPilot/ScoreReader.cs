@@ -6,28 +6,24 @@ namespace KeyboundPilot;
 
 internal sealed unsafe class ScoreReader(IGameGui gui)
 {
-    // Node IDs verified against installed KTGResult/KTGHudScore ULDs. No game state is written.
-    public (int? Live,bool ResultVisible,ScoreRow[] Rows) Read(string character)
-        =>Read(gui.GetAddonByName<AtkUnitBase>("KTGHudScore"),gui.GetAddonByName<AtkUnitBase>("KTGResult"),character);
-    internal static (int? Live,bool ResultVisible,ScoreRow[] Rows) Read(AtkUnitBase* hud,AtkUnitBase* result,string character)
+    // Node IDs verified against installed KTGResult ULD. No game state is written.
+    public (bool ResultVisible,ScoreRow[] Rows) Read(string character)
+        =>Read(gui.GetAddonByName<AtkUnitBase>("KTGResult"),character);
+    internal static (bool ResultVisible,ScoreRow[] Rows) Read(AtkUnitBase* result,string character)
     {
-        int? live=null;
-        if(Ready(hud))
-        {
-            var component=Component(hud,2);
-            if(component!=null)live=ScoreNumbers.Parse(Text(component,5));
-        }
-        if(!Ready(result))return(live,false,[]);
+        if(!Ready(result))return(false,[]);
         var rows=new List<ScoreRow>(4);
         for(uint node=30;node<=33;node++)
         {
             var component=Component(result,node);
             if(component==null || !Visible((AtkResNode*)component->OwnerNode))continue;
-            var name=Text(component,9);var score=ScoreNumbers.Parse(Text(component,11));
+            var name=Text(component,9);
+            if(string.IsNullOrWhiteSpace(character) || name!=character)continue;
+            var score=ScoreNumbers.Parse(Text(component,11));
             if(string.IsNullOrWhiteSpace(name) || score==null)continue;
             rows.Add(new((int)node-29,name,score.Value,name==character));
         }
-        return(live,true,rows.ToArray());
+        return(true,rows.ToArray());
     }
     private static bool Ready(AtkUnitBase* addon)=>addon!=null && addon->IsReady && addon->IsVisible && Visible(addon->RootNode);
     private static AtkResNode* Node(AtkUldManager* manager,uint id)

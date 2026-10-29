@@ -27,7 +27,7 @@ internal static class ScoreTests
         session.Observe(1000,null,true,rows[..1],records.Add);
         session.Observe(2000,null,true,rows,records.Add);check(records.Count==0,"wait for newly revealed self score");
         session.Observe(2800,null,true,rows,records.Add);
-        check(records.Count==1 && records[0].OwnScore==456 && records[0].Players.Length==2,"record available final rows and self");
+        check(records.Count==1 && records[0].OwnScore==456 && records[0].Players.Length==1 && records[0].Players[0].Name=="Me","record only self and exclude other participants");
         check(session.ReadyToLeave(2800),"recorded result permits loop exit");
         session.Observe(4000,null,true,rows,records.Add);session.End(records.Add);session.End(records.Add);
         check(records.Count==1,"repeated result polls and exit record exactly once");

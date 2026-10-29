@@ -220,7 +220,7 @@ public sealed class Plugin : IDalamudPlugin
             if(string.IsNullOrWhiteSpace(name))return;
             if(!scores.Active){var marker=scoreHistory.BeginSession(name);scores.Begin(name,marker.Id,marker.Result);}
             var sample=scoreReader.Read(name);
-            scores.Observe(now,sample.Live,sample.ResultVisible,sample.Rows,scoreHistory.Add);scoreFailures=0;
+            scores.Observe(now,null,sample.ResultVisible,sample.Rows,scoreHistory.Add);scoreFailures=0;
         }
         catch(Exception ex){if(++scoreFailures==3){log.Error(ex,"Score reading stopped for this game");open=true;}}
     }
@@ -299,7 +299,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         uiCaptures = ImGui.GetIO().WantTextInput || ImGui.IsAnyItemActive();
         if (stopping || !open) return;
-        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(scores.Result.Select(x=>x.Name)));
+        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names));
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(650, 440), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Keybound Pilot###KeyboundPilot", ref open))
@@ -326,7 +326,7 @@ public sealed class Plugin : IDalamudPlugin
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
                     ImGui.TextWrapped(T("LoopStatus")+": "+(loop.Total>0
                         ?string.Format(T("LoopProgress"),loop.Current,loop.Total,loop.Completed)+" / "+T(loop.Paused?"UserPaused":loop.Phase==LoopPhase.Complete && loop.StopAfterCurrentRequested?"LoopStopped":"Loop"+loop.Phase)
-                        :T("LoopIdle")));
+                        :T("LoopIdle"))+ExitWaitText());
                     if(loop.Active && loop.StopAfterCurrentRequested)ImGui.TextWrapped(T("StopAfterCurrentPending"));
                     ImGui.BeginDisabled(loop.Active);
                     var count=config.LoopCount;ImGui.SetNextItemWidth(Math.Min(400,ImGui.GetContentRegionAvail().X));
@@ -335,11 +335,6 @@ public sealed class Plugin : IDalamudPlugin
                     ImGui.EndDisabled();
                     PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
                     PlaybackControls.DrawStopAfterCurrent(loop.Active,T,loop.ToggleStopAfterCurrent,loop.StopAfterCurrentRequested);
-                    ImGui.Spacing();ImGui.Separator();
-                    ImGui.TextUnformatted(T("ScoreOwn")+": "+(scores.LiveScore?.ToString("N0")??"—"));
-                    if(scores.ResultSeen){ImGui.TextUnformatted(T("ScoreFinal"));ScorePanel.DrawRows(scores.Result,T);}
-                    ImGui.TextWrapped(T("ScoreScope"));
-                    if(scoreHistory.Error!=null || scoreFailures>=3)ImGui.TextWrapped(T("ScoreHistoryError"));
                     if(config.ShowDebug)
                     {
                         ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
@@ -366,6 +361,12 @@ public sealed class Plugin : IDalamudPlugin
             }
         }
         ImGui.End();
+    }
+    private string ExitWaitText()
+    {
+        var remaining=loop.ExitWaitSeconds(Environment.TickCount64);
+        if(remaining==null)return "";
+        return " / "+(remaining>0?string.Format(T("ExitCountdown"),remaining):T(loop.WaitingForScores?"ExitScoreWait":"ExitReadyWait"));
     }
     private void DrawSettings()
     {

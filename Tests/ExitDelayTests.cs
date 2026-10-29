@@ -56,6 +56,25 @@ internal static class ExitDelayTests
   migrated.SetExitMinimum(5000);migrated.SetExitMaximum(60000);check(migrated.ExitMin==5000 && migrated.ExitMax==60000,"upper endpoint changes without moving minimum");
   migrated.SetExitMinimum(70000);check(migrated.ExitMin==60000 && migrated.ExitMax==60000,"lower endpoint cannot move upper");
   migrated.SetExitMinimum(-5);check(migrated.ExitMin==0 && migrated.ExitMax==60000,"lower endpoint clamps independently");
+  var countdownDraws=0;var countdown=new RoundLoop((min,max)=>{countdownDraws++;return 2500;});
+  check(countdown.ExitWaitSeconds(0)==null,"idle has no exit countdown");
+  countdown.Start(0,3,true);check(countdown.ExitWaitSeconds(0)==null,"playing without readiness has no countdown");
+  countdown.Tick(100,result,exitDelayMs:1000,exitMaximumMs:3000);
+  check(countdown.ExitWaitSeconds(100)==3 && countdown.ExitWaitSeconds(600)==2,"countdown rounds remaining milliseconds up to seconds");
+  check(countdown.ExitWaitSeconds(2599)==1 && countdown.ExitWaitSeconds(2600)==0,"countdown exact expiry boundary");
+  for(var n=0;n<100;n++)countdown.ExitWaitSeconds(200);
+  check(countdownDraws==1,"drawing countdown never redraws random wait");
+  countdown.Pause();countdown.Tick(3000,result,exitDelayMs:1000,exitMaximumMs:3000);
+  check(countdown.ExitWaitSeconds(3000)==0 && countdown.Paused,"paused countdown follows existing elapsed-time semantics without exit");
+  countdown.Resume();countdown.Tick(3001,result,exitDelayMs:1000,scoresReady:false,exitMaximumMs:3000);
+  check(countdown.ExitWaitSeconds(3001)==0 && countdown.WaitingForScores,"expired configured wait identifies remaining score wait");
+  countdown.Tick(3100,result,exitDelayMs:1000,scoresReady:true,exitMaximumMs:3000);
+  check(countdown.ExitWaitSeconds(3100)==null,"countdown disappears after exit dispatch");
+  countdown.Start(0,3,true);countdown.Tick(100,result,exitDelayMs:5000);countdown.Tick(200,result with {LeaveReady=false},exitDelayMs:5000);
+  check(countdown.ExitWaitSeconds(200)==null,"readiness loss hides countdown");
+  countdown.Tick(300,result,exitDelayMs:5000);check(countdown.ExitWaitSeconds(300)==5,"new readiness updates countdown origin");
+  countdown.Tick(400,result,exitDelayMs:8000);check(countdown.ExitWaitSeconds(400)==8,"edited range is reflected in remaining time");
+  countdown.Stop();check(countdown.ExitWaitSeconds(400)==null,"manual stop clears countdown");
   var root=Path.Combine(AppContext.BaseDirectory,"exit-delay-"+Guid.NewGuid());Directory.CreateDirectory(root);
   try
   {

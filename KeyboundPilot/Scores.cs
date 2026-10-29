@@ -54,6 +54,6 @@ public sealed class ScoreSession
     private void Commit(Action<ScoreRecord> save)
     {
         var self=Result.FirstOrDefault(x=>x.IsSelf);
-        save(new(id,DateTimeOffset.Now,character,self?.Score,Result.ToArray()));recorded=true;
+        save(new(id,DateTimeOffset.Now,character,self?.Score,Result.Where(x=>x.IsSelf).ToArray()));recorded=true;
     }
 }

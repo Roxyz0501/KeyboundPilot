@@ -21,12 +21,10 @@ unsafe partial class Program
       ImGui.TextUnformatted(T("Status")+": 自動入力中");ImGui.TextUnformatted(T("Current")+": じゅんぱくのていおうヴぁいす");
       PlaybackControls.Draw(true,false,T,()=>{},()=>{},()=>{});ImGui.SameLine();PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"));
       ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
-      ImGui.TextUnformatted(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T("LoopPlaying"));
+      ImGui.TextUnformatted(T("LoopStatus")+": "+string.Format(T("LoopProgress"),2,5,1)+" / "+T(panel==0?"LoopLeaving":"UserPaused")+" / "+(panel==0?string.Format(T("ExitCountdown"),12):T("ExitScoreWait")));
       var count=5;ImGui.SetNextItemWidth(400);PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp"));
       PlaybackControls.DrawLoop(false,T("LoopButton"),()=>{});PlaybackControls.DrawStopAfterCurrent(true,T,()=>{},panel==1);
       if(panel==1)ImGui.TextUnformatted(T("StopAfterCurrentPending"));
-      ImGui.Spacing();ImGui.Separator();ImGui.TextUnformatted(T("ScoreOwn")+": 12,345");
-      ImGui.TextWrapped(T("ScoreScope"));
       if(panel==1)
       {
        ImGui.Spacing();ImGui.Separator();ImGui.Spacing();ImGui.TextUnformatted(T("Words")+": 3");ImGui.TextUnformatted(T("DetectedList"));

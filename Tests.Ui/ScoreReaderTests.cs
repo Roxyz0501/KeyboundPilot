@@ -21,18 +21,16 @@ unsafe partial class Program
         AtkResNode** textNodes=stackalloc AtkResNode*[2];textNodes[0]=(AtkResNode*)&name;textNodes[1]=(AtkResNode*)&score;
         addon.UldManager.NodeList=addonNodes;addon.UldManager.NodeListCount=1;
         component.UldManager.NodeList=textNodes;component.UldManager.NodeListCount=2;
-        var sample=ScoreReader.Read(null,&addon,"Me");
+        var sample=ScoreReader.Read(&addon,"Me");
         Check(sample.ResultVisible && sample.Rows.Length==1 && sample.Rows[0].Score==12345 && sample.Rows[0].IsSelf,"result names and score decoded");
-        Check(ScoreReader.Read(null,&addon,"Someone Else").Rows[0].IsSelf==false,"unknown/abbreviated identity not guessed");
-        score.Color.A=0;Check(ScoreReader.Read(null,&addon,"Me").Rows.Length==0,"hidden score text excluded");score.Color.A=255;
-        owner.NodeFlags=0;Check(ScoreReader.Read(null,&addon,"Me").Rows.Length==0,"hidden row excluded");owner.NodeFlags=NodeFlags.Visible;
-        score.NodeText.BufUsed=1024;Check(ScoreReader.Read(null,&addon,"Me").Rows.Length==0,"oversized text rejected");score.NodeText.BufUsed=7;
-        component.UldManager.NodeListCount=1025;Check(ScoreReader.Read(null,&addon,"Me").Rows.Length==0,"invalid node array bounded");component.UldManager.NodeListCount=2;
-        owner.Type=NodeType.Text;Check(ScoreReader.Read(null,&addon,"Me").Rows.Length==0,"non-component node not cast");owner.Type=(NodeType)1005;
-        owner.NodeId=2;score.NodeId=5;
-        sample=ScoreReader.Read(&addon,null,"Me");Check(sample.Live==12345 && !sample.ResultVisible,"live score uses HUD component 2 text 5");
+        Check(ScoreReader.Read(&addon,"Someone Else").Rows.Length==0,"other participants excluded before score reading");
+        score.Color.A=0;Check(ScoreReader.Read(&addon,"Me").Rows.Length==0,"hidden score text excluded");score.Color.A=255;
+        owner.NodeFlags=0;Check(ScoreReader.Read(&addon,"Me").Rows.Length==0,"hidden row excluded");owner.NodeFlags=NodeFlags.Visible;
+        score.NodeText.BufUsed=1024;Check(ScoreReader.Read(&addon,"Me").Rows.Length==0,"oversized text rejected");score.NodeText.BufUsed=7;
+        component.UldManager.NodeListCount=1025;Check(ScoreReader.Read(&addon,"Me").Rows.Length==0,"invalid node array bounded");component.UldManager.NodeListCount=2;
+        owner.Type=NodeType.Text;Check(ScoreReader.Read(&addon,"Me").Rows.Length==0,"non-component node not cast");owner.Type=(NodeType)1005;
         addon.IsVisible=false;
-        sample=ScoreReader.Read(&addon,&addon,"Me");Check(sample.Live==null && !sample.ResultVisible && sample.Rows.Length==0,"hidden addons supply no scores");
-        Console.WriteLine("PASS: native score node fixture, hidden rows, bounded arrays/text, self identity and live HUD mapping");
+        sample=ScoreReader.Read(&addon,"Me");Check(!sample.ResultVisible && sample.Rows.Length==0,"hidden addons supply no scores");
+        Console.WriteLine("PASS: native score node fixture, hidden rows, bounded arrays/text, self-only identity filtering");
     }
 }

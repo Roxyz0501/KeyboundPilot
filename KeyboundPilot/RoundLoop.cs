@@ -14,6 +14,10 @@ public sealed class RoundLoop
     public LoopPhase Phase {get;private set;}
     public bool Active=>Phase is LoopPhase.Requesting or LoopPhase.Waiting or LoopPhase.Playing or LoopPhase.Leaving;
     public bool Paused {get;private set;}
+    public bool WaitingForScores {get;private set;}
+    // Pure display projection: never samples randomness or changes the exit deadline.
+    public int? ExitWaitSeconds(long now) => Active && !left && exitReadyAt>=0 && Phase is LoopPhase.Playing or LoopPhase.Leaving
+        ? (int)((Math.Max(0,sampledExitDelay-Math.Max(0,now-exitReadyAt))+999)/1000) : null;
     public bool StopAfterCurrentRequested {get;private set;}
     public void RequestStopAfterCurrent() {if(Active)StopAfterCurrentRequested=true;}
     public void ToggleStopAfterCurrent() {if(Active)StopAfterCurrentRequested=!StopAfterCurrentRequested;}
@@ -23,8 +27,8 @@ public sealed class RoundLoop
     private long since,blockedAt=-1,exitReadyAt=-1;
     private bool accepted,left,confirmed,wasPreparing,keyboardConfirmed;
     public void Start(long now,int count,bool inGame)
-    {Total=Math.Clamp(count,1,9999);Completed=0;Paused=StopAfterCurrentRequested=false;blockedAt=exitReadyAt=-1;accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(inGame?LoopPhase.Playing:LoopPhase.Requesting,now);}
-    public void Stop(bool error=false) {Phase=error?LoopPhase.Error:LoopPhase.Stopped;Paused=StopAfterCurrentRequested=false;blockedAt=exitReadyAt=-1;}
+    {Total=Math.Clamp(count,1,9999);Completed=0;Paused=StopAfterCurrentRequested=WaitingForScores=false;blockedAt=exitReadyAt=-1;accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(inGame?LoopPhase.Playing:LoopPhase.Requesting,now);}
+    public void Stop(bool error=false) {Phase=error?LoopPhase.Error:LoopPhase.Stopped;Paused=StopAfterCurrentRequested=WaitingForScores=false;blockedAt=exitReadyAt=-1;}
     public void Pause() {if(Active)Paused=true;}
     public void Resume() {Paused=false;}
     private void Set(LoopPhase phase,long now) {Phase=phase;since=now;}
@@ -44,6 +48,7 @@ public sealed class RoundLoop
             if(exitReadyAt<0)exitReadyAt=now;
         }
         else exitReadyAt=-1;
+        WaitingForScores=!scoresReady;
         var canLeave=state.LeaveReady && exitReadyAt>=0 && now-exitReadyAt>=sampledExitDelay && scoresReady;
         if(Paused || blocked || state.Loading) {if(blockedAt<0)blockedAt=now;return LoopAction.None;}
         if(blockedAt>=0) {since+=now-blockedAt;blockedAt=-1;}

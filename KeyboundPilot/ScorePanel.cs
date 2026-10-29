@@ -10,10 +10,10 @@ internal sealed class ScorePanel(ScoreHistory history) : IDisposable
     private Task<(string[] Dates,ScoreRecord[] Records,bool More,string Date,int Page)>? loading;
     private ScoreRecord[] records=[];
     private bool failed;
-    public IEnumerable<string> Names=>records.SelectMany(r=>r.Players.Select(x=>x.Name).Append(r.Character));
+    public IEnumerable<string> Names=>records.SelectMany(r=>r.Players.Where(x=>x.IsSelf).Select(x=>x.Name).Append(r.Character));
     public static void DrawRows(ScoreRow[] rows,Func<string,string> text)
     {
-        foreach(var row in rows)
+        foreach(var row in rows.Where(x=>x.IsSelf))
             ImGui.TextUnformatted($"{row.Name}{(row.IsSelf?" ("+text("ScoreSelf")+")":"")}: {row.Score:N0}");
     }
     public void Draw(Func<string,string> text,bool readError,Action retryReading)
@@ -43,7 +43,7 @@ internal sealed class ScorePanel(ScoreHistory history) : IDisposable
         {
             if(ImGui.TreeNode($"{record.Ended:HH:mm:ss zzz} | {record.Character} | {text("ScoreOwn")}: {record.OwnScore?.ToString("N0")??"—"}###{record.Id}"))
             {
-                if(record.Players.Length==0)ImGui.TextUnformatted(text("ScoreUnavailable"));
+                if(record.OwnScore==null)ImGui.TextUnformatted(text("ScoreUnavailable"));
                 DrawRows(record.Players,text);ImGui.TreePop();
             }
         }
