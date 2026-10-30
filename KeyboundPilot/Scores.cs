@@ -27,8 +27,17 @@ public sealed class ScoreSession
     private string character="";
     public int? LiveScore {get;private set;}
     public ScoreRow[] Result {get;private set;}=[];
+    public bool RecordingEnabled {get;private set;}=true;
+    public void SetRecording(bool enabled)
+    {
+        if(RecordingEnabled==enabled)return;
+        RecordingEnabled=enabled;
+        // Drop uncommitted observations, but retain this game's identity and recorded flag.
+        // Toggling off/on on the same results screen must not create another result.
+        Result=[];LiveScore=null;resultSince=-1;changedAt=0;
+    }
     public bool ResultSeen=>resultSince>=0;
-    public bool ReadyToLeave(long now)=>!ResultSeen || recorded || now-resultSince>=5000;
+    public bool ReadyToLeave(long now)=>!RecordingEnabled || !ResultSeen || recorded || now-resultSince>=5000;
     public void Begin(string name,Guid? sessionId=null,ScoreRecord? saved=null)
     {
         active=true;recorded=saved!=null;id=sessionId??Guid.NewGuid();character=name;resultSince=saved==null?-1:0;changedAt=0;LiveScore=null;Result=saved?.Players??[];
@@ -36,7 +45,7 @@ public sealed class ScoreSession
     public bool Active=>active;
     public void Observe(long now,int? live,bool resultVisible,ScoreRow[] rows,Action<ScoreRecord> save)
     {
-        if(!active)return;
+        if(!active || !RecordingEnabled)return;
         LiveScore=live;
         if(!resultVisible)return;
         if(resultSince<0){resultSince=now;changedAt=now;}
@@ -48,7 +57,7 @@ public sealed class ScoreSession
     }
     public void End(Action<ScoreRecord> save)
     {
-        if(active && ResultSeen && !recorded)Commit(save);
+        if(RecordingEnabled && active && ResultSeen && !recorded)Commit(save);
         active=false;LiveScore=null;
     }
     private void Commit(Action<ScoreRecord> save)

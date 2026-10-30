@@ -78,10 +78,10 @@ unsafe partial class Program
   {var io=ImGui.GetIO();io.AddMousePosEvent(x,y);Frame();io.AddMouseButtonEvent(0,true);Frame();io.AddMouseButtonEvent(0,false);Frame();Frame();}
   void Capture(string name){ImGui.GetIO().AddMousePosEvent(-1000,-1000);Frame();Render(ImGui.GetDrawData(),textures,Path.Combine(path,name+".bmp"));}
   Frame();Frame();Frame();Capture("settings");
-  Click(110,341);Click(830,341);Capture("obstruction-disabled");
+  Click(110,368);Click(830,368);Capture("obstruction-disabled");
   foreach(var config in configs){config.ObstructionIntervalEnabled=true;config.ObstructionSettings=new(150,250,100,300,true,15,25);}
   Frame();Capture("obstruction-enabled");
-  Click(180,341);Click(918,341);Capture("hp-disabled");
+  Click(180,368);Click(918,368);Capture("hp-disabled");
   foreach(var config in configs){config.LowHpEnabled=true;config.LowHpSettings=new(40,70,50,100,false,15,25);}
   Frame();Capture("hp-enabled");
  }

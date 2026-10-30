@@ -33,7 +33,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ScorePanel scorePanel;
     private long scoreSample,scoreExitWait=-1;
     private int scoreFailures;
-    private bool scoreErrorShown;
+    private bool scoreErrorShown,wasScoreInGame;
     private readonly ActivityKeeper activity=new();
     private readonly LoopGameUi loopUi;
     private readonly ICondition condition;
@@ -105,8 +105,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true;scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true;scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -209,9 +209,17 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void UpdateScores(long now,bool inGame)
     {
+        scores.SetRecording(config.RecordScores);
+        if(!inGame)
+        {
+            if(scores.Active)scores.End(scoreHistory.Add);
+            if(wasScoreInGame)scoreHistory.EndSession();
+            wasScoreInGame=false;scoreFailures=0;return;
+        }
+        wasScoreInGame=true;
+        if(!config.RecordScores){scoreFailures=0;scoreExitWait=-1;return;}
         if(scoreHistory.Error!=null && !scoreErrorShown){scoreErrorShown=true;open=true;log.Warning("Score history saving stopped; use Retry in Score history.");}
         if(scoreHistory.Error==null)scoreErrorShown=false;
-        if(!inGame){if(scores.Active){scores.End(scoreHistory.Add);scoreHistory.EndSession();}scoreFailures=0;return;}
         if(Loading || now-scoreSample<250 || scoreFailures>=3)return;
         scoreSample=now;
         try
@@ -240,7 +248,7 @@ public sealed class Plugin : IDalamudPlugin
         if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked)loopUi.SuspendTravel();
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
         var scoresReady=true;
-        if(!snapshot.Result)scoreExitWait=-1;
+        if(!snapshot.Result || !config.RecordScores)scoreExitWait=-1;
         else
         {
             if(scoreExitWait<0)scoreExitWait=now;
@@ -370,7 +378,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void DrawSettings()
     {
-        SettingsPanel.Draw(config,T,()=>settings.Update(config),StopByUser);
+        SettingsPanel.Draw(config,T,()=>{scores.SetRecording(config.RecordScores);settings.Update(config);},StopByUser);
         if (settings.Recovered) ImGui.TextWrapped(T("Recovered"));
         if (settings.LoadWarning != null || settings.LastError != null || settings.Stopped)
         {

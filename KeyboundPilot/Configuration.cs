@@ -54,6 +54,7 @@ public sealed class Configuration
     public bool MistypeEnabled { get; set; }
     public int MistypeInterval { get; set; } = 20;
     public bool ShowDebug { get; set; }
+    public bool RecordScores { get; set; } = true;
     public bool RecordDiagnostics { get; set; }
     public int ExitDelayMs { get; set; }
     public int? ExitDelayMinimumMs { get; set; }

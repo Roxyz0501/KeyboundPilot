@@ -33,7 +33,10 @@ internal static class SettingsPanel
         Help("AutoStartHelp");
         var debug=config.ShowDebug;
         if(ImGui.Checkbox(t("ShowDebug")+"###ShowDebug",ref debug)){config.ShowDebug=debug;save();}
-        Help("DebugHelp");ImGui.Spacing();
+        Help("DebugHelp");
+        var record=config.RecordScores;
+        if(ImGui.Checkbox(t("RecordScores")+"###RecordScores",ref record)){config.RecordScores=record;save();}
+        Help("RecordScoresHelp");ImGui.Spacing();
         if(ImGui.CollapsingHeader(t("LoopButton")+"###LoopSettings",ImGuiTreeNodeFlags.DefaultOpen))
         {
             Title("ExitDelay","ExitDelayHelp");

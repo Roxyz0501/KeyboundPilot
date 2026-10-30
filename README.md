@@ -33,7 +33,9 @@ The normal Pause, Play and Stop buttons also control loops. Stopping does not ca
 
 ## Scores
 
-Your final score is saved with the finish time and your character name. Open “Score history” and select a date to review it. Recording also works during manual play. Scores appear only in history; other participants’ scores are not recorded.
+Your final score is saved with the finish time and your character name. Open “Score history” and select a date to review it. Recording also works during manual play. Scores appear only in history; other participants’ scores are not recorded. The history lists time, character and score without expandable details or a “You” label.
+
+Settings → Record scores is on by default. Turn it off to stop reading and recording new scores. Saved history stays available, and the loop skips the score-recording wait before exit while keeping your configured exit delay.
 
 Records stay on this PC, and timestamps use the PC’s time zone at recording. Unavailable scores appear as “—”. If the game abbreviates your name so it cannot be matched, the final score may be unavailable.
 
@@ -123,7 +125,9 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 ### スコア
 
-自分の終了スコアを終了日時・キャラクター名とともに保存します。「スコア履歴」で日付を選ぶと過去の結果を見直せます。手動プレイでも記録できます。スコアは履歴だけに表示し、他の参加者のスコアは記録しません。
+自分の終了スコアを終了日時・キャラクター名とともに保存します。「スコア履歴」で日付を選ぶと過去の結果を見直せます。手動プレイでも記録できます。スコアは履歴だけに表示し、他の参加者のスコアは記録しません。履歴は時刻・キャラクター名・スコアの一覧で表示し、折り畳みや「自分」の付記はありません。
+
+「設定」の「スコアを記録する」は初期値オンです。オフにすると新しいスコアの取得・記録を止めます。保存済みの履歴は引き続き閲覧できます。周回ではスコア記録のための待機を省きますが、設定した退出待ち時間はそのまま適用します。
 
 記録はこのPCに保存し、時刻には記録時のPCの時間帯を使います。取得できなかった値は「—」で表示します。キャラクター名が省略されて自分と照合できない場合は、終了スコアを取得できないことがあります。
 

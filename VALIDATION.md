@@ -1,3 +1,11 @@
+# Validation — 1.0.16.16 / 2026-10-30
+
+- Replace per-game score tree expansion with a flat time/character/score table. Remove the self suffix and repeated self detail. Retain date selection, cached dates, 50-record pages, explicit refresh and unavailable-score tooltip; no history files are rewritten or deleted.
+- Add RecordScores (default true, including legacy configurations) to Settings and the immutable configuration snapshot/retry restore. Apply toggles immediately while retaining 60-second changed-only saves, lifecycle flush and backup generations.
+- When disabled, skip player-name/result reads and session creation, discard uncommitted observations, and bypass score-recording exit waits without changing configured exit delays. Preserve active session identity/recorded flag across toggles so enabling again on the same results screen cannot duplicate a completed score. Logout/unload honor the switch before final capture. Existing committed pending records still flush and durable journal replay is preserved. Clear the session marker once on leaving content even if recording stayed off after reload; no per-frame cleanup writes.
+- 572 offline checks pass, including 17 new default/migration, disabled observation/exit, reenable/deduplication, pending-discard, history retention, exit-delay and persistence cases. Native HP/callback/activity/fixed-row/numeric fixtures pass. 152 keys across seven languages and four-font 1083-character coverage pass. Native flat history and Japanese/English settings renders reviewed. Clean Release/public checks are recorded in PUBLICATION_STATE.md; live game toggle behavior is not newly verified.
+- The enabled path retains its existing 250 ms score sample interval; the disabled branch performs no new score lookup or result/session write. History loading remains cache/generation-driven and date/page bounded. No new external communication or periodic tasks.
+- README lint/diff/verify run 20261030T141406Z-2ebc59df, hash prefix 24b07641fe20. The added wait behavior matches the implementation; existing placeholder dash and polite explanatory endings remain intentional. No unresolved writing facts.
 # Validation — 1.0.16.15 / 2026-10-30
 
 - Unify both condition-profile enable labels as Use custom settings / 固有の設定を使用する, with corresponding seven-language translations. No mode-selection or typing behavior changes.

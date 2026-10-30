@@ -10,12 +10,7 @@ internal sealed class ScorePanel(ScoreHistory history) : IDisposable
     private Task<(string[] Dates,ScoreRecord[] Records,bool More,string Date,int Page)>? loading;
     private ScoreRecord[] records=[];
     private bool failed;
-    public IEnumerable<string> Names=>records.SelectMany(r=>r.Players.Where(x=>x.IsSelf).Select(x=>x.Name).Append(r.Character));
-    public static void DrawRows(ScoreRow[] rows,Func<string,string> text)
-    {
-        foreach(var row in rows.Where(x=>x.IsSelf))
-            ImGui.TextUnformatted($"{row.Name}{(row.IsSelf?" ("+text("ScoreSelf")+")":"")}: {row.Score:N0}");
-    }
+    public IEnumerable<string> Names=>records.Select(r=>r.Character);
     public void Draw(Func<string,string> text,bool readError,Action retryReading)
     {
         Poll();
@@ -39,13 +34,20 @@ internal sealed class ScorePanel(ScoreHistory history) : IDisposable
         if(ImGui.Button(text("ScoreNext"))){page++;Load(false);}ImGui.EndDisabled();ImGui.EndDisabled();
         if(loading!=null)ImGui.TextUnformatted(text("ScoreLoading"));
         else if(!failed && records.Length==0)ImGui.TextUnformatted(text("ScoreEmpty"));
-        foreach(var record in records)
+        if(records.Length>0 && ImGui.BeginTable("ScoreRecords",3,ImGuiTableFlags.RowBg|ImGuiTableFlags.BordersInnerV|ImGuiTableFlags.SizingStretchProp))
         {
-            if(ImGui.TreeNode($"{record.Ended:HH:mm:ss zzz} | {record.Character} | {text("ScoreOwn")}: {record.OwnScore?.ToString("N0")??"—"}###{record.Id}"))
+            ImGui.TableSetupColumn(text("ScoreTime"),ImGuiTableColumnFlags.WidthFixed,120);
+            ImGui.TableSetupColumn(text("ScoreCharacter"),ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn(text("ScoreValue"),ImGuiTableColumnFlags.WidthFixed,100);
+            ImGui.TableHeadersRow();
+            foreach(var record in records)
             {
-                if(record.OwnScore==null)ImGui.TextUnformatted(text("ScoreUnavailable"));
-                DrawRows(record.Players,text);ImGui.TreePop();
+                ImGui.TableNextRow();ImGui.TableNextColumn();ImGui.TextUnformatted($"{record.Ended:HH:mm:ss zzz}");
+                ImGui.TableNextColumn();ImGui.TextUnformatted(record.Character);
+                ImGui.TableNextColumn();ImGui.TextUnformatted(record.OwnScore?.ToString("N0")??"—");
+                if(record.OwnScore==null && ImGui.IsItemHovered())ImGui.SetTooltip(text("ScoreUnavailable"));
             }
+            ImGui.EndTable();
         }
     }
     private void Load(bool refreshDates)
