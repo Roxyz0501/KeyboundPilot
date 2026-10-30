@@ -1,3 +1,12 @@
+## 2026-10-30 — Keybound Pilot 1.0.16.16 score history controls
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.16
+- Source/tag 7bddca438dbbf06fbfd52ead0e80a0acb01d768b; distribution index b2436f8d2263368421c7747759d778d32bbf3f4d.
+- Flatten score history into time/character/score rows without expandable details or a self suffix. Preserve date/page caching and old files.
+- Add Record scores in Settings, default on including legacy settings. Off skips new score reads/session creation and score-recording exit waits while retaining configured exit delay and saved history. Discard uncommitted observations but preserve game identity/recorded flag through toggles to prevent duplicate results; lifecycle final capture respects the setting. Existing durable pending records still flush. Changed-only persistence and backups remain intact.
+- Clean Release zero warnings/errors; 572 offline checks including 17 new recording-toggle cases, native fixtures, 152 localization keys/seven languages and four-font 1083-character coverage pass. Flat history and settings UI reviewed. README lint/diff/hash verification recorded in VALIDATION.md. Live game toggle behavior not newly verified.
+- Anonymous repository/icon/ZIP/source README/main and pinned index verified; both indices 1.0.16.16. ZIP 205098 bytes; SHA-256 4d4b4ec3536b9fe70cc9e21df1ef2a8a1e2085e971ab2fe544a965133de298ce.
+
 ## 2026-10-30 — Keybound Pilot 1.0.16.15 compact settings help
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.15
