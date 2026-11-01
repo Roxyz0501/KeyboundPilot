@@ -1,3 +1,12 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.8 equipment ownership scope
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.8
+- Source/tag dd889f801cc55ae33a6e437f7adec956ded039ce; distribution index 27942a107c558b4cb4934fea292f7cefe83b94ea.
+- Equipment display counts only bags and armoury; excludes equipped gear, dresser and armoire, independent of storage readiness. Eligibility and acknowledgment observation use matching equipped=false/armoury=true flags for weapon/armour/accessory categories. Existing inventory invalidation remains, including equip/unequip changes.
+- Seven localized help texts and English/Japanese README updated. README review candidates retained where they describe requested behavior, quoted UI labels and ordinary instructions. yomiyasu-check: executed via=verify run=20261101T093700Z-e6b21650 attempt=1 final=sha256:5df231478c04 mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
+- Clean Release, 720 checks and native UI/font checks pass (1173 characters/four faces). Live inventory interaction not exercised. No additional scans, IO, external calls or persistence writes.
+- Public repository/icon/ZIP/source README/main and pinned index verified at 1.0.17.8. ZIP 251603 bytes; SHA-256 004932f8826ba4ba0cb57001fed0dee7725280ed4be4dac5aa10147561515ca6. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.7 equipment counts
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.7
