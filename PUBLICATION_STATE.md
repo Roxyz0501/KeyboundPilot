@@ -1,3 +1,13 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.3 category selection and automatic unsent recovery
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.3
+- Source/tag a6a4def9297ae74fcedc5619745b077c923caa0b; distribution index 86248130a44b70f2109d334203bb3a67a86b0a37.
+- Read-only live shop capture disproved prior mapping assumption: item/cost arrays are visible-row indexed, callback IDs independent. Current armour category has 9 rows; add category radio selection derived from equip-slot data and wait for target row before reservation. Native fixture replays captured IDs/costs/callbacks. No live game operations were sent during inspection; updated purchase not yet live-verified.
+- Persist explicit unsubmitted marker, then durable dispatch-start marker before selection. Automatically clear only known-unsubmitted records on reload/stop. Pre-callback rejection/category timeout defers the visit and resumes loop without same-round retry. Unknown legacy/sent records remain for reconciliation. One additional durable marker write per purchase; unchanged polling has zero writes/network calls.
+- Add loop Pause/Stop icons and Resume on paused loop Play; native click/drag/rendering checks pass. 685 checks, native category/input/HP/score/activity/capacity fixtures, 191 localization keys/seven languages and four-font 1175-glyph coverage pass. Clean Release zero warnings/errors.
+- README English/Japanese verified. yomiyasu-check: executed via=verify run=20261101T055016Z-1393e892 attempt=2 final=sha256:62e89df91d07 mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
+- Anonymous public repository/icon/ZIP/source README/main and pinned indices verified at 1.0.17.3. ZIP 247069 bytes; SHA-256 a2b69d5fb990121721015ed9b5893fc68e23ad6972561e5ec73b65ef79c31f7a. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.2 startup holdings and mapped exchange selection
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.2
