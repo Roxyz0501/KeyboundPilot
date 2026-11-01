@@ -36,6 +36,13 @@ internal static class PlaybackControls
         if(ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))ImGui.SetTooltip(text("StopAfterCurrentHelp"));
         if(pressed)action();
     }
+    public static void DrawLoopPauseStop(bool running,bool paused,Func<string,string> text,Action pause,Action stop)
+    {
+        ImGui.PushID("LoopControls");
+        ImGui.SameLine();Button("Pause",1,!running||paused,text("Pause"),pause);
+        ImGui.SameLine();Button("Stop",2,!running,text("Stop"),stop);
+        ImGui.PopID();
+    }
     public static bool Number(string id,ref int value,int min,int max,float speed,string tooltip)
     {
         // Native DragInt supports double-click and Ctrl-click direct text editing.

@@ -29,7 +29,10 @@ internal sealed unsafe class ExchangeCatalog
             // Mount, minion, emote, portrait, fashion accessory and orchestrion unlock actions.
             var learnable=action is 1322 or 853 or 2633 or 29459 or 20086 or 25183;
             if(action!=0 && action!=4647 && !learnable)return;
-            list.Add(new(item.RowId,item.Name.ToString(),(int)row.ItemCosts[0].CurrencyCost,learnable,item.IsUnique,item.StackSize,item.Icon));
+            var slot=item.EquipSlotCategory.Value;
+            var tab=item.EquipSlotCategory.RowId==0?11u:slot.MainHand>0 || slot.OffHand>0?8u:
+                slot.Ears>0 || slot.Neck>0 || slot.Wrists>0 || slot.FingerL>0 || slot.FingerR>0?10u:9u;
+            list.Add(new(item.RowId,item.Name.ToString(),(int)row.ItemCosts[0].CurrencyCost,learnable,item.IsUnique,item.StackSize,item.Icon,tab));
         }
         if(list.Count is <1 or >64 || list.Select(i=>i.Id).Distinct().Count()!=list.Count)return;
         Items=list.ToArray();CurrencyIcon=data.GetExcelSheet<Item>().GetRow(CurrencyId).Icon;Supported=true;

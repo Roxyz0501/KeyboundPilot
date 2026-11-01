@@ -17,10 +17,10 @@ internal static unsafe class ExchangeShopValues
         {
             var index=Number(addon,1310+i);
             if(index==null || index>=64)return null;
-            // Visible rows map to original shop entries; owned-item filters leave holes.
-            var id=Number(addon,1066+(int)index.Value);
+            // Item and price arrays are indexed by visible row; callback IDs are separate.
+            var id=Number(addon,1066+i);
             if(id==0)continue; // Empty list slots are not products.
-            var price=Number(addon,456+(int)index.Value);
+            var price=Number(addon,456+i);
             if(id==null || price==null || index==null || index>=64 || !ids.Add(id.Value))return null;
             var expected=catalog.FirstOrDefault(x=>x.Id==id);
             if(expected==null || expected.Cost!=price)return null;

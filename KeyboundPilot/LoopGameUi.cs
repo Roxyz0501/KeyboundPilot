@@ -138,9 +138,9 @@ internal sealed unsafe class LoopGameUi
         }
         return true;
     }
-    internal static bool Click(AtkUnitBase* addon,AtkComponentButton* button)
+    internal static bool Click(AtkUnitBase* addon,AtkComponentButton* button,ComponentType expectedType=ComponentType.Button)
     {
-        if(!Visible(addon) || !Ready(button) || (int)button->GetComponentType()!=1)return false;
+        if(!Visible(addon) || !Ready(button) || button->GetComponentType()!=expectedType)return false;
         var evt=button->OwnerNode->AtkEventManager.Event;
         for(var i=0;evt!=null && i<64;i++,evt=evt->NextEvent)
         {

@@ -13,8 +13,9 @@ internal sealed unsafe class ExchangeShop(IGameGui gui,IObjectTable objects,IDal
     private readonly ReceptionTravel travel=new(pi);
     private bool interacted;
     private nint ownedShop;
+    private uint preparedItem;
     public void Suspend()=>travel.Stop();
-    public void Reset(){travel.Stop();interacted=false;ownedShop=0;}
+    public void Reset(){travel.Stop();interacted=false;ownedShop=0;preparedItem=0;}
     internal static bool Visible(AtkUnitBase* addon)=>addon!=null && addon->IsVisible && addon->RootNode!=null && addon->RootNode->IsVisible();
     private AtkUnitBase* Shop=>gui.GetAddonByName<AtkUnitBase>("ShopExchangeCurrency");
     public bool IsOpen=>Visible(Shop);
@@ -40,6 +41,17 @@ internal sealed unsafe class ExchangeShop(IGameGui gui,IObjectTable objects,IDal
         if(quantity<1 || quantity>item.StackSize || (item.Learnable || item.Unique) && quantity!=1 || !interacted || ownedShop!=(nint)addon || DialogOpen || ExchangeShopValues.Find(addon,item,catalog.Items,catalog.CurrencyIcon) is not {} index)return false;
         var values=stackalloc AtkValue[3];values[0]=new(){Type=AtkValueType.Int,Int=0};values[1]=new(){Type=AtkValueType.UInt,UInt=index};values[2]=new(){Type=AtkValueType.Int,Int=quantity};
         addon->FireCallback(3,values,true);return true;
+    }
+    public bool Prepare(ExchangeItem item)
+    {
+        if(!Matches() || DialogOpen)return false;
+        if(ExchangeShopValues.Find(Shop,item,catalog.Items,catalog.CurrencyIcon)!=null)return true;
+        if(preparedItem==item.Id || item.ShopTab is <8 or >11)return false;
+        var button=(AtkComponentRadioButton*)Shop->GetComponentByNodeId(item.ShopTab);
+        if(button==null || button->GetComponentType()!=ComponentType.RadioButton || button->IsSelected)return false;
+        preparedItem=item.Id;
+        LoopGameUi.Click(Shop,(AtkComponentButton*)button,ComponentType.RadioButton);
+        return false; // Wait for the refreshed item/price list before reserving currency.
     }
     public bool Matches()=>interacted && ownedShop==(nint)Shop && catalog.Items.Any(item=>ExchangeShopValues.Find(Shop,item,catalog.Items,catalog.CurrencyIcon)!=null);
     public string Describe()

@@ -71,7 +71,7 @@ public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string T
 }
 
 public enum ExchangeKnowledge { NotApplicable, Unlearned, Learned, Unknown }
-public sealed record ExchangeItem(uint Id,string Name,int Cost,bool Learnable,bool Unique,uint StackSize,uint Icon=0);
+public sealed record ExchangeItem(uint Id,string Name,int Cost,bool Learnable,bool Unique,uint StackSize,uint Icon=0,uint ShopTab=11);
 public readonly record struct ExchangeObservation(ExchangeKnowledge Knowledge,int Owned,bool Space,int Capacity=int.MaxValue,int? TotalOwned=null)
 {
     public int DisplayOwned=>TotalOwned??Owned;

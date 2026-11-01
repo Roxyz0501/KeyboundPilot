@@ -29,7 +29,7 @@ Automatic travel to reception requires [vnavmesh](https://github.com/awgil/ffxiv
 
 To finish the current run and stop, press “Stop after this run” to the right of the Loop button. Typing and the return to the Square continue, then the loop stops without another registration. A pending stop is shown in the loop status. The button changes to “Cancel scheduled stop”; press it again to continue looping.
 
-The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. Other entry dialogs are not confirmed. While paused or stopped, no new game operation is sent.
+The Loop row has Pause and Stop buttons. After pausing, press Resume in the same row. The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. Other entry dialogs are not confirmed. While paused or stopped, no new game operation is sent.
 
 ## Item exchange
 
@@ -44,6 +44,8 @@ Quantities and priorities are shared across characters. Exchanged counts are sav
 Owned counts include bags, equipped gear, armoury, glamour dresser and armoire, and refresh when the plugin loads (after login if needed), at loop start, exchange start and loop end. Open and close the dresser and armoire during this login to load their contents. Unavailable totals show “—”. Storage contents are remembered until logout or plugin reload.
 
 Unlockable items allow only 0 or 1. Their learned status appears in the list. Learned entries remain editable, but are skipped for that character. An unused copy in inventory also prevents another exchange. Missing unlock information and insufficient bag space prevent an exchange.
+
+The plugin switches to the category containing the target item before selecting it. If an exchange is known not to have been submitted, its reservation is cleared automatically. When selection cannot proceed, the plugin skips that exchange visit and continues looping; it can try again after the next completed run.
 
 Pause and Stop also apply during exchange visits. If a purchase result cannot be confirmed, the loop stops. Check your inventory and choose “Mark as exchanged” or “Mark as not exchanged” before restarting. Close any remaining game exchange dialog before starting again.
 
@@ -137,7 +139,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 今の周回を終えてから止めるには、周回ボタン右側の「この周回で停止」を押してください。入力とスクウェアへの退出は続け、次の参加申請をせずに終了します。押した後は「この周回で停止予定」と表示します。ボタンは「停止予約を取り消す」に変わり、もう一度押すと周回を続けられます。
 
-周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。別の参加確認画面では押しません。一時停止・停止中は新たなゲーム操作を送りません。
+周回ボタンの横にも一時停止・停止ボタンがあります。一時停止後は、同じ列の再開ボタンで続けられます。通常の一時停止・再生・停止ボタンも周回に使えます。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。別の参加確認画面では押しません。一時停止・停止中は新たなゲーム操作を送りません。
 
 ### アイテムの自動交換
 
@@ -152,6 +154,8 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 所持数は、所持品・装備中・アーマリー・ミラージュドレッサー・愛蔵品キャビネットの合計です。プラグイン読み込み時と、周回開始・交換開始・周回終了時に更新します。ログイン前に読み込んだ場合は、ログイン後に取得します。ドレッサーと愛蔵品の内容を取得するには、そのログイン中に収納画面を開いて閉じてください。未取得の合計は「—」と表示します。収納内容の記憶はログアウトやプラグインの再読み込みで消えます。
 
 習得系の予定数は0か1です。一覧に習得状況を表示し、習得済みでも予定数を編集できます。そのキャラクターで習得済みの場合や、未使用の現物を持っている場合は交換しません。習得状況を確認できない場合や、所持品に空きがない場合も交換を見送ります。
+
+交換対象に合わせて、防具・アクセサリ・その他などのカテゴリを切り替えます。未送信と確定できる交換は、自動で未交換扱いにします。選択に進めない場合は、その回の交換を見送って周回を続け、次のゲーム終了後に改めて交換します。
 
 交換中も一時停止・停止ボタンを使えます。交換結果を確認できないときは周回を停止します。所持品を確認し、「交換済みとして扱う」か「未交換として扱う」を選んでください。ゲーム側に交換画面が残っている場合は、閉じてから周回を再開します。
 

@@ -4,7 +4,7 @@ namespace KeyboundPilot;
 /// <summary>Small character checkpoint and date-partitioned transaction receipts. No IO on unchanged UI frames.</summary>
 public sealed class ExchangeLedger(string directory) : IDisposable
 {
-    public sealed record Purchase(Guid Id,uint Item,int CurrencyBefore,int OwnedBefore,int Cost,DateTimeOffset Created,int Quantity=1);
+    public sealed record Purchase(Guid Id,uint Item,int CurrencyBefore,int OwnedBefore,int Cost,DateTimeOffset Created,int Quantity=1,bool? DispatchStarted=null);
     public sealed record State(ulong Character,Dictionary<uint,int> Completed,Purchase? Pending);
     private sealed record Receipt(ulong Character,Purchase Purchase,bool Purchased);
     private Task<State>? work;
@@ -32,9 +32,16 @@ public sealed class ExchangeLedger(string directory) : IDisposable
     public bool Reserve(uint item,int currency,int owned,int cost,int quantity=1)
     {
         Poll();if(disposed || !Ready || Current!.Pending!=null || item==0 || cost<=0 || quantity is <1 or >9999 || (long)cost*quantity>currency || owned<0)return false;
-        var state=Current with {Pending=new(Guid.NewGuid(),item,currency,owned,checked(cost*quantity),DateTimeOffset.Now,quantity)};
+        var state=Current with {Pending=new(Guid.NewGuid(),item,currency,owned,checked(cost*quantity),DateTimeOffset.Now,quantity,false)};
         work=Task.Run(()=>{Save(state);return state;});return true;
     }
+    public bool MarkDispatchStarted()
+    {
+        Poll();if(!Ready || Current!.Pending is not {DispatchStarted:false} purchase)return false;
+        var state=Current with {Pending=purchase with {DispatchStarted=true}};
+        work=Task.Run(()=>{Save(state);return state;});return true;
+    }
+    public bool RecoverUnsubmitted()=>Ready && Current!.Pending is {DispatchStarted:false} && Resolve(false);
     public bool Resolve(bool purchased)
     {
         Poll();if(disposed || !Ready || Current!.Pending is not {} purchase)return false;
@@ -65,6 +72,11 @@ public sealed class ExchangeLedger(string directory) : IDisposable
             var receipt=Read<Receipt>(ReceiptPath(pending));
             if(receipt.Character!=id || receipt.Purchase!=pending)throw new InvalidDataException("Exchange receipt mismatch");
             state=Apply(state,receipt.Purchased);Save(state);
+        }
+        if(state.Pending is {DispatchStarted:false} unsubmitted)
+        {
+            Write(ReceiptPath(unsubmitted),JsonSerializer.SerializeToUtf8Bytes(new Receipt(id,unsubmitted,false)),false);
+            state=Apply(state,false);Save(state);
         }
         return state;
     }

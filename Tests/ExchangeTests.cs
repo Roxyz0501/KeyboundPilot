@@ -87,6 +87,7 @@ static class ExchangeTests
             C(ledger.Writes==writes,"unchanged frames write nothing");
             C(ledger.Reserve(10,100,0,100),"reserve before callback");ledger.Flush();
             C(ledger.Current!.Pending!=null && !ledger.Reserve(10,100,0,100),"single pending purchase: "+ledger.Error);
+            C(ledger.MarkDispatchStarted(),"persist dispatch boundary");ledger.Flush();
             using(var recovered=new ExchangeLedger(directory)){recovered.Select(1);recovered.Flush();C(recovered.Current?.Pending!=null,"uncertain purchase retained across reload");}
             C(ledger.Resolve(true),"commit acknowledgment");ledger.Flush();
             C(ledger.Completed(10)==1 && ledger.Current!.Pending==null,"progress committed");
@@ -103,7 +104,7 @@ static class ExchangeTests
             var balance=100;var owned=0;var selects=0;var confirms=0;var dialog=false;var closes=0;
             void Tick(long now,bool enabled=true,bool blocked=false,ExchangeItem? candidate=null)=>session.Tick(now,blocked,enabled,ledger,candidate??item,balance,_=>unlearned with {Owned=owned},()=>true,()=>true,
                 _=>{selects++;return true;},_=>{confirms++;return true;},()=>dialog,()=>{closes++;return true;});
-            Tick(0);Tick(1);ledger.Flush();Tick(2);C(selects==1 && ledger.Current!.Pending!=null,"dispatch after durable reservation");
+            Tick(0);Tick(1);ledger.Flush();Tick(2);C(selects==0,"no callback before dispatch marker is durable");ledger.Flush();Tick(2);C(selects==1 && ledger.Current!.Pending!=null,"dispatch after durable reservation");
             Tick(3);Tick(4);C(selects==1 && confirms==0,"no repeat while awaiting dialog");
             dialog=true;Tick(5);Tick(6);C(confirms==1,"single confirmation");
             balance=0;owned=1;dialog=false;Tick(7);ledger.Flush();Tick(8);C(ledger.Completed(10)==1,"matching inventory and currency acknowledges");
@@ -111,7 +112,7 @@ static class ExchangeTests
             Tick(10);C(session.Step==ExchangeStep.Done,"no remaining targets finishes visit");
             session.Start(20);Tick(20,false);C(session.Step==ExchangeStep.Done,"disable before purchase closes without dispatch");
             C(selects==1 && confirms==1,"disabled visit sends no purchase");
-            session.Start(30);Tick(30);balance=100;owned=0;Tick(31);ledger.Flush();Tick(32);
+            session.Start(30);Tick(30);balance=100;owned=0;Tick(31);ledger.Flush();Tick(32);ledger.Flush();Tick(32);
             Tick(16000);C(session.Step==ExchangeStep.Failed && ledger.Current!.Pending!=null,"unacknowledged purchase stops with journal");
             var prior=selects;Tick(17000);C(selects==prior,"failed flow never retries purchase");
         }
@@ -130,7 +131,7 @@ static class ExchangeTests
             C(sent==0 && ledger.Current!.Pending==null && ledger.Completed(10)==0,"off during durable reservation cancels before dispatch");
             session.Start(10);Tick(10);Tick(11);ledger.Flush();Tick(12,true,true);Tick(50000,true,true);
             C(sent==0 && session.Active,"paused reservation sends nothing and retains session");
-            Tick(50001);C(sent==1,"resume sends reservation once");
+            Tick(50001);ledger.Flush();Tick(50001);C(sent==1,"resume sends reservation once");
             Tick(50002,currency:0);C(ledger.Current!.Pending!=null,"currency change alone cannot acknowledge");
             Tick(50003,owned:1);C(ledger.Current!.Pending!=null,"inventory change alone cannot acknowledge");
             Tick(50004,currency:0,owned:1);ledger.Flush();C(ledger.Completed(10)==1,"both changes commit exactly one");
@@ -141,8 +142,9 @@ static class ExchangeTests
         {
             ledger.Select(7);ledger.Flush();var session=new ExchangeSession();session.Start(0);
             void Tick(long now)=>session.Tick(now,false,true,ledger,item,100,_=>unlearned,()=>true,()=>true,_=>false,_=>throw new Exception("Unexpected confirmation"),()=>false,()=>true);
-            Tick(0);Tick(1);ledger.Flush();Tick(2);ledger.Flush();
-            C(session.Step==ExchangeStep.Failed && ledger.Current!.Pending==null && ledger.Completed(10)==0,"rejected selection clears unsubmitted reservation");
+            Tick(0);Tick(1);ledger.Flush();Tick(2);ledger.Flush();Tick(2);ledger.Flush();
+            C(session.Step==ExchangeStep.Commit && session.Deferred && ledger.Current!.Pending==null && ledger.Completed(10)==0,"rejected selection clears unsubmitted reservation");
+            Tick(3);Tick(4);C(session.Step==ExchangeStep.Done,"unsubmitted rejection closes visit to resume loop");
         }
         var badDir=Path.Combine(directory,"corrupt");Directory.CreateDirectory(Path.Combine(badDir,"0000000000000005"));
         File.WriteAllText(Path.Combine(badDir,"0000000000000005","progress.json"),"invalid");
@@ -155,11 +157,36 @@ static class ExchangeTests
                 _=>normal with {Owned=owned},()=>true,()=>true,_=>{selects++;return ledger.Current!.Pending!.Quantity==3;},
                 _=>{confirms++;return ledger.Current!.Pending!.Quantity==3;},()=>dialog,()=>true,3);
             Tick(0);Tick(1);ledger.Flush();C(ledger.Current!.Pending is {Quantity:3,Cost:600},"batch journal captures quantity and total cost");
-            Tick(2);Tick(3,dialog:true);C(selects==1 && confirms==1,"three units use one selection and confirmation");
+            Tick(2);ledger.Flush();Tick(2);Tick(3,dialog:true);C(selects==1 && confirms==1,"three units use one selection and confirmation");
             Tick(4,400,1);C(ledger.Current!.Pending!=null,"partial batch inventory does not commit");
             Tick(5,400,3);ledger.Flush();C(ledger.Completed(11)==3,"batch progress adds all units");
             C(!ledger.Reserve(11,100,3,200,3),"unaffordable reservation rejected");
         }
-        Console.WriteLine("Exchange fixture: bounded 20-item catalog, 0 external calls, unchanged polling 0 writes; per purchase 1 reservation + 1 receipt + 1 checkpoint.");
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"unsubmitted")))
+        {
+            ledger.Select(8);ledger.Flush();ledger.Reserve(10,100,0,100);ledger.Flush();
+        }
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"unsubmitted")))
+        {
+            ledger.Select(8);ledger.Flush();C(ledger.Ready && ledger.Current!.Pending==null && ledger.Completed(10)==0,"unsubmitted reservation automatically recovered on reload");
+            ledger.Reserve(10,100,0,100);ledger.Flush();C(ledger.RecoverUnsubmitted(),"stopped unsubmitted reservation recovered");ledger.Flush();
+            C(!ledger.RecoverUnsubmitted(),"unchanged state does not repeat recovery writes");
+        }
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"category")))
+        {
+            ledger.Select(9);ledger.Flush();var session=new ExchangeSession();session.Start(0);var ready=false;var sends=0;
+            void Tick(long now)=>session.Tick(now,false,true,ledger,item,100,_=>unlearned,()=>true,()=>true,_=>{sends++;return true;},_=>false,()=>false,()=>true,1,_=>ready);
+            Tick(0);Tick(1);C(session.Step==ExchangeStep.Reserve && ledger.Current!.Pending==null,"category refresh precedes purchase reservation");
+            ready=true;Tick(2);ledger.Flush();Tick(3);ledger.Flush();Tick(4);C(sends==1,"ready category selects once");
+        }
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"category-timeout")))
+        {
+            ledger.Select(10);ledger.Flush();var session=new ExchangeSession();session.Start(0);
+            void Tick(long now)=>session.Tick(now,false,true,ledger,item,100,_=>unlearned,()=>true,()=>true,_=>throw new Exception("No purchase during category wait"),_=>false,()=>false,()=>true,1,_=>false);
+            Tick(0);Tick(1);Tick(16001);C(session.Deferred && session.Step==ExchangeStep.Done && ledger.Current!.Pending==null,"category timeout resumes loop without a purchase");
+        }
+        var legacy=JsonSerializer.Deserialize<ExchangeLedger.Purchase>("{\"Id\":\"00000000-0000-0000-0000-000000000001\",\"Item\":10,\"CurrencyBefore\":100,\"OwnedBefore\":0,\"Cost\":100}");
+        C(legacy!.DispatchStarted==null,"legacy pending is unknown, never assumed unsubmitted");
+        Console.WriteLine("Exchange fixture: bounded 20-item catalog, 0 external calls, unchanged polling 0 writes; per purchase reservation + dispatch marker + receipt + checkpoint.");
     }
 }

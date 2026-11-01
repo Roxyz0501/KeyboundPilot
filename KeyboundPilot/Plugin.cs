@@ -33,6 +33,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ExchangeHoldings exchangeHoldings;
     private readonly IAddonLifecycle addonLifecycle;
     private bool loopWasActive;
+    private int exchangeDeferredRound=-1;
     private readonly ExchangeShop exchangeShop;
     private readonly ExchangeLedger exchangeLedger;
     private readonly ExchangeSession exchangeSession=new();
@@ -160,6 +161,8 @@ public sealed class Plugin : IDalamudPlugin
     {
         ResetExchange();activity.End();loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
     }
+    private void PauseByUser(){activity.End();loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);}
+    private void ResumeLoop(){activity.Begin();loop.Resume();typing.ResumeByUser();reader.ResetFocus();}
     private void UpdateCore()
     {
         if(stopping)return;
@@ -266,7 +269,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if(!loopUi.Supported || !client.IsLoggedIn || client.TerritoryType is not (LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory))return;
         var now=Environment.TickCount64;
-        StopByUser();RefreshHoldings();loop.Start(now,config.LoopCount,IsContent());loopWasActive=true;loopSample=0;scoreExitWait=-1;
+        StopByUser();RefreshHoldings();loop.Start(now,config.LoopCount,IsContent());exchangeDeferredRound=-1;loopWasActive=true;loopSample=0;scoreExitWait=-1;
         if(IsContent())StartTyping(now,"loop_current_game");
     }
     private void UpdateLoop(long now)
@@ -296,11 +299,13 @@ public sealed class Plugin : IDalamudPlugin
             exchangeSession.Tick(now,blocked || loop.Paused || loading,config.Exchange.Enabled,exchangeLedger,nextExchange,exchangeCurrency,
                 id=>ExchangeCatalog.Observe(exchangeCatalog.Items.Single(i=>i.Id==id)),exchangeShop.Approach,exchangeShop.Matches,
                 item=>exchangeShop.Select(item,exchangeLedger.Current?.Pending?.Quantity??0),
-                item=>exchangeShop.Confirm(item,exchangeLedger.Current?.Pending?.Quantity??0),()=>exchangeShop.DialogOpen,exchangeShop.Close,batch);
+                item=>exchangeShop.Confirm(item,exchangeLedger.Current?.Pending?.Quantity??0),()=>exchangeShop.DialogOpen,exchangeShop.Close,batch,exchangeShop.Prepare);
+            if(exchangeSession.Deferred && exchangeDeferredRound!=loop.Completed)
+            {exchangeDeferredRound=loop.Completed;log.Warning("Exchange deferred before purchase at {Step}: {Shop}",previousStep,exchangeShop.Describe());}
             if(exchangeSession.Step==ExchangeStep.Failed){log.Warning("Exchange stopped at {Step}: {Shop}; ledger={Ledger}",previousStep,exchangeShop.Describe(),exchangeLedger.Error??"ok");exchangeShop.Suspend();loop.Stop(true);open=true;return;}
         }
         var due=exchangeCatalog.Supported && exchangeLedger.Ready && exchangeLedger.Current!.Pending==null && config.Exchange.Enabled
-            && exchangeCurrency>=config.Exchange.Threshold && NextExchange()!=null;
+            && exchangeDeferredRound!=loop.Completed && exchangeCurrency>=config.Exchange.Threshold && NextExchange()!=null;
         // Do not submit a new queue while enabled exchange data or a previous transaction is unresolved.
         if(loop.Phase==LoopPhase.Requesting && config.Exchange.Enabled)
         {
@@ -333,6 +338,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         if(!config.Exchange.Enabled && !exchangeSession.Active)return;
         exchangeLedger.Select(id);
+        if(!exchangeSession.Active && exchangeLedger.RecoverUnsubmitted())return;
         if(id==0 || Loading || (client.TerritoryType!=LoopGameUi.LobbyTerritory && !(open && exchangeVisible)) || (!exchangeSession.Active && !loop.Active && !(open && exchangeVisible)) || now-exchangeSample<(exchangeSession.Active?200:1000))return;
         exchangeSample=now;exchangeCurrency=ExchangeCatalog.Currency();
         foreach(var item in exchangeCatalog.Items)exchangeObservations[item.Id]=ExchangeCatalog.Observe(item);
@@ -403,8 +409,7 @@ public sealed class Plugin : IDalamudPlugin
                     PlaybackControls.StableText(typing.Running && !typing.ManualPaused && typing.CurrentWord.Length>0?T("Current")+": "+typing.CurrentWord:"");
                     PlaybackControls.StableText(activity.Failed?T("ActivityUnavailable"):activity.Requested && !typing.Running?T("ActivityHeld"):"");
                     PlaybackControls.Draw(typing.Running||loop.Active||activity.Requested,loop.Active?loop.Paused:typing.ManualPaused || (activity.Requested && !typing.Running),T,
-                        ()=>{if(loop.Active){activity.Begin();loop.Resume();typing.ResumeByUser();reader.ResetFocus();}else StartTyping(Environment.TickCount64,"button");},
-                        ()=>{activity.End();loop.Pause();typing.PauseByUser();controlGate="ManualPause";Keyboard.Release(true);},StopByUser);
+                        ()=>{if(loop.Active)ResumeLoop();else StartTyping(Environment.TickCount64,"button");},PauseByUser,StopByUser);
                     ImGui.SameLine();
                     PlaybackControls.Help(T("Guide")+"\n\n"+T("LoopHelp")+"\n\n"+T("ReceptionHelp"),30);
                     ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
@@ -417,11 +422,12 @@ public sealed class Plugin : IDalamudPlugin
                     if(PlaybackControls.Number("###LoopCount",ref count,1,9999,1,T("NumberHelp")))
                     {config.LoopCount=count;settings.Update(config);}
                     ImGui.EndDisabled();
-                    PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
+                    PlaybackControls.DrawLoop(loop.Active?loop.Paused:loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T(loop.Active && loop.Paused?"Resume":"LoopButton"),()=>{if(loop.Active)ResumeLoop();else StartLoop();});
+                    PlaybackControls.DrawLoopPauseStop(loop.Active,loop.Paused,T,PauseByUser,StopByUser);
                     PlaybackControls.DrawStopAfterCurrent(loop.Active,T,loop.ToggleStopAfterCurrent,loop.StopAfterCurrentRequested);
                     exchangeVisible=true;
                     exchangePanel.Draw(config,T,()=>settings.Update(config),exchangeCatalog.Items,exchangeCurrency,exchangeLedger.Completed,ExchangeObserved,
-                        "Exchange"+exchangeSession.Step,exchangeSession.Active || exchangeLedger.Busy,exchangeLedger.Current?.Pending,
+                        exchangeSession.Deferred?"ExchangeDeferred":"Exchange"+exchangeSession.Step,exchangeSession.Active || exchangeLedger.Busy,exchangeLedger.Current?.Pending,
                         purchased=>{if(!loop.Active)exchangeLedger.Resolve(purchased);},exchangeLedger.Error!=null || exchangeSession.Step==ExchangeStep.Failed,DrawExchangeIcon);
                     if(config.ShowDebug)
                     {
