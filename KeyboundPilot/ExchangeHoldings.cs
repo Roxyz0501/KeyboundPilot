@@ -69,6 +69,12 @@ internal sealed unsafe class ExchangeHoldings
         var inventory=InventoryManager.Instance();if(inventory==null)return;
         foreach(var item in items)
         {
+            if(equipment.Contains(item.Id))
+            {
+                var owned=inventory->GetInventoryItemCount(item.Id,checkEquipped:false,checkArmory:true);
+                totals[item.Id]=new(owned,owned>=0);
+                continue;
+            }
             totals[item.Id]=HoldingsCount.Combine(inventory->GetInventoryItemCount(item.Id,checkEquipped:true,checkArmory:true),
                 equipment.Contains(item.Id)?dresser?.GetValueOrDefault(item.Id):0,
                 cabinet.ContainsKey(item.Id)?armoire?.GetValueOrDefault(item.Id):0);

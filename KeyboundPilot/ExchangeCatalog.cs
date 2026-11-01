@@ -48,7 +48,7 @@ internal sealed unsafe class ExchangeCatalog
     {
         var inventory=InventoryManager.Instance();var ui=UIState.Instance();
         if(inventory==null || ui==null)return new(ExchangeKnowledge.Unknown,-1,false);
-        var owned=inventory->GetInventoryItemCount(item.Id);
+        var owned=inventory->GetInventoryItemCount(item.Id,checkEquipped:item.ShopTab==11,checkArmory:true);
         var knowledge=ExchangeKnowledge.NotApplicable;
         if(item.Learnable)
         {

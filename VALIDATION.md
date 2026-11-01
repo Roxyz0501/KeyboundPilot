@@ -1,3 +1,9 @@
+## 2026-11-01 - 1.0.17.8 equipment ownership scope
+
+- Per user request, equipment display totals count only player bags and armoury. Exclude equipped gear, dresser and armoire; known equipment totals no longer depend on storage completeness. Catalog observation uses matching explicit equipped=false/armoury=true flags for weapon, armour and accessory tabs, keeping eligibility and acknowledgment counts aligned.
+- Inventory events remain active for equipped changes so equipping/unequipping invalidates bag/armoury totals. Other item behavior remains unchanged. No new scans, network calls or writes. Seven help translations and English/Japanese README updated.
+- Clean Release and 720 offline checks pass; native UI/font checks run. Live game interaction not exercised.
+
 ## 2026-11-01 - 1.0.17.7 partial equipment holdings
 
 - Found that any unloaded dresser/armoire replaced the entire equipment total with unknown, masking known bag/equipped/armoury counts. Always count carried gear (explicit equipped/armoury flags), add known storage, and track completeness separately. Display partial totals with +; never interpret unavailable storage as zero. Preserve unknown when carried count itself is unavailable.
