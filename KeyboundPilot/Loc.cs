@@ -17,7 +17,7 @@ internal static class Loc
         ["ExchangeItem"] = ["アイテム", "Item", "Gegenstand", "Objet", "아이템", "物品", "物品"],
         ["ExchangeQuantity"] = ["予定数", "Target", "Ziel", "Objectif", "목표 수량", "目标数量", "目標數量"],
         ["ExchangeCompleted"] = ["交換済み", "Exchanged", "Getauscht", "Échangé", "교환 완료", "已兑换", "已兌換"],
-        ["ExchangeKnowledge"] = ["習得状況", "Unlock status", "Freischaltung", "Acquisition", "습득 상태", "习得状态", "習得狀態"],
+        ["ExchangeKnowledge"] = ["習得・所持状況", "Unlock / ownership", "Freischaltung / Besitz", "Acquisition / possession", "습득·보유 상태", "习得・持有状态", "習得・持有狀態"],
         ["ExchangeLearnableHelp"] = ["習得系の数量は0か1。習得済みでも編集できますが、そのキャラクターでは交換しません。未使用の現物を持っている場合も交換を見送ります。", "Unlockable items allow 0 or 1. Learned entries remain editable but are skipped for that character. An unused copy in inventory also prevents another exchange.", "Freischaltbare Gegenstände: 0 oder 1. Erlernte bleiben bearbeitbar, werden für diesen Charakter aber übersprungen. Auch ein unbenutztes Exemplar verhindert weiteren Tausch.", "Objets à apprendre : 0 ou 1. Les entrées acquises restent modifiables mais sont ignorées pour ce personnage. Un exemplaire inutilisé empêche aussi un nouvel échange.", "습득 아이템은 0 또는 1만 설정합니다. 습득 후에도 편집할 수 있지만 해당 캐릭터는 교환하지 않습니다. 미사용 아이템을 보유 중이어도 건너뜁니다.", "可习得物品只能设为0或1。已习得时仍可编辑，但该角色不会兑换。持有未使用物品时也会跳过。", "可習得物品只能設為0或1。已習得時仍可編輯，但該角色不會兌換。持有未使用物品時也會略過。"],
         ["ExchangeLearned"] = ["習得済み", "Learned", "Erlernt", "Acquis", "습득 완료", "已习得", "已習得"],
         ["ExchangeUnlearned"] = ["未習得", "Not learned", "Nicht erlernt", "Non acquis", "미습득", "未习得", "未習得"],

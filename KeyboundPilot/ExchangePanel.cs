@@ -41,7 +41,7 @@ internal sealed unsafe class ExchangePanel
             ImGui.TableSetupColumn("MGC",ImGuiTableColumnFlags.WidthFixed,50);
             ImGui.TableSetupColumn(t("ExchangeQuantity"),ImGuiTableColumnFlags.WidthFixed,76);
             ImGui.TableSetupColumn(t("ExchangeOwnedCount"),ImGuiTableColumnFlags.WidthFixed,55);
-            ImGui.TableSetupColumn(t("ExchangeKnowledge"),ImGuiTableColumnFlags.WidthFixed,90);
+            ImGui.TableSetupColumn(t("ExchangeKnowledge"),ImGuiTableColumnFlags.WidthFixed,ImGui.CalcTextSize(t("ExchangeKnowledge")).X+8);
             ImGui.TableSetupScrollFreeze(0,1);ImGui.TableHeadersRow();
             for(var position=0;position<ordered.Length;position++)
             {

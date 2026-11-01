@@ -1,3 +1,8 @@
+## 2026-11-01 - 1.0.17.6 ownership column label
+
+- Rename the exchange column to 習得・所持状況 and update all seven localized labels. Size the column from the current label width to avoid truncation. No exchange policy or holdings calculation changes.
+- Native UI/font fixtures pass: 1176 characters in four font faces, seven languages, existing exchange table/drag/control checks. Release build and 713 offline checks pass. No additional IO, network calls or persistence writes. Live gameplay unchanged and not re-tested.
+
 ## 2026-11-01 - 1.0.17.5 inventory-driven owned counts
 
 - Subscribe to Dalamud InventoryChangedRaw and unsubscribe on disposal. Raw additions/removals preserve both sides of moves; item replacement checks old and new IDs. Watch only catalog items in four player bags, equipped items and armoury containers; ignore unrelated items/containers and repair/spiritbond-only changes.
