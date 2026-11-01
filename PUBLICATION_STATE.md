@@ -1,3 +1,14 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.0 automatic item exchange
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.0
+- Source/tag 366c4b2f73950e679684787a28631224bffcf4b6; distribution index 3474d1e003a49ff57e2b8cbbeae408bb94d63855.
+- Added opt-in MGC exchange below Loop controls on Auto typing: threshold, shared quantities, custom priority arrows, search and persistent zero-quantity hiding. Default priority is unlockable items, equipment, coffer. Learned quantities remain editable (0/1) but are excluded per character; unused owned copies are also skipped. Progress is stored separately for each character.
+- Same-item exchanges batch the remaining target within currency, inventory and stack limits. Exact batch quantity is checked at confirmation and counted after matching currency and inventory updates. Durable reservation/receipt/checkpoint prevents automatic retries after uncertain outcomes; explicit reconciliation is available.
+- Exchange visits integrate with registration and final-round return, optional navigation, pause/stop and scheduled stop. No new runtime network calls; cached catalog/UI filtering and bounded memory reads. Changed-only config saves, backups and lifecycle cleanup remain intact.
+- Clean Release: zero warnings/errors; 664 offline checks, native shop/capacity/HP/score/callback/activity/fixed-row/numeric fixtures pass. 188 localization keys in seven languages and four-font coverage of 1150 characters pass. Native panel reviewed. Live NPC, exchange quantity/confirmation, travel and server acknowledgment remain unverified.
+- README English then Japanese checked with yomiyasu. yomiyasu-check: executed via=verify run=20261101T045645Z-9468b235 attempt=2 final=sha256:f9c294742506 mode=rewrite checks=lint,diff meaning_risk=5 replay=skipped
+- Anonymous public repository/icon/ZIP/source README/main and pinned index verified; both indices 1.0.17.0. ZIP 236249 bytes; SHA-256 4c8464094b4dcec04a44dfba2b782e2c063255cc22de1890b13c7487b1082dae. Release notes contain update features only.
+
 ## 2026-10-30 — Keybound Pilot 1.0.16.16 score history controls
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.16.16
