@@ -1,3 +1,10 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.6 ownership column
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.6
+- Source/tag 76f7e92f14d894005d8edea938c07e31c5c8df2b; distribution index c33694373137481c79807c2d8c91149d23ec3763.
+- Rename the exchange column to 習得・所持状況 in Japanese and equivalent labels in all seven languages. Fit column width to the label. Native rendered Japanese table inspected; native fixtures and four-font 1176-glyph checks pass. 713 checks and clean Release build pass. No exchange logic, IO or persistence changes.
+- Anonymous public repository/icon/ZIP/source README/main and pinned indices verified at 1.0.17.6. ZIP 250582 bytes; SHA-256 59487439a8e8bba304be4533888c39ba8b7beb7834bfed6ea10abd00912b195a. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.5 inventory-driven owned counts
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.5
