@@ -1,7 +1,7 @@
 using System.Globalization;
 namespace KeyboundPilot;
 
-public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string Targets="",string Order="",bool HideZero=false)
+public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string Targets="",string Order="",bool HideZero=false,bool ExcludeOverTarget=false)
 {
     [System.Text.Json.Serialization.JsonIgnore] public bool Valid => Threshold is >=1 and <=10000 && Parse(Targets)!=null && ParseOrder(Order)!=null;
     private static uint[]? ParseOrder(string? value)
@@ -28,6 +28,14 @@ public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string T
         return this with {Order=string.Join(',',ordered.Select(i=>i.Id))};
     }
     public bool Shows(ExchangeItem item)=>!HideZero || Quantity(item.Id,item.Learnable)>0;
+    public bool ExcludedByOwned(ExchangeItem item,int owned)=>ExcludeOverTarget && (owned<0 || owned>Quantity(item.Id,item.Learnable));
+    public ExchangePlan Insert(IReadOnlyList<ExchangeItem> items,uint source,uint target,bool after)
+    {
+        var order=Ordered(items).Select(i=>i.Id).ToList();
+        if(source==target || !order.Contains(source) || !order.Contains(target))return this;
+        order.Remove(source);order.Insert(order.IndexOf(target)+(after?1:0),source);
+        return this with {Order=string.Join(',',order)};
+    }
     private static SortedDictionary<uint,int>? Parse(string? text)
     {
         if(text==null || text.Length>2048)return null;
@@ -64,13 +72,16 @@ public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string T
 }
 
 public enum ExchangeKnowledge { NotApplicable, Unlearned, Learned, Unknown }
-public sealed record ExchangeItem(uint Id,string Name,int Cost,bool Learnable,bool Unique,uint StackSize);
-public readonly record struct ExchangeObservation(ExchangeKnowledge Knowledge,int Owned,bool Space,int Capacity=int.MaxValue);
+public sealed record ExchangeItem(uint Id,string Name,int Cost,bool Learnable,bool Unique,uint StackSize,uint Icon=0);
+public readonly record struct ExchangeObservation(ExchangeKnowledge Knowledge,int Owned,bool Space,int Capacity=int.MaxValue,int? TotalOwned=null)
+{
+    public int DisplayOwned=>TotalOwned??Owned;
+}
 public static class ExchangePolicy
 {
     public static int BatchSize(ExchangeItem? item,ExchangePlan plan,int currency,int completed,ExchangeObservation state)
     {
-        if(item==null || item.Cost<=0 || !Eligible(item,plan.Quantity(item.Id,item.Learnable),completed,state))return 0;
+        if(item==null || item.Cost<=0 || plan.ExcludedByOwned(item,state.DisplayOwned) || !Eligible(item,plan.Quantity(item.Id,item.Learnable),completed,state))return 0;
         var remaining=plan.Quantity(item.Id,item.Learnable)-completed;
         var capacity=Math.Min(state.Capacity,item.Learnable || item.Unique?1:(int)Math.Min(item.StackSize,9999));
         return Math.Max(0,Math.Min(Math.Min(remaining,currency/item.Cost),capacity));
@@ -81,7 +92,7 @@ public static class ExchangePolicy
            && (!item.Learnable || state.Knowledge==ExchangeKnowledge.Unlearned && state.Owned==0);
     public static ExchangeItem? Next(IEnumerable<ExchangeItem> items,ExchangePlan plan,int currency,
         Func<uint,int> completed,Func<uint,ExchangeObservation> observe)
-        => plan.Ordered(items).FirstOrDefault(i=>i.Cost>0 && i.Cost<=currency && Eligible(i,plan.Quantity(i.Id,i.Learnable),completed(i.Id),observe(i.Id)));
+        => plan.Ordered(items).FirstOrDefault(i=>i.Cost>0 && i.Cost<=currency && !plan.ExcludedByOwned(i,observe(i.Id).DisplayOwned) && Eligible(i,plan.Quantity(i.Id,i.Learnable),completed(i.Id),observe(i.Id)));
     public static bool ShouldBegin(bool requesting,bool queued,bool loading,bool stopRequested,ExchangePlan plan,int? currency,ExchangeItem? next)
         => requesting && !queued && !loading && !stopRequested && plan.Enabled && currency>=plan.Threshold && next!=null;
 }

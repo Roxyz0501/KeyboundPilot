@@ -37,9 +37,11 @@ In Auto typing, turn on “Automatically exchange items” below the Loop button
 
 When your MGC reaches the threshold, the loop visits the MGC exchange counter before the next registration. It exchanges affordable items in priority order, then returns to registration. The final run can also be followed by an exchange visit. “Stop after this run” skips a new exchange visit and stops after returning to the Square. Travel requires vnavmesh; without it, you must be close enough to talk to the counter.
 
-The default priority is unlockable items, equipment, then the treasure coffer. Use the up/down buttons to change the order. “Hide zero quantities” hides excluded items; “Show all” restores them without changing quantities or priorities. Multiple copies of the same item are exchanged together, within the remaining target, MGC balance and inventory capacity.
+The default priority is unlockable items, equipment, then the treasure coffer. Drag an item’s icon or name to change its priority, or use the up/down buttons. The taller list shows item icons and owned quantities. Check “Hide zero quantities” to hide items with a target of 0; uncheck it to restore them. Multiple copies of the same item are exchanged together, within the remaining target, MGC balance and inventory capacity.
 
 Quantities and priorities are shared across characters. Exchanged counts are saved separately for each character and remain after restarting the loop or plugin. Counts refer to purchases made through this feature, not all items you own. Once a target is met, that item is no longer exchanged.
+
+“Exclude items owned above the target” skips an item when its owned count is greater than its target. Equal counts are not excluded by this option. It is off by default. Owned counts include bags, equipped gear, armoury, glamour dresser and armoire, and refresh at loop start, exchange start and loop end. Open and close the dresser and armoire during this login to load their contents. Unavailable totals show “—”; the exclusion option skips these items until their counts are known. Storage contents are remembered until logout or plugin reload.
 
 Unlockable items allow only 0 or 1. Their learned status appears in the list. Learned entries remain editable, but are skipped for that character. An unused copy in inventory also prevents another exchange. Missing unlock information and insufficient bag space prevent an exchange.
 
@@ -143,9 +145,13 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 所持MGCが設定値以上になると、次の申請前にMGC交換窓口へ向かいます。優先順に、通貨が足りるアイテムを交換してから申請へ戻ります。最終回の退出後も条件を満たせば交換します。「この周回で停止」を予約した場合は、新たな交換へ寄らず、スクウェアに戻って停止します。自動移動にはvnavmeshが必要です。未導入の場合は、窓口に話しかけられる距離でのみ交換できます。
 
-初期の優先順位は「習得系 → 装備 → 宝箱」です。一覧の上下ボタンで変更できます。「交換数0を非表示」を押すと対象外のアイテムを隠し、「すべて表示」で元に戻せます。表示を切り替えても、数量と優先順位は変わりません。同じアイテムを複数交換できる場合は、残りの予定数・所持MGC・所持品の空きに合わせて数量をまとめて指定します。
+初期の優先順位は「習得系 → 装備 → 宝箱」です。アイコンやアイテム名をドラッグするか、上下ボタンで変更できます。一覧は縦に広げ、アイコンと所持数を表示します。「交換数0を非表示」にチェックを入れると予定数0の行を隠し、外すと元に戻せます。同じアイテムを複数交換できる場合は、残りの予定数・所持MGC・所持品の空きに合わせて数量をまとめて指定します。
 
 予定数と優先順位は全キャラクターで共通です。交換済み数はキャラクターごとに保存し、周回やプラグインを再開しても引き継ぎます。この機能で交換した数を数えるため、現在の所持数とは異なります。予定数に達したアイテムは追加交換しません。
+
+「所持数が予定数を超えたら除外する」は初期値オフです。オンにすると、所持数が予定数より多いアイテムを交換対象から外します。同じ数なら、この設定では除外しません。
+
+所持数は、所持品・装備中・アーマリー・ミラージュドレッサー・愛蔵品キャビネットの合計です。周回開始・交換開始・周回終了時に更新します。ドレッサーと愛蔵品の内容を取得するには、そのログイン中に収納画面を開いて閉じてください。未取得の合計は「—」と表示し、所持数による除外がオンなら交換を見送ります。収納内容の記憶はログアウトやプラグインの再読み込みで消えます。
 
 習得系の予定数は0か1です。一覧に習得状況を表示し、習得済みでも予定数を編集できます。そのキャラクターで習得済みの場合や、未使用の現物を持っている場合は交換しません。習得状況を確認できない場合や、所持品に空きがない場合も交換を見送ります。
 

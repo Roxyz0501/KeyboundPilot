@@ -17,6 +17,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IFramework framework;
     private readonly IClientState client;
     private readonly IPlayerState playerState;
+    private readonly ITextureProvider textures;
     private readonly IDataManager data;
     private readonly IPluginLog log;
     private readonly ConfigurationStore settings;
@@ -29,6 +30,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly AutomationLifecycle automation = new();
     private readonly RoundLoop loop=new();
     private readonly ExchangeCatalog exchangeCatalog;
+    private readonly ExchangeHoldings exchangeHoldings;
+    private readonly IAddonLifecycle addonLifecycle;
+    private bool loopWasActive;
     private readonly ExchangeShop exchangeShop;
     private readonly ExchangeLedger exchangeLedger;
     private readonly ExchangeSession exchangeSession=new();
@@ -39,7 +43,10 @@ public sealed class Plugin : IDalamudPlugin
     private long exchangeDataWait=-1;
     private ulong exchangeCharacter;
     private bool exchangeVisible;
-    private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false));
+    private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false)) with {TotalOwned=exchangeHoldings.Total(id)};
+    private void RefreshHoldings()=>exchangeHoldings.Refresh(client.IsLoggedIn?playerState.ContentId:0,exchangeCatalog.Items);
+    private void StorageClosed(Dalamud.Game.Addon.Lifecycle.AddonEvent _,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs args)
+    {try{exchangeHoldings.CaptureStorage(client.IsLoggedIn?playerState.ContentId:0);}catch(Exception ex){log.Warning(ex,"Exchange storage snapshot unavailable");}}
     private ExchangeItem? NextExchange()=>ExchangePolicy.Next(exchangeCatalog.Items,config.Exchange,exchangeCurrency??0,exchangeLedger.Completed,ExchangeObserved);
     private void ResetExchange(){exchangeSession.Stop();exchangeShop.Reset();exchangeDataWait=-1;}
     private readonly ScoreSession scores=new();
@@ -76,10 +83,10 @@ public sealed class Plugin : IDalamudPlugin
     private long activitySample;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IClientState client, IPlayerState playerState, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
+        IClientState client, IPlayerState playerState, ITextureProvider textures, IAddonLifecycle addonLifecycle, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
     {
         this.pi = pi; this.commands = commands; this.framework = framework;
-        this.client = client;this.playerState=playerState; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
+        this.client = client;this.playerState=playerState;this.textures=textures; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
         Loc.CheckCompleteness();
         settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => { log.Error(ex, "Configuration saving stopped"); open = true; },
             onFinalFailure: ex => { log.Error(ex, "Final configuration flush failed"); open = true; });
@@ -93,6 +100,8 @@ public sealed class Plugin : IDalamudPlugin
         reader = new GameReader(gui);
         scoreReader=new ScoreReader(gui);
         exchangeCatalog=new(data);exchangeShop=new(gui,objects,pi,exchangeCatalog);
+        exchangeHoldings=new(data,exchangeCatalog.Items);this.addonLifecycle=addonLifecycle;
+        addonLifecycle.RegisterListener(Dalamud.Game.Addon.Lifecycle.AddonEvent.PreFinalize,["MiragePrismPrismBox","Cabinet","CabinetWithdraw"],StorageClosed);
         exchangeLedger=new(Path.Combine(pi.GetPluginConfigDirectory(),"exchanges"));
         scoreHistory=new ScoreHistory(Path.Combine(pi.GetPluginConfigDirectory(),"scores"));
         scorePanel=new ScorePanel(scoreHistory);
@@ -122,7 +131,7 @@ public sealed class Plugin : IDalamudPlugin
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { ResetExchange();exchangeLedger.Select(0);scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Logout(int type, int code) { lock (executionGate) { ResetExchange();exchangeHoldings.Select(0);exchangeLedger.Select(0);scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
     private void Stop() { lock (executionGate) { stopping = true;ResetExchange();exchangeLedger.Dispose();scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
@@ -166,6 +175,8 @@ public sealed class Plugin : IDalamudPlugin
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
             RefreshExchange(now);
             UpdateLoop(now);
+            if(loopWasActive && !loop.Active)RefreshHoldings();
+            loopWasActive=loop.Active;
 
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
             var needsRead=inGame && (typing.Running || loop.Active || activity.Requested || (open && config.ShowDebug) || (config.AutoStart && !automation.Consumed));
@@ -254,7 +265,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if(!loopUi.Supported || !client.IsLoggedIn || client.TerritoryType is not (LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory))return;
         var now=Environment.TickCount64;
-        StopByUser();loop.Start(now,config.LoopCount,IsContent());loopSample=0;scoreExitWait=-1;
+        StopByUser();RefreshHoldings();loop.Start(now,config.LoopCount,IsContent());loopWasActive=true;loopSample=0;scoreExitWait=-1;
         if(IsContent())StartTyping(now,"loop_current_game");
     }
     private void UpdateLoop(long now)
@@ -280,11 +291,12 @@ public sealed class Plugin : IDalamudPlugin
             if(!snapshot.LoggedIn || !snapshot.Lobby || snapshot.Queued || snapshot.OtherQueue){exchangeSession.Fail();loop.Stop(true);return;}
             var nextExchange=NextExchange();
             var batch=nextExchange==null?0:ExchangePolicy.BatchSize(nextExchange,config.Exchange,exchangeCurrency??0,exchangeLedger.Completed(nextExchange.Id),ExchangeObserved(nextExchange.Id));
+            var previousStep=exchangeSession.Step;
             exchangeSession.Tick(now,blocked || loop.Paused || loading,config.Exchange.Enabled,exchangeLedger,nextExchange,exchangeCurrency,
                 id=>ExchangeCatalog.Observe(exchangeCatalog.Items.Single(i=>i.Id==id)),exchangeShop.Approach,exchangeShop.Matches,
                 item=>exchangeShop.Select(item,exchangeLedger.Current?.Pending?.Quantity??0),
                 item=>exchangeShop.Confirm(item,exchangeLedger.Current?.Pending?.Quantity??0),()=>exchangeShop.DialogOpen,exchangeShop.Close,batch);
-            if(exchangeSession.Step==ExchangeStep.Failed){exchangeShop.Suspend();loop.Stop(true);open=true;return;}
+            if(exchangeSession.Step==ExchangeStep.Failed){log.Warning("Exchange stopped at {Step}: {Shop}; ledger={Ledger}",previousStep,exchangeShop.Describe(),exchangeLedger.Error??"ok");exchangeShop.Suspend();loop.Stop(true);open=true;return;}
         }
         var due=exchangeCatalog.Supported && exchangeLedger.Ready && exchangeLedger.Current!.Pending==null && config.Exchange.Enabled
             && exchangeCurrency>=config.Exchange.Threshold && NextExchange()!=null;
@@ -302,7 +314,7 @@ public sealed class Plugin : IDalamudPlugin
             exchangeDataWait=-1;
         }
         var action=loop.Tick(now,snapshot,blocked,config.ExitMin,scoresReady,config.ExitMax,due,exchangeSession.Step==ExchangeStep.Done);
-        if(action==LoopAction.Exchange){exchangeShop.Reset();exchangeSession.Start(now);return;}
+        if(action==LoopAction.Exchange){RefreshHoldings();exchangeShop.Reset();exchangeSession.Start(now);return;}
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
         if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){loopUi.CancelQueuePreparation();automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}
@@ -312,7 +324,7 @@ public sealed class Plugin : IDalamudPlugin
         exchangeLedger.Poll();
         var id=client.IsLoggedIn?playerState.ContentId:0;
         if(id!=exchangeCharacter)
-        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;}
+        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeHoldings.Select(id);exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;}
         if(!config.Exchange.Enabled && !exchangeSession.Active)return;
         exchangeLedger.Select(id);
         if(id==0 || Loading || (client.TerritoryType!=LoopGameUi.LobbyTerritory && !(open && exchangeVisible)) || (!exchangeSession.Active && !loop.Active && !(open && exchangeVisible)) || now-exchangeSample<(exchangeSession.Active?200:1000))return;
@@ -367,7 +379,7 @@ public sealed class Plugin : IDalamudPlugin
         fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(config.Exchange.Enabled?exchangeCatalog.Items.Select(i=>i.Name):[]));
         exchangeVisible=false;
         using var font = fonts.Push(config.Language);
-        ImGui.SetNextWindowSize(new Vector2(650, 440), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSize(new Vector2(780, 940), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Keybound Pilot###KeyboundPilot", ref open))
         {
             if(!fonts.Available)
@@ -404,7 +416,7 @@ public sealed class Plugin : IDalamudPlugin
                     exchangeVisible=true;
                     exchangePanel.Draw(config,T,()=>settings.Update(config),exchangeCatalog.Items,exchangeCurrency,exchangeLedger.Completed,ExchangeObserved,
                         "Exchange"+exchangeSession.Step,exchangeSession.Active || exchangeLedger.Busy,exchangeLedger.Current?.Pending,
-                        purchased=>{if(!loop.Active)exchangeLedger.Resolve(purchased);},exchangeLedger.Error!=null || exchangeSession.Step==ExchangeStep.Failed);
+                        purchased=>{if(!loop.Active)exchangeLedger.Resolve(purchased);},exchangeLedger.Error!=null || exchangeSession.Step==ExchangeStep.Failed,DrawExchangeIcon);
                     if(config.ShowDebug)
                     {
                         ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
@@ -432,6 +444,12 @@ public sealed class Plugin : IDalamudPlugin
         }
         ImGui.End();
     }
+    private void DrawExchangeIcon(ExchangeItem item,float size)
+    {
+        if(item.Icon!=0 && textures.GetFromGameIcon(new Dalamud.Interface.Textures.GameIconLookup(item.Icon)).TryGetWrap(out var texture,out _))
+            ImGui.Image(texture.Handle,new Vector2(size));
+        else ImGui.Dummy(new Vector2(size));
+    }
     private string ExitWaitText()
     {
         var remaining=loop.ExitWaitSeconds(Environment.TickCount64);
@@ -458,6 +476,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         if (disposed) return;
         disposed = true; Stop();
+        addonLifecycle.UnregisterListener(StorageClosed);
         framework.Update -= Update; pi.UiBuilder.Draw -= Draw;
         pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Open;
         client.Logout -= Logout; commands.RemoveHandler(Command);

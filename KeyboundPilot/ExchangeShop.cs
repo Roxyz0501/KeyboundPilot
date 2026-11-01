@@ -41,7 +41,12 @@ internal sealed unsafe class ExchangeShop(IGameGui gui,IObjectTable objects,IDal
         var values=stackalloc AtkValue[3];values[0]=new(){Type=AtkValueType.Int,Int=0};values[1]=new(){Type=AtkValueType.UInt,UInt=index};values[2]=new(){Type=AtkValueType.Int,Int=quantity};
         addon->FireCallback(3,values,true);return true;
     }
-    public bool Matches()=>interacted && ownedShop==(nint)Shop && catalog.Items.Length>0 && ExchangeShopValues.Find(Shop,catalog.Items[0],catalog.Items,catalog.CurrencyIcon)!=null;
+    public bool Matches()=>interacted && ownedShop==(nint)Shop && catalog.Items.Any(item=>ExchangeShopValues.Find(Shop,item,catalog.Items,catalog.CurrencyIcon)!=null);
+    public string Describe()
+    {
+        var shop=Shop;
+        return $"visible={Visible(shop)}, owned={interacted && ownedShop==(nint)shop}, values={(shop==null?0:shop->AtkValuesCount)}, rows={ExchangeShopValues.Number(shop,4)}, currencyIcon={ExchangeShopValues.Number(shop,87)}/{catalog.CurrencyIcon}, firstItem={ExchangeShopValues.Number(shop,1066)}, firstPrice={ExchangeShopValues.Number(shop,456)}, firstIndex={ExchangeShopValues.Number(shop,1310)}, dialog={DialogOpen}";
+    }
     private static string Text(AtkTextNode* node)=>node==null || node->NodeText.Length>2048?"":SeString.Parse(node->NodeText.AsSpan()).TextValue;
     public bool Confirm(ExchangeItem item,int expectedQuantity)
     {
