@@ -328,6 +328,7 @@ if(args.Length>0)
     Check(!premature,"recording replay never starts during disabled input");
     Check(!stopped,"recording replay preserves waiting across disabled input transitions");
 }
+ExchangeTests.Run(Check);
 MistypeTests.Run(Check);
 BackgroundTests.Run(Check);RangeTests.Run(Check);
 Console.WriteLine($"PASS {checks} checks; no real keyboard events sent.");

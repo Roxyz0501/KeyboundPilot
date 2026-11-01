@@ -1,7 +1,7 @@
 namespace KeyboundPilot;
 
-public enum LoopAction { None, Queue, Accept, StartTyping, Leave, ConfirmExit, ConfirmKeyboard }
-public enum LoopPhase { Idle, Requesting, Waiting, Playing, Leaving, Complete, Stopped, Error }
+public enum LoopAction { None, Queue, Accept, StartTyping, Leave, ConfirmExit, ConfirmKeyboard, Exchange }
+public enum LoopPhase { Idle, Requesting, Waiting, Playing, Leaving, Complete, Stopped, Error, Exchanging }
 public readonly record struct LoopSnapshot(bool LoggedIn,bool Lobby,bool InGame,bool Loading,bool OtherQueue,
     bool Queued,bool EntryReady,bool Result,bool LeaveReady,bool ExitConfirm,bool Preparing=false,bool KeyboardWarning=false,bool WaitingForMatch=false);
 
@@ -12,7 +12,7 @@ public sealed class RoundLoop
     private int sampledExitDelay,sampledExitMin,sampledExitMax;
     public RoundLoop(Func<int,int,int>? random=null) {this.random=random??Random.Shared.Next;}
     public LoopPhase Phase {get;private set;}
-    public bool Active=>Phase is LoopPhase.Requesting or LoopPhase.Waiting or LoopPhase.Playing or LoopPhase.Leaving;
+    public bool Active=>Phase is LoopPhase.Requesting or LoopPhase.Waiting or LoopPhase.Playing or LoopPhase.Leaving or LoopPhase.Exchanging;
     public bool Paused {get;private set;}
     public bool WaitingForScores {get;private set;}
     // Pure display projection: never samples randomness or changes the exit deadline.
@@ -32,7 +32,7 @@ public sealed class RoundLoop
     public void Pause() {if(Active)Paused=true;}
     public void Resume() {Paused=false;}
     private void Set(LoopPhase phase,long now) {Phase=phase;since=now;}
-    public LoopAction Tick(long now,LoopSnapshot state,bool blocked=false,int exitDelayMs=0,bool scoresReady=true,int? exitMaximumMs=null)
+    public LoopAction Tick(long now,LoopSnapshot state,bool blocked=false,int exitDelayMs=0,bool scoresReady=true,int? exitMaximumMs=null,bool exchangeDue=false,bool exchangeFinished=false)
     {
         if(!Active)return LoopAction.None;
         if(!state.LoggedIn || state.OtherQueue) {Stop(true);return LoopAction.None;}
@@ -61,7 +61,11 @@ public sealed class RoundLoop
             case LoopPhase.Requesting:
                 if(StopAfterCurrentRequested) {Set(LoopPhase.Complete,now);break;}
                 if(!state.Lobby || state.Queued || state.InGame) {Stop(true);break;}
+                if(exchangeDue){Set(LoopPhase.Exchanging,now);return LoopAction.Exchange;}
                 exitReadyAt=-1;accepted=left=confirmed=wasPreparing=keyboardConfirmed=false;Set(LoopPhase.Waiting,now);return LoopAction.Queue;
+            case LoopPhase.Exchanging:
+                if(exchangeFinished)Set(Completed>=Total || StopAfterCurrentRequested?LoopPhase.Complete:LoopPhase.Requesting,now);
+                break;
             case LoopPhase.Waiting:
                 if(state.Preparing)wasPreparing=true;
                 else if(wasPreparing){wasPreparing=false;since=now;}
@@ -77,7 +81,8 @@ public sealed class RoundLoop
                 break;
             case LoopPhase.Leaving:
                 if(!state.InGame && state.Lobby && !state.Queued)
-                {Set(Completed>=Total || StopAfterCurrentRequested?LoopPhase.Complete:LoopPhase.Requesting,now);break;}
+                {if(exchangeDue && !StopAfterCurrentRequested){Set(LoopPhase.Exchanging,now);return LoopAction.Exchange;}
+                 Set(Completed>=Total || StopAfterCurrentRequested?LoopPhase.Complete:LoopPhase.Requesting,now);break;}
                 if(state.ExitConfirm && left && !confirmed) {confirmed=true;return LoopAction.ConfirmExit;}
                 if(state.Result && canLeave && !left) {left=true;return LoopAction.Leave;}
                 if(now-since>120000)Stop(true);

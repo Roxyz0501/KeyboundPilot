@@ -8,6 +8,7 @@ public sealed record InputSettings(int MinimumMs=80,int MaximumMs=150,int WaitMi
 }
 public sealed class Configuration
 {
+    public ExchangePlan Exchange {get;set;} = new();
     public InputSettings? ObstructionSettings {get;set;}
     public InputSettings LowHpSettings {get;set;} = new();
     public bool LowHpEnabled {get;set;}

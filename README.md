@@ -29,7 +29,21 @@ Automatic travel to reception requires [vnavmesh](https://github.com/awgil/ffxiv
 
 To finish the current run and stop, press “Stop after this run” to the right of the Loop button. Typing and the return to the Square continue, then the loop stops without another registration. A pending stop is shown in the loop status. The button changes to “Cancel scheduled stop”; press it again to continue looping.
 
-The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. It does not confirm other dialogs or act while paused or stopped.
+The normal Pause, Play and Stop buttons also control loops. Stopping does not cancel a registration already in progress. If the game displays the keyboard-disconnection warning while waiting for entry in the Square, the plugin automatically selects Yes once per run. Other entry dialogs are not confirmed. While paused or stopped, no new game operation is sent.
+
+## Item exchange
+
+In Auto typing, turn on “Automatically exchange items” below the Loop buttons to open the exchange settings. It is off by default. Set the MGC balance that starts an exchange visit (1–10000, default 9000), then enter a target quantity for each item. A quantity of 0 excludes an item. Drag quantities or double-click to type them.
+
+When your MGC reaches the threshold, the loop visits the MGC exchange counter before the next registration. It exchanges affordable items in priority order, then returns to registration. The final run can also be followed by an exchange visit. “Stop after this run” skips a new exchange visit and stops after returning to the Square. Travel requires vnavmesh; without it, you must be close enough to talk to the counter.
+
+The default priority is unlockable items, equipment, then the treasure coffer. Use the up/down buttons to change the order. “Hide zero quantities” hides excluded items; “Show all” restores them without changing quantities or priorities. Multiple copies of the same item are exchanged together, within the remaining target, MGC balance and inventory capacity.
+
+Quantities and priorities are shared across characters. Exchanged counts are saved separately for each character and remain after restarting the loop or plugin. Counts refer to purchases made through this feature, not all items you own. Once a target is met, that item is no longer exchanged.
+
+Unlockable items allow only 0 or 1. Their learned status appears in the list. Learned entries remain editable, but are skipped for that character. An unused copy in inventory also prevents another exchange. Missing unlock information and insufficient bag space prevent an exchange.
+
+Pause and Stop also apply during exchange visits. If a purchase result cannot be confirmed, the loop stops. Check your inventory and choose “Mark as exchanged” or “Mark as not exchanged” before restarting. Close any remaining game exchange dialog before starting again.
 
 ## Scores
 
@@ -121,7 +135,21 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 今の周回を終えてから止めるには、周回ボタン右側の「この周回で停止」を押してください。入力とスクウェアへの退出は続け、次の参加申請をせずに終了します。押した後は「この周回で停止予定」と表示します。ボタンは「停止予約を取り消す」に変わり、もう一度押すと周回を続けられます。
 
-周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。一時停止・停止中や別の確認画面では押しません。
+周回中も通常の一時停止・再生・停止ボタンを使います。停止しても申請済みの参加申請は取り消しません。参加待ちで「キーボードの接続が確認できません」という確認が出た場合は、スクウェアでの参加待ちに限り、1周につき1回だけ自動で「はい」を押します。別の参加確認画面では押しません。一時停止・停止中は新たなゲーム操作を送りません。
+
+### アイテムの自動交換
+
+「自動入力」タブの周回ボタンの下にある「アイテムを自動交換する」をオンにすると、交換設定が開きます。初期値はオフです。交換を始める所持MGCを1〜10000で指定し、各アイテムの予定数を入力してください。所持MGCの初期値は9000です。予定数が0のアイテムは交換しません。数値はドラッグ、またはダブルクリックで変更できます。
+
+所持MGCが設定値以上になると、次の申請前にMGC交換窓口へ向かいます。優先順に、通貨が足りるアイテムを交換してから申請へ戻ります。最終回の退出後も条件を満たせば交換します。「この周回で停止」を予約した場合は、新たな交換へ寄らず、スクウェアに戻って停止します。自動移動にはvnavmeshが必要です。未導入の場合は、窓口に話しかけられる距離でのみ交換できます。
+
+初期の優先順位は「習得系 → 装備 → 宝箱」です。一覧の上下ボタンで変更できます。「交換数0を非表示」を押すと対象外のアイテムを隠し、「すべて表示」で元に戻せます。表示を切り替えても、数量と優先順位は変わりません。同じアイテムを複数交換できる場合は、残りの予定数・所持MGC・所持品の空きに合わせて数量をまとめて指定します。
+
+予定数と優先順位は全キャラクターで共通です。交換済み数はキャラクターごとに保存し、周回やプラグインを再開しても引き継ぎます。この機能で交換した数を数えるため、現在の所持数とは異なります。予定数に達したアイテムは追加交換しません。
+
+習得系の予定数は0か1です。一覧に習得状況を表示し、習得済みでも予定数を編集できます。そのキャラクターで習得済みの場合や、未使用の現物を持っている場合は交換しません。習得状況を確認できない場合や、所持品に空きがない場合も交換を見送ります。
+
+交換中も一時停止・停止ボタンを使えます。交換結果を確認できないときは周回を停止します。所持品を確認し、「交換済みとして扱う」か「未交換として扱う」を選んでください。ゲーム側に交換画面が残っている場合は、閉じてから周回を再開します。
 
 ### スコア
 

@@ -16,6 +16,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly ICommandManager commands;
     private readonly IFramework framework;
     private readonly IClientState client;
+    private readonly IPlayerState playerState;
     private readonly IDataManager data;
     private readonly IPluginLog log;
     private readonly ConfigurationStore settings;
@@ -27,6 +28,20 @@ public sealed class Plugin : IDalamudPlugin
     private readonly EncounterPolicy encounter = new();
     private readonly AutomationLifecycle automation = new();
     private readonly RoundLoop loop=new();
+    private readonly ExchangeCatalog exchangeCatalog;
+    private readonly ExchangeShop exchangeShop;
+    private readonly ExchangeLedger exchangeLedger;
+    private readonly ExchangeSession exchangeSession=new();
+    private readonly ExchangePanel exchangePanel=new();
+    private readonly Dictionary<uint,ExchangeObservation> exchangeObservations=new();
+    private int? exchangeCurrency;
+    private long exchangeSample;
+    private long exchangeDataWait=-1;
+    private ulong exchangeCharacter;
+    private bool exchangeVisible;
+    private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false));
+    private ExchangeItem? NextExchange()=>ExchangePolicy.Next(exchangeCatalog.Items,config.Exchange,exchangeCurrency??0,exchangeLedger.Completed,ExchangeObserved);
+    private void ResetExchange(){exchangeSession.Stop();exchangeShop.Reset();exchangeDataWait=-1;}
     private readonly ScoreSession scores=new();
     private readonly ScoreReader scoreReader;
     private readonly ScoreHistory scoreHistory;
@@ -61,10 +76,10 @@ public sealed class Plugin : IDalamudPlugin
     private long activitySample;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IClientState client, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
+        IClientState client, IPlayerState playerState, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
     {
         this.pi = pi; this.commands = commands; this.framework = framework;
-        this.client = client; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
+        this.client = client;this.playerState=playerState; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
         Loc.CheckCompleteness();
         settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => { log.Error(ex, "Configuration saving stopped"); open = true; },
             onFinalFailure: ex => { log.Error(ex, "Final configuration flush failed"); open = true; });
@@ -77,6 +92,8 @@ public sealed class Plugin : IDalamudPlugin
         }
         reader = new GameReader(gui);
         scoreReader=new ScoreReader(gui);
+        exchangeCatalog=new(data);exchangeShop=new(gui,objects,pi,exchangeCatalog);
+        exchangeLedger=new(Path.Combine(pi.GetPluginConfigDirectory(),"exchanges"));
         scoreHistory=new ScoreHistory(Path.Combine(pi.GetPluginConfigDirectory(),"scores"));
         scorePanel=new ScorePanel(scoreHistory);
         if(client.TerritoryType!=LoopGameUi.GameTerritory)scoreHistory.EndSession();
@@ -105,8 +122,8 @@ public sealed class Plugin : IDalamudPlugin
     private bool ModifierPressed => Keyboard.ForegroundGame && Keyboard.Modifier;
     private string T(string key) => Loc.Get(config.Language, key);
     private void Open() => open = true;
-    private void Logout(int type, int code) { lock (executionGate) { scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
-    private void Stop() { lock (executionGate) { stopping = true;scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
+    private void Logout(int type, int code) { lock (executionGate) { ResetExchange();exchangeLedger.Select(0);scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scoreHistory.EndSession();scoreHistory.Flush();activity.End();loop.Stop();loopUi.CancelQueuePreparation();typing.Stop(); Keyboard.Release(true); ime.Restore(); encounter.Reset(); automation.Reset(); reader.Clear(); diagnostics.Stop();diagnosticReader.Reset();diagnosticAttempted=false;settings.Flush(); } }
+    private void Stop() { lock (executionGate) { stopping = true;ResetExchange();exchangeLedger.Dispose();scores.SetRecording(config.RecordScores);scores.End(scoreHistory.Add);scorePanel.Dispose();scoreHistory.Dispose();activity.End();loop.Stop();loopUi.CancelQueuePreparation(); typing.Stop(); Keyboard.Release(true);ime.Restore();diagnostics.Dispose(); settings.Dispose(); } }
     private bool IsContent()
     {
         if (!client.IsLoggedIn) return false;
@@ -131,7 +148,7 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void StopByUser()
     {
-        activity.End();loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
+        ResetExchange();activity.End();loop.Stop();loopUi.CancelQueuePreparation();activity.Reset();automation.Suppress();typing.Stop();controlGate="ManualStop";Keyboard.Release(true);ime.Restore();
     }
     private void UpdateCore()
     {
@@ -147,6 +164,7 @@ public sealed class Plugin : IDalamudPlugin
             if(!inGame)activity.End();
             activity.Tick(now,inGame && !Loading && !reader.ContentComplete && activity.Requested && !typing.ManualPaused && !loop.Paused,ContentActivity.Touch);
             if(!Keyboard.Release()) {typing.Stop("SendFailed");controlGate="KeyReleaseFailed";if(loop.Active)loop.Stop(true);return;}
+            RefreshExchange(now);
             UpdateLoop(now);
 
             if(!inGame) {automation.Reset();reader.Clear();encounter.Reset();if(typing.Running){typing.Stop("Completed");controlGate="OutsideContent";}return;}
@@ -202,7 +220,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         catch(Exception ex)
         {
-            controlGate="Exception";if(loop.Active)loop.Stop(true);loopUi.CancelQueuePreparation();typing.Stop("Fault");open=true;
+            exchangeShop.Suspend();exchangeSession.Fail();controlGate="Exception";if(loop.Active)loop.Stop(true);loopUi.CancelQueuePreparation();typing.Stop("Fault");open=true;
             if(++failures<=3)log.Error(ex,"Keybound read stopped; restart is manual");
         }
         finally {if(!typing.Running){ime.Restore();if(loop.Active && loop.Phase==LoopPhase.Playing && typing.Status!="Completed")loop.Stop(true);}}
@@ -241,11 +259,11 @@ public sealed class Plugin : IDalamudPlugin
     }
     private void UpdateLoop(long now)
     {
-        if(!loop.Active){loopUi.CancelQueuePreparation();return;}
+        if(!loop.Active){loopUi.CancelQueuePreparation();exchangeShop.Suspend();if(exchangeSession.Active)exchangeSession.Fail();return;}
         if(Keyboard.ForegroundGame && Keyboard.Escape){StopByUser();return;}
         if(now-loopSample<200)return;loopSample=now;
         var loading=condition[ConditionFlag.BetweenAreas] || condition[ConditionFlag.BetweenAreas51];
-        if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked)loopUi.SuspendTravel();
+        if(loop.Paused || loading || !InputAllowed || ModifierPressed || UiBlocked){loopUi.SuspendTravel();exchangeShop.Suspend();}
         var snapshot=loopUi.Read(client.IsLoggedIn,client.TerritoryType,loading);
         var scoresReady=true;
         if(!snapshot.Result || !config.RecordScores)scoreExitWait=-1;
@@ -257,10 +275,49 @@ public sealed class Plugin : IDalamudPlugin
         var blocked=!InputAllowed || ModifierPressed || UiBlocked;
         if(loop.Phase==LoopPhase.Waiting && !loop.Paused && !blocked && !loading && snapshot.LoggedIn && !snapshot.OtherQueue && !snapshot.InGame && !snapshot.KeyboardWarning
             && !loopUi.AdvanceQueue(now,client.TerritoryType))loop.Stop(true);
-        var action=loop.Tick(now,snapshot,blocked,config.ExitMin,scoresReady,config.ExitMax);
+        if(loop.Phase==LoopPhase.Exchanging)
+        {
+            if(!snapshot.LoggedIn || !snapshot.Lobby || snapshot.Queued || snapshot.OtherQueue){exchangeSession.Fail();loop.Stop(true);return;}
+            var nextExchange=NextExchange();
+            var batch=nextExchange==null?0:ExchangePolicy.BatchSize(nextExchange,config.Exchange,exchangeCurrency??0,exchangeLedger.Completed(nextExchange.Id),ExchangeObserved(nextExchange.Id));
+            exchangeSession.Tick(now,blocked || loop.Paused || loading,config.Exchange.Enabled,exchangeLedger,nextExchange,exchangeCurrency,
+                id=>ExchangeCatalog.Observe(exchangeCatalog.Items.Single(i=>i.Id==id)),exchangeShop.Approach,exchangeShop.Matches,
+                item=>exchangeShop.Select(item,exchangeLedger.Current?.Pending?.Quantity??0),
+                item=>exchangeShop.Confirm(item,exchangeLedger.Current?.Pending?.Quantity??0),()=>exchangeShop.DialogOpen,exchangeShop.Close,batch);
+            if(exchangeSession.Step==ExchangeStep.Failed){exchangeShop.Suspend();loop.Stop(true);open=true;return;}
+        }
+        var due=exchangeCatalog.Supported && exchangeLedger.Ready && exchangeLedger.Current!.Pending==null && config.Exchange.Enabled
+            && exchangeCurrency>=config.Exchange.Threshold && NextExchange()!=null;
+        // Do not submit a new queue while enabled exchange data or a previous transaction is unresolved.
+        if(loop.Phase==LoopPhase.Requesting && config.Exchange.Enabled)
+        {
+            if(exchangeLedger.Error!=null || exchangeLedger.Ready && exchangeLedger.Current!.Pending!=null || !exchangeCatalog.Supported)
+            {exchangeSession.Fail();loop.Stop(true);open=true;return;}
+            if(!exchangeLedger.Ready || exchangeCurrency==null)
+            {
+                if(exchangeDataWait<0)exchangeDataWait=now;
+                if(now-exchangeDataWait>15000){exchangeSession.Fail();loop.Stop(true);open=true;}
+                return;
+            }
+            exchangeDataWait=-1;
+        }
+        var action=loop.Tick(now,snapshot,blocked,config.ExitMin,scoresReady,config.ExitMax,due,exchangeSession.Step==ExchangeStep.Done);
+        if(action==LoopAction.Exchange){exchangeShop.Reset();exchangeSession.Start(now);return;}
         if(action==LoopAction.StartTyping)StartTyping(now,"loop_entry");
         else if(action!=LoopAction.None && !loopUi.Execute(action,client.TerritoryType))loop.Stop(true);
         if(loop.Phase is LoopPhase.Error or LoopPhase.Complete){loopUi.CancelQueuePreparation();automation.Suppress();typing.Stop(loop.Phase==LoopPhase.Complete?"Completed":"Fault");Keyboard.Release(true);}
+    }
+    private void RefreshExchange(long now)
+    {
+        exchangeLedger.Poll();
+        var id=client.IsLoggedIn?playerState.ContentId:0;
+        if(id!=exchangeCharacter)
+        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;}
+        if(!config.Exchange.Enabled && !exchangeSession.Active)return;
+        exchangeLedger.Select(id);
+        if(id==0 || Loading || (client.TerritoryType!=LoopGameUi.LobbyTerritory && !(open && exchangeVisible)) || (!exchangeSession.Active && !loop.Active && !(open && exchangeVisible)) || now-exchangeSample<(exchangeSession.Active?200:1000))return;
+        exchangeSample=now;exchangeCurrency=ExchangeCatalog.Currency();
+        foreach(var item in exchangeCatalog.Items)exchangeObservations[item.Id]=ExchangeCatalog.Observe(item);
     }
     private void StartDiagnostics()
     {
@@ -307,7 +364,8 @@ public sealed class Plugin : IDalamudPlugin
     {
         uiCaptures = ImGui.GetIO().WantTextInput || ImGui.IsAnyItemActive();
         if (stopping || !open) return;
-        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names));
+        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(config.Exchange.Enabled?exchangeCatalog.Items.Select(i=>i.Name):[]));
+        exchangeVisible=false;
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(650, 440), ImGuiCond.FirstUseEver);
         if (ImGui.Begin("Keybound Pilot###KeyboundPilot", ref open))
@@ -343,6 +401,10 @@ public sealed class Plugin : IDalamudPlugin
                     ImGui.EndDisabled();
                     PlaybackControls.DrawLoop(!loop.Active && loopUi.Supported && client.IsLoggedIn && client.TerritoryType is LoopGameUi.LobbyTerritory or LoopGameUi.GameTerritory,T("LoopButton"),StartLoop);
                     PlaybackControls.DrawStopAfterCurrent(loop.Active,T,loop.ToggleStopAfterCurrent,loop.StopAfterCurrentRequested);
+                    exchangeVisible=true;
+                    exchangePanel.Draw(config,T,()=>settings.Update(config),exchangeCatalog.Items,exchangeCurrency,exchangeLedger.Completed,ExchangeObserved,
+                        "Exchange"+exchangeSession.Step,exchangeSession.Active || exchangeLedger.Busy,exchangeLedger.Current?.Pending,
+                        purchased=>{if(!loop.Active)exchangeLedger.Resolve(purchased);},exchangeLedger.Error!=null || exchangeSession.Step==ExchangeStep.Failed);
                     if(config.ShowDebug)
                     {
                         ImGui.Spacing();ImGui.Separator();ImGui.Spacing();
