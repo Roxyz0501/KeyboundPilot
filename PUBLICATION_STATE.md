@@ -1,3 +1,12 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.5 inventory-driven owned counts
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.5
+- Source/tag e1c650c477cbf4c715e08a6fe6f797591a76d26b; distribution index a83a179fc55258667b97d841422535fa33ff7f84.
+- Subscribe to raw inventory changes for catalog items in player bags, equipped items and armoury; check replacement old/new IDs, ignore repair/spiritbond-only changes, coalesce bursts within 250ms. Refresh works with automatic exchange disabled and UI hidden. Pending changes survive loading and reset per character. Unsubscribe on disposal.
+- Refresh totals on confirmed purchase acknowledgment. Initial and loop boundary snapshots remain; notification-driven refresh reuses current-login storage caches and preserves unknown storage. Storage close refreshes cached storage and invalidates totals.
+- 713 offline checks pass; clean Release zero warnings/errors. No UI/localization/README changes. Live inventory-event behavior remains unverified. No new runtime network or persistent writes; unchanged frames perform no extra inventory scan, event refresh bounded to catalog size with no storage rescan.
+- Anonymous public repository/icon/ZIP/source README/main and pinned indices verified at 1.0.17.5. ZIP 250326 bytes; SHA-256 6cffbcaf9ddb433f3df1a4c98dd3949946fc6eaa4e22884cb2aacfa296328ec8. Release notes describe update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.4 exchange Yes/No confirmation
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.4
