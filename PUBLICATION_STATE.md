@@ -1,3 +1,13 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.1 exchange list and holdings
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.1
+- Source/tag 539e5658b6039732076ce3d699e9c7eaec4b3fb2; distribution index 738a80b17280155504fdc2101fcc5c77f8b23705.
+- Taller exchange list with shared item icons, native drag/drop priority, checkbox filters and owned snapshot column. Totals refresh at loop start, exchange start and loop end, including available dresser/armoire contents cached only for the current login. Unknown required storage remains unknown and is skipped with owned filtering enabled. Purchase acknowledgment continues to use live carried counts separately.
+- Shop validation now allows empty rows and filtered subsets while retaining item, currency, cost and index checks. Failure warnings include the stopped stage and bounded numeric shop data. The reported live stop has not been reproduced; root cause remains unconfirmed without a captured stage. No blind retry was added.
+- Clean Release zero warnings/errors; 681 checks, native drag/drop/shop/capacity/HP/score/input/activity fixtures pass; 191 localization keys, seven languages, four font faces cover 1177 characters. Live exchange/storage capture remain unverified.
+- README English then Japanese verified with yomiyasu; update-only Release notes. yomiyasu-check: executed via=verify run=20261101T052059Z-1c11f48b attempt=1 final=sha256:4ea44f255506 mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
+- Anonymous repository/icon/ZIP/pinned index and source README verified. ZIP 244080 bytes, SHA-256 4306f00fa9f096a916fb670ef51854aa67464b8c5e3f2e7c236ea8cab2b1c738. Main branch connector confirms 1.0.17.1; anonymous main raw cache propagation is being rechecked.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.0 automatic item exchange
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.0
