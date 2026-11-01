@@ -12,7 +12,7 @@ internal sealed unsafe class ExchangeHoldings
     private readonly Dictionary<uint,uint[]> sets;
     private Dictionary<uint,int>? dresser,armoire;
     private ulong character;
-    private readonly Dictionary<uint,int> totals=new();
+    private readonly Dictionary<uint,HoldingsCount> totals=new();
     public static bool InventoryReady
     {
         get
@@ -41,7 +41,7 @@ internal sealed unsafe class ExchangeHoldings
     }
     public void Select(ulong id)
     {if(character==id)return;character=id;dresser=null;armoire=null;totals.Clear();}
-    public int Total(uint id)=>totals.GetValueOrDefault(id,-1);
+    public HoldingsCount Total(uint id)=>totals.GetValueOrDefault(id,new(-1,false));
     // Also called when the user closes storage, before zone changes clear the game's cache.
     public void CaptureStorage(ulong id)
     {
@@ -69,8 +69,9 @@ internal sealed unsafe class ExchangeHoldings
         var inventory=InventoryManager.Instance();if(inventory==null)return;
         foreach(var item in items)
         {
-            if(equipment.Contains(item.Id) && dresser==null || cabinet.ContainsKey(item.Id) && armoire==null){totals[item.Id]=-1;continue;}
-            totals[item.Id]=inventory->GetInventoryItemCount(item.Id)+(dresser?.GetValueOrDefault(item.Id)??0)+(armoire?.GetValueOrDefault(item.Id)??0);
+            totals[item.Id]=HoldingsCount.Combine(inventory->GetInventoryItemCount(item.Id,checkEquipped:true,checkArmory:true),
+                equipment.Contains(item.Id)?dresser?.GetValueOrDefault(item.Id):0,
+                cabinet.ContainsKey(item.Id)?armoire?.GetValueOrDefault(item.Id):0);
         }
     }
 }

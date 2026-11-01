@@ -84,7 +84,7 @@ internal sealed unsafe class ExchangePanel
                 if(PlaybackControls.Number("###Quantity",ref quantity,0,item.Learnable?1:9999,1,t(item.Learnable?"ExchangeLearnableHelp":"NumberHelp")))
                 {config.Exchange=config.Exchange.SetQuantity(item.Id,quantity,item.Learnable);save();}
                 var state=observe(item.Id);
-                ImGui.TableNextColumn();ImGui.TextUnformatted(state.DisplayOwned<0?"—":state.DisplayOwned.ToString("N0"));
+                ImGui.TableNextColumn();ImGui.TextUnformatted(new HoldingsCount(state.DisplayOwned,state.OwnedComplete).Text);
                 if(ImGui.IsItemHovered())ImGui.SetTooltip(t("ExchangeOwnedHelp"));
                 ImGui.TableNextColumn();
                 var label=state.Knowledge==ExchangeKnowledge.NotApplicable?"—":t("Exchange"+state.Knowledge);

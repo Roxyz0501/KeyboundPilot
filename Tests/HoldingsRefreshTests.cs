@@ -4,6 +4,13 @@ static class HoldingsRefreshTests
     public static void Run(Action<bool,string> check)
     {
         var refresh=new HoldingsRefresh([52261,52323]);
+        check(HoldingsCount.Combine(2,null,null)==new HoldingsCount(2,false),"holdings: unloaded storage preserves carried gear");
+        check(HoldingsCount.Combine(2,3,null)==new HoldingsCount(5,false),"holdings: known storage contributes to partial count");
+        check(HoldingsCount.Combine(2,3,1)==new HoldingsCount(6,true),"holdings: fully loaded storage exact total");
+        check(HoldingsCount.Combine(0,0,0).Text=="0","holdings: confirmed zero");
+        check(HoldingsCount.Combine(0,null,0).Text=="0+","holdings: unknown storage not presented as empty");
+        check(HoldingsCount.Combine(1,null,0).Text=="1+","holdings: partial count marked");
+        check(HoldingsCount.Combine(-1,3,1).Text=="—","holdings: unloaded carried inventory remains unknown");
         check(!refresh.Due(0,false) && refresh.Due(0,true),"holdings: initial refresh waits for loaded inventory");
         refresh.Complete(0);
         check(!refresh.Pending && !refresh.Due(10000,true),"holdings: unchanged frames require no inventory reads");

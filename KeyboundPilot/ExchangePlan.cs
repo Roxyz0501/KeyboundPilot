@@ -72,7 +72,12 @@ public sealed record ExchangePlan(bool Enabled=false,int Threshold=9000,string T
 
 public enum ExchangeKnowledge { NotApplicable, Unlearned, Learned, Unknown }
 public sealed record ExchangeItem(uint Id,string Name,int Cost,bool Learnable,bool Unique,uint StackSize,uint Icon=0,uint ShopTab=11);
-public readonly record struct ExchangeObservation(ExchangeKnowledge Knowledge,int Owned,bool Space,int Capacity=int.MaxValue,int? TotalOwned=null)
+public readonly record struct HoldingsCount(int Count,bool Complete)
+{
+    public static HoldingsCount Combine(int carried,int? dresser,int? armoire)=>carried<0?new(-1,false):new(carried+(dresser??0)+(armoire??0),dresser.HasValue && armoire.HasValue);
+    public string Text=>Count<0?"—":Count.ToString("N0")+(Complete?"":"+");
+}
+public readonly record struct ExchangeObservation(ExchangeKnowledge Knowledge,int Owned,bool Space,int Capacity=int.MaxValue,int? TotalOwned=null,bool OwnedComplete=true)
 {
     public int DisplayOwned=>TotalOwned??Owned;
 }

@@ -1,3 +1,9 @@
+## 2026-11-01 - 1.0.17.7 partial equipment holdings
+
+- Found that any unloaded dresser/armoire replaced the entire equipment total with unknown, masking known bag/equipped/armoury counts. Always count carried gear (explicit equipped/armoury flags), add known storage, and track completeness separately. Display partial totals with +; never interpret unavailable storage as zero. Preserve unknown when carried count itself is unavailable.
+- Update all seven help texts, including event-driven refresh timing. Exchange eligibility/receipts still use carried inventory independently of displayed totals. No new IO, network, persistent writes or scans.
+- Added seven regression checks for carried/partial/complete/unknown counts and labels. Release and 720 checks pass; native UI/font validation run. Live inventory behavior not exercised.
+
 ## 2026-11-01 - 1.0.17.6 ownership column label
 
 - Rename the exchange column to 習得・所持状況 and update all seven localized labels. Size the column from the current label width to avoid truncation. No exchange policy or holdings calculation changes.

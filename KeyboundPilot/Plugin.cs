@@ -48,7 +48,11 @@ public sealed class Plugin : IDalamudPlugin
     private long exchangeDataWait=-1;
     private ulong exchangeCharacter;
     private bool exchangeVisible;
-    private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false)) with {TotalOwned=exchangeHoldings.Total(id)};
+    private ExchangeObservation ExchangeObserved(uint id)
+    {
+        var held=exchangeHoldings.Total(id);
+        return exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false)) with {TotalOwned=held.Count,OwnedComplete=held.Complete};
+    }
     private void RefreshHoldings(bool captureStorage=true)
     {
         if(!client.IsLoggedIn || Loading || !ExchangeHoldings.InventoryReady){holdingsRefresh.Invalidate();return;}
