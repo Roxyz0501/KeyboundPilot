@@ -1,3 +1,11 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.7 equipment counts
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.7
+- Source/tag 0e6f4144170c96b2f081d51578e53aa0314cae51; distribution index 023b99ba484ec779e8be42249dbd9bec04b2226e.
+- Fix unknown dresser/armoire suppressing known equipped, bag and armoury counts. Always show confirmed counts plus known storage, mark incomplete totals with +, preserve unavailable carried counts as unknown. Exactness is separate from count; exchange eligibility and receipt logic unchanged. Update seven localized help texts and event refresh description.
+- Clean Release and 720 checks pass, including seven partial-count regressions; native UI and four-font 1171-character checks pass. Live inventory behavior not exercised. No additional scans, IO, network or persistence writes.
+- Public repository/icon/ZIP/source README verified; pinned index and main Contents API report 1.0.17.7 (raw main CDN briefly returned 1.0.17.6). ZIP 251665 bytes; SHA-256 12df9a22ea394b7b306dbf8fc4fb07c42143717d180f2f26946bb3b90e07a419. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.6 ownership column
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.6
