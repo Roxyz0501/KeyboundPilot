@@ -1,3 +1,13 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.2 startup holdings and mapped exchange selection
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.2
+- Source/tag 9c422d9dc96f75ab6209cb02674046c488b31163; distribution index 95a4ee0c7f7cbc4dcf440f16f106ecc8461aa4ba.
+- Initial owned snapshot runs once after plugin load/login when player and bags are ready, even if exchange is disabled. Removed owned-above-target checkbox and exclusion policy; legacy field ignored. Existing display and loop/exchange snapshots remain.
+- Live warning captured Select failure with 9 visible rows, original first index 9 and 3325 addon values. Resolve displayed row mapping before reading original item/cost and selecting original index. Native regression covers this offset, hidden first product and invalid mappings. Pre-callback rejection releases unsubmitted reservations; existing uncertain records remain for explicit reconciliation. Updated live exchange not yet verified.
+- Clean Release zero warnings/errors; 675 checks pass. Native shop/input/HP/score/activity/capacity/drag fixtures pass. 190 keys/seven locales and four-font coverage of 1174 glyphs pass. No new persistent writes or runtime external calls.
+- README English/Japanese checked. yomiyasu-check: executed via=verify run=20261101T053024Z-f994b3eb attempt=2 final=sha256:ca1afe067c9e mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
+- Anonymous repository/icon/source README/ZIP and both main and pinned distribution indices verified at 1.0.17.2. ZIP 244006 bytes; SHA-256 a0cd6a5d8e1a8d8abe2fe20fd76002dfbd5780a8201d926df94e637c377dbe45. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.1 exchange list and holdings
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.1
