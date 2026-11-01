@@ -34,18 +34,10 @@ static class ExchangeTests
         C(plan.Insert(mixed,999,10,true)==plan && plan.Insert(mixed,10,999,true)==plan,"unknown drag ids rejected");
         C(hidden.Insert(mixed,11,10,false).Targets==hidden.Targets && hidden.Insert(mixed,11,10,false).HideZero,"filtered drag preserves quantities and filter");
         C(plan.Insert(mixed,11,10,false).SetQuantity(10,1,true).Ordered(mixed)[0].Id==11,"quantity edits retain dropped priority");
-        var ownedPlan=plan with {ExcludeOverTarget=true};
-        C(!plan.ExcludedByOwned(box,4),"owned exclusion defaults off");
-        C(ownedPlan.ExcludedByOwned(box,-1),"unloaded storage not treated as zero");
-        C(!plan.ExcludedByOwned(box,-1),"unknown totals do not block disabled exclusion");
-        C(ExchangePolicy.Next([box],ownedPlan,1000,_=>0,_=>normal with {TotalOwned=4})==null,"storage total used for exclusion");
         C((normal with {TotalOwned=7}).Owned==0 && (normal with {TotalOwned=7}).DisplayOwned==7,"receipt inventory independent of displayed storage");
+        C(ExchangePolicy.Next([box],plan,1000,_=>0,_=>normal with {TotalOwned=999})==box,"displayed holdings do not exclude targets");
+        C(JsonSerializer.Deserialize<ExchangePlan>("{\"ExcludeOverTarget\":true}")==new ExchangePlan(),"removed legacy exclusion ignored");
         C(ExchangePolicy.Eligible(equipment,1,0,normal with {TotalOwned=1}),"stored unique gear not confused with carried inventory");
-        C(!ownedPlan.ExcludedByOwned(box,3),"owned equal to target remains eligible");
-        C(ownedPlan.ExcludedByOwned(box,4),"owned strictly above target excluded");
-        C(ExchangePolicy.BatchSize(box,ownedPlan,1000,0,normal with {Owned=4})==0,"owned exclusion prevents batch");
-        C(ExchangePolicy.Next([box],ownedPlan,1000,_=>0,_=>normal with {Owned=4})==null,"owned exclusion prevents exchange selection");
-        C(ExchangePolicy.Next([box],ownedPlan,1000,_=>0,_=>normal with {Owned=3})==box,"equal count selection retained");
         C(ExchangePolicy.BatchSize(box,plan,1000,0,normal)==3,"batch remaining target");
         C(ExchangePolicy.BatchSize(box,plan,400,0,normal)==2,"batch currency limit");
         C(ExchangePolicy.BatchSize(box,plan,1000,2,normal)==1,"batch subtracts prior progress");
@@ -144,6 +136,13 @@ static class ExchangeTests
             Tick(50004,currency:0,owned:1);ledger.Flush();C(ledger.Completed(10)==1,"both changes commit exactly one");
             Tick(50005,currency:0,owned:1);C(ledger.Completed(10)==1,"later poll cannot duplicate result");
             session.Stop();C(!session.Active && session.Step==ExchangeStep.Idle,"stop clears automation only");
+        }
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"rejected-selection")))
+        {
+            ledger.Select(7);ledger.Flush();var session=new ExchangeSession();session.Start(0);
+            void Tick(long now)=>session.Tick(now,false,true,ledger,item,100,_=>unlearned,()=>true,()=>true,_=>false,_=>throw new Exception("Unexpected confirmation"),()=>false,()=>true);
+            Tick(0);Tick(1);ledger.Flush();Tick(2);ledger.Flush();
+            C(session.Step==ExchangeStep.Failed && ledger.Current!.Pending==null && ledger.Completed(10)==0,"rejected selection clears unsubmitted reservation");
         }
         var badDir=Path.Combine(directory,"corrupt");Directory.CreateDirectory(Path.Combine(badDir,"0000000000000005"));
         File.WriteAllText(Path.Combine(badDir,"0000000000000005","progress.json"),"invalid");

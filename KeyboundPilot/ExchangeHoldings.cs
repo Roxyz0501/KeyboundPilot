@@ -13,6 +13,20 @@ internal sealed unsafe class ExchangeHoldings
     private Dictionary<uint,int>? dresser,armoire;
     private ulong character;
     private readonly Dictionary<uint,int> totals=new();
+    public static bool InventoryReady
+    {
+        get
+        {
+            var inventory=InventoryManager.Instance();
+            if(inventory==null || UIState.Instance()==null)return false;
+            for(var i=0;i<4;i++)
+            {
+                var bag=inventory->GetInventoryContainer((InventoryType)i);
+                if(bag==null || !bag->IsLoaded)return false;
+            }
+            return true;
+        }
+    }
     public ExchangeHoldings(IDataManager data,IReadOnlyList<ExchangeItem> items)
     {
         var ids=items.Select(i=>i.Id).ToHashSet();

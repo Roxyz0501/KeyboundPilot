@@ -42,6 +42,7 @@ public sealed class Plugin : IDalamudPlugin
     private long exchangeSample;
     private long exchangeDataWait=-1;
     private ulong exchangeCharacter;
+    private bool initialHoldingsPending=true;
     private bool exchangeVisible;
     private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false)) with {TotalOwned=exchangeHoldings.Total(id)};
     private void RefreshHoldings()=>exchangeHoldings.Refresh(client.IsLoggedIn?playerState.ContentId:0,exchangeCatalog.Items);
@@ -324,7 +325,12 @@ public sealed class Plugin : IDalamudPlugin
         exchangeLedger.Poll();
         var id=client.IsLoggedIn?playerState.ContentId:0;
         if(id!=exchangeCharacter)
-        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeHoldings.Select(id);exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;}
+        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeHoldings.Select(id);exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;initialHoldingsPending=true;}
+        if(initialHoldingsPending && id!=0 && !Loading && objects.LocalPlayer!=null && ExchangeHoldings.InventoryReady)
+        {
+            RefreshHoldings();initialHoldingsPending=false;
+            foreach(var item in exchangeCatalog.Items)exchangeObservations[item.Id]=ExchangeCatalog.Observe(item);
+        }
         if(!config.Exchange.Enabled && !exchangeSession.Active)return;
         exchangeLedger.Select(id);
         if(id==0 || Loading || (client.TerritoryType!=LoopGameUi.LobbyTerritory && !(open && exchangeVisible)) || (!exchangeSession.Active && !loop.Active && !(open && exchangeVisible)) || now-exchangeSample<(exchangeSession.Active?200:1000))return;

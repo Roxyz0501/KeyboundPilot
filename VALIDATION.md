@@ -1,3 +1,12 @@
+## 2026-11-01 - 1.0.17.2 startup counts and mapped exchange rows
+
+- Added one initial holdings capture on the framework thread once logged in, outside loading, with a local player and all four bags loaded. Also applies after character change; runs even with exchange disabled. No repeated snapshot or disk writes on unchanged frames. Existing loop/exchange boundary snapshots retained.
+- Live failure warning identified Select with 3325 values, 9 visible rows and first original index 9. Previous code treated visible indices as original item/cost indices. Resolve each visible mapping first, then validate original item/cost and dispatch its original index. Native fixtures now cover visible row 0 mapping to original row 9, hidden original row 0 and invalid mapping. Final item-name/quantity confirmation remains required. Live revised purchase not yet verified.
+- Removed owned-above-target checkbox and policy; legacy JSON field is ignored, with unchanged remaining quantities/priorities. Owned totals remain display-only. Pre-callback selection rejection clears its unsubmitted reservation; unknown dispatched outcomes still require reconciliation. Existing pending records are preserved.
+- Native fixtures and four-font coverage pass (1174 glyphs, 190 keys/seven languages). Clean Release zero warnings/errors; 675 checks pass, including migration/display-only ownership and rejected-selection cases.
+- README reviewed with yomiyasu: removal of exclusion text follows user request; added startup/login timing matches code. Retained actual dash markers and polite instructional endings.
+- yomiyasu-check: executed via=verify run=20261101T053024Z-f994b3eb attempt=2 final=sha256:ca1afe067c9e mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
+
 ## 2026-11-01 - 1.0.17.1 exchange list, holdings and selection
 
 - Expanded table to 15 rows with visible-cell shared texture provider icons; native drag/drop moves a row before/after its target without changing quantities. Hide-zero and strictly-over-target filters are persisted checkboxes. Exchanged display replaced by snapshot owned totals; purchase progress stays separate.

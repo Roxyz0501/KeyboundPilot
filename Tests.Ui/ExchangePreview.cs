@@ -47,11 +47,16 @@ unsafe partial class Program
         Set(4,3);Set(87,999);
         for(var i=0;i<3;i++){Set(1066+i,items[i].Id);Set(456+i,(uint)items[i].Cost);Set(1310+i,(uint)i);}
         if(ExchangeShopValues.Find(&addon,items[1],items,999)!=1)throw new Exception("Exchange valid catalog rejected");
-        Set(4,4);Set(1069,0);
+        Set(4,4);Set(1069,0);Set(1313,3);
         if(ExchangeShopValues.Find(&addon,items[1],items,999)!=1)throw new Exception("Empty shop slots blocked selection");
         Set(4,2);
         if(ExchangeShopValues.Find(&addon,items[1],items,999)!=1)throw new Exception("Filtered shop blocked selection");
         if(ExchangeShopValues.Find(&addon,items[2],items,999)!=null)throw new Exception("Absent product accepted");
+        Set(4,1);Set(1310,9);Set(1075,items[2].Id);Set(465,(uint)items[2].Cost);
+        if(ExchangeShopValues.Find(&addon,items[2],items,999)!=9)throw new Exception("Filtered original index 9 not selected");
+        if(ExchangeShopValues.Find(&addon,items[0],items,999)!=null)throw new Exception("Hidden original row zero selected");
+        Set(1310,64);if(ExchangeShopValues.Find(&addon,items[2],items,999)!=null)throw new Exception("Invalid mapped index accepted");
+        Set(1310,0);
         Set(4,3);
         Set(457,1);if(ExchangeShopValues.Find(&addon,items[1],items,999)!=null)throw new Exception("Exchange changed cost accepted");Set(457,260);
         Set(1067,items[0].Id);if(ExchangeShopValues.Find(&addon,items[1],items,999)!=null)throw new Exception("Duplicate exchange id accepted");Set(1067,items[1].Id);

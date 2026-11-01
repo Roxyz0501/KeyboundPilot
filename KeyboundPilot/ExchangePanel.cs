@@ -27,8 +27,6 @@ internal sealed unsafe class ExchangePanel
         ImGui.TextUnformatted(t("ExchangePriority"));ImGui.SameLine();ImGui.PushID("Priority");PlaybackControls.Help(t("ExchangePriorityHelp"));ImGui.PopID();
         var hideZero=config.Exchange.HideZero;
         if(ImGui.Checkbox(t("ExchangeHideZero"),ref hideZero)){config.Exchange=config.Exchange with {HideZero=hideZero};save();}
-        var excludeOwned=config.Exchange.ExcludeOverTarget;
-        if(ImGui.Checkbox(t("ExchangeExcludeOwned"),ref excludeOwned)){config.Exchange=config.Exchange with {ExcludeOverTarget=excludeOwned};save();}
         ImGui.SetNextItemWidth(-1);ImGui.InputTextWithHint("###ExchangeSearch",t("ExchangeSearch"),ref search,128);
         if(lastPlan!=config.Exchange || lastSearch!=search || !ReferenceEquals(lastItems,items))
         {

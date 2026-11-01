@@ -46,7 +46,7 @@ public sealed class ExchangeSession
             if(!enabled || next?.Id!=Item?.Id || quantity!=ledger.Current!.Pending?.Quantity || currency!=ledger.Current!.Pending?.CurrencyBefore)
             {ledger.Resolve(false);Move(ExchangeStep.Commit,now);return;}
             Move(ExchangeStep.Confirm,now);
-            if(Item==null || !select(Item))Fail();
+            if(Item==null || !select(Item)){ledger.Resolve(false);Fail();} // Selection rejected before any purchase callback.
         }
         else if(Step is ExchangeStep.Confirm or ExchangeStep.Acknowledge)
         {

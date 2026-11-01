@@ -41,7 +41,7 @@ The default priority is unlockable items, equipment, then the treasure coffer. D
 
 Quantities and priorities are shared across characters. Exchanged counts are saved separately for each character and remain after restarting the loop or plugin. Counts refer to purchases made through this feature, not all items you own. Once a target is met, that item is no longer exchanged.
 
-“Exclude items owned above the target” skips an item when its owned count is greater than its target. Equal counts are not excluded by this option. It is off by default. Owned counts include bags, equipped gear, armoury, glamour dresser and armoire, and refresh at loop start, exchange start and loop end. Open and close the dresser and armoire during this login to load their contents. Unavailable totals show “—”; the exclusion option skips these items until their counts are known. Storage contents are remembered until logout or plugin reload.
+Owned counts include bags, equipped gear, armoury, glamour dresser and armoire, and refresh when the plugin loads (after login if needed), at loop start, exchange start and loop end. Open and close the dresser and armoire during this login to load their contents. Unavailable totals show “—”. Storage contents are remembered until logout or plugin reload.
 
 Unlockable items allow only 0 or 1. Their learned status appears in the list. Learned entries remain editable, but are skipped for that character. An unused copy in inventory also prevents another exchange. Missing unlock information and insufficient bag space prevent an exchange.
 
@@ -149,9 +149,7 @@ Dalamud のカスタムリポジトリに次のURLを登録し、Keybound Pilot 
 
 予定数と優先順位は全キャラクターで共通です。交換済み数はキャラクターごとに保存し、周回やプラグインを再開しても引き継ぎます。この機能で交換した数を数えるため、現在の所持数とは異なります。予定数に達したアイテムは追加交換しません。
 
-「所持数が予定数を超えたら除外する」は初期値オフです。オンにすると、所持数が予定数より多いアイテムを交換対象から外します。同じ数なら、この設定では除外しません。
-
-所持数は、所持品・装備中・アーマリー・ミラージュドレッサー・愛蔵品キャビネットの合計です。周回開始・交換開始・周回終了時に更新します。ドレッサーと愛蔵品の内容を取得するには、そのログイン中に収納画面を開いて閉じてください。未取得の合計は「—」と表示し、所持数による除外がオンなら交換を見送ります。収納内容の記憶はログアウトやプラグインの再読み込みで消えます。
+所持数は、所持品・装備中・アーマリー・ミラージュドレッサー・愛蔵品キャビネットの合計です。プラグイン読み込み時と、周回開始・交換開始・周回終了時に更新します。ログイン前に読み込んだ場合は、ログイン後に取得します。ドレッサーと愛蔵品の内容を取得するには、そのログイン中に収納画面を開いて閉じてください。未取得の合計は「—」と表示します。収納内容の記憶はログアウトやプラグインの再読み込みで消えます。
 
 習得系の予定数は0か1です。一覧に習得状況を表示し、習得済みでも予定数を編集できます。そのキャラクターで習得済みの場合や、未使用の現物を持っている場合は交換しません。習得状況を確認できない場合や、所持品に空きがない場合も交換を見送ります。
 
