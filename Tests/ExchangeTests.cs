@@ -116,6 +116,15 @@ static class ExchangeTests
             Tick(16000);C(session.Step==ExchangeStep.Failed && ledger.Current!.Pending!=null,"unacknowledged purchase stops with journal");
             var prior=selects;Tick(17000);C(selects==prior,"failed flow never retries purchase");
         }
+        using(var ledger=new ExchangeLedger(Path.Combine(directory,"dialog-ready")))
+        {
+            ledger.Select(11);ledger.Flush();var session=new ExchangeSession();session.Start(0);var ready=false;var clicks=0;
+            void Tick(long now)=>session.Tick(now,false,true,ledger,item,100,_=>unlearned,()=>true,()=>true,_=>true,_=>{if(!ready)return false;clicks++;return true;},()=>true,()=>true);
+            Tick(0);Tick(1);ledger.Flush();Tick(2);ledger.Flush();Tick(3);Tick(4);
+            C(session.Step==ExchangeStep.Confirm && clicks==0,"visible incomplete confirmation waits without a click");
+            ready=true;Tick(5);Tick(6);C(session.Step==ExchangeStep.Acknowledge && clicks==1,"ready confirmation dispatches exactly once");
+            Tick(16006);C(session.Step==ExchangeStep.Failed && clicks==1,"missing acknowledgment never repeats confirmation");
+        }
         var cfgPath=Path.Combine(directory,"config.json");
         using(var store=new ConfigurationStore(cfgPath))
         {store.Configuration.Exchange=plan;store.Update(store.Configuration);store.Flush();C(store.SaveCount==1,"exchange settings persisted once");}

@@ -1,3 +1,11 @@
+## 2026-11-01 - 1.0.17.4 exchange confirmation
+
+- Read-only live inspection identified SelectYesno (22 values), rather than ShopExchangeCurrencyDialog. Captured item 52261, icon 26014, displayed item name and currency cost 430; no game input, purchase or memory writes were issued. Only bounded exchange UI metadata was read; raw capture stays local.
+- Add the item-bearing Yes/No path through the registered Yes button event. Require the owned catalog/shop, exact item ID/icon/name, currency name and total cost matching reserved quantity. Positive unit costs and total cost validate quantity without assuming undocumented quantity fields. Ordinary/unrelated dialogs, malformed values, mismatched costs and invalid learnable quantities are rejected.
+- Wait for confirmation values/button readiness within the existing 15-second deadline. Once a click dispatches, wait for currency plus inventory acknowledgment and never repeat the click. Unknown purchase records retain manual reconciliation; no speculative retry or ledger reset.
+- 688 offline checks and native confirmation/category/input/HP/score/activity/capacity/UI fixtures pass; clean Release zero warnings/errors. Four font faces cover 1175 characters, 191 keys/seven languages. The updated confirmation has not been clicked in live gameplay; successful real exchange remains unverified.
+- No new runtime network calls or persistence writes. Validation reads at most 22 values and two bounded 2048-byte strings, only while a purchase is awaiting confirmation; existing timeout bounds retries. README and localization unchanged.
+
 ## 2026-11-01 - 1.0.17.3 category selection, unsent recovery and loop controls
 
 - Read-only live capture of ShopExchangeCurrency: 3325 values, armour category contains 9 rows (item 52323 at visible row 0; callback ID 9). Item and price arrays are visible-row indexed, not callback-ID indexed. This disproves the 1.0.17.2 mapping assumption. Capture used bounded numeric/shop-label reads only; no game writes, key events or purchase calls. Artifact remains local.

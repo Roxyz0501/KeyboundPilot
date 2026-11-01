@@ -5,5 +5,6 @@
  <None Include="$(DalamudLibPath)cimgui.dll" Link="cimgui.dll" CopyToOutputDirectory="PreserveNewest"/>
  <Compile Include="../KeyboundPilot/Loc.cs" Link="Loc.cs"/><Compile Include="../KeyboundPilot/GlyphCoverage.cs" Link="GlyphCoverage.cs"/>
  <Compile Include="../KeyboundPilot/PlaybackControls.cs" Link="PlaybackControls.cs"/>
+ <Compile Include="../KeyboundPilot/ExchangeConfirmation.cs" Link="ExchangeConfirmation.cs"/>
  </ItemGroup>
 </Project>

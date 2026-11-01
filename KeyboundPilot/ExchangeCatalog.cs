@@ -11,6 +11,7 @@ internal sealed unsafe class ExchangeCatalog
     public ExchangeItem[] Items {get;}=[];
     public bool Supported {get;}
     public uint CurrencyIcon {get;}
+    public string CurrencyName {get;}="";
     // Construct once from installed sheets; never download a shop list during UI drawing.
     public ExchangeCatalog(IDataManager data)
     {
@@ -35,7 +36,7 @@ internal sealed unsafe class ExchangeCatalog
             list.Add(new(item.RowId,item.Name.ToString(),(int)row.ItemCosts[0].CurrencyCost,learnable,item.IsUnique,item.StackSize,item.Icon,tab));
         }
         if(list.Count is <1 or >64 || list.Select(i=>i.Id).Distinct().Count()!=list.Count)return;
-        Items=list.ToArray();CurrencyIcon=data.GetExcelSheet<Item>().GetRow(CurrencyId).Icon;Supported=true;
+        Items=list.ToArray();var currency=data.GetExcelSheet<Item>().GetRow(CurrencyId);CurrencyIcon=currency.Icon;CurrencyName=currency.Name.ToString();Supported=true;
     }
     public static int? Currency()
     {

@@ -5,6 +5,7 @@ using System.Numerics;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Component.GUI;
+using FFXIVClientStructs.FFXIV.Client.UI;
 namespace KeyboundPilot;
 
 /// <summary>Owned NPC conversation only; validate the live catalog before any single-item callback.</summary>
@@ -63,6 +64,10 @@ internal sealed unsafe class ExchangeShop(IGameGui gui,IObjectTable objects,IDal
     public bool Confirm(ExchangeItem item,int expectedQuantity)
     {
         if(!Matches())return false;
+        var yesno=gui.GetAddonByName<AddonSelectYesno>("SelectYesno");
+        if(Visible((AtkUnitBase*)yesno))
+            return ExchangeConfirmation.Matches((AtkUnitBase*)yesno,item,expectedQuantity,catalog.CurrencyName)
+                && LoopGameUi.Click((AtkUnitBase*)yesno,yesno->YesButton);
         var dialog=gui.GetAddonByName<AtkUnitBase>("ShopExchangeCurrencyDialog");
         if(!Visible(dialog))return false;
         // The selected item must be present in the dialog's actual text values, with the exact reserved quantity.

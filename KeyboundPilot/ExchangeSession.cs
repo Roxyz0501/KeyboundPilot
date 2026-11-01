@@ -70,8 +70,9 @@ public sealed class ExchangeSession
                 // Server currency and inventory updates can arrive on different frames.
                 if(currency!=pending.CurrencyBefore || state.Owned!=pending.OwnedBefore)return;
                 if(next?.Id!=Item.Id || quantity!=pending.Quantity){Fail();return;}
-                confirmed=true;Move(ExchangeStep.Acknowledge,now);
-                if(!confirm(Item))Fail();
+                // A visible dialog may still be populating its item values or enabling its button.
+                // Retry validation only; once the click is dispatched, never send it again.
+                if(confirm(Item)){confirmed=true;Move(ExchangeStep.Acknowledge,now);}
             }
         }
         else if(Step==ExchangeStep.Commit)
