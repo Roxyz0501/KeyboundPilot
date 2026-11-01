@@ -5,6 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
+using Dalamud.Game.Inventory.InventoryEventArgTypes;
 using Roxyz0501.Dalamud.CommonUi;
 
 namespace KeyboundPilot;
@@ -31,6 +32,9 @@ public sealed class Plugin : IDalamudPlugin
     private readonly RoundLoop loop=new();
     private readonly ExchangeCatalog exchangeCatalog;
     private readonly ExchangeHoldings exchangeHoldings;
+    private readonly IGameInventory gameInventory;
+    private readonly HoldingsRefresh holdingsRefresh;
+    private bool captureHoldingsStorage=true;
     private readonly IAddonLifecycle addonLifecycle;
     private bool loopWasActive;
     private int exchangeDeferredRound=-1;
@@ -43,12 +47,30 @@ public sealed class Plugin : IDalamudPlugin
     private long exchangeSample;
     private long exchangeDataWait=-1;
     private ulong exchangeCharacter;
-    private bool initialHoldingsPending=true;
     private bool exchangeVisible;
     private ExchangeObservation ExchangeObserved(uint id)=>exchangeObservations.GetValueOrDefault(id,new(ExchangeKnowledge.Unknown,-1,false)) with {TotalOwned=exchangeHoldings.Total(id)};
-    private void RefreshHoldings()=>exchangeHoldings.Refresh(client.IsLoggedIn?playerState.ContentId:0,exchangeCatalog.Items);
+    private void RefreshHoldings(bool captureStorage=true)
+    {
+        if(!client.IsLoggedIn || Loading || !ExchangeHoldings.InventoryReady){holdingsRefresh.Invalidate();return;}
+        exchangeHoldings.Refresh(playerState.ContentId,exchangeCatalog.Items,captureStorage || captureHoldingsStorage);
+        captureHoldingsStorage=false;
+        holdingsRefresh.Complete(Environment.TickCount64);
+    }
+    private void InventoryChanged(IReadOnlyCollection<InventoryEventArgs> changes)
+    {
+        if(stopping)return;
+        foreach(var change in changes)
+        {
+            // Raw events preserve both ends of moves/removals; ignore repair and spiritbond-only changes.
+            if(change is InventoryItemChangedArgs modified && modified.Item.ItemId==modified.OldItemState.ItemId
+                && modified.Item.Quantity==modified.OldItemState.Quantity)continue;
+            if(holdingsRefresh.Tracks((uint)change.Item.ContainerType,change.Item.BaseItemId)
+                || change is InventoryItemChangedArgs old && holdingsRefresh.Tracks((uint)old.OldItemState.ContainerType,old.OldItemState.BaseItemId))
+            {holdingsRefresh.Invalidate();break;}
+        }
+    }
     private void StorageClosed(Dalamud.Game.Addon.Lifecycle.AddonEvent _,Dalamud.Game.Addon.Lifecycle.AddonArgTypes.AddonArgs args)
-    {try{exchangeHoldings.CaptureStorage(client.IsLoggedIn?playerState.ContentId:0);}catch(Exception ex){log.Warning(ex,"Exchange storage snapshot unavailable");}}
+    {try{exchangeHoldings.CaptureStorage(client.IsLoggedIn?playerState.ContentId:0);holdingsRefresh.Invalidate();}catch(Exception ex){log.Warning(ex,"Exchange storage snapshot unavailable");}}
     private ExchangeItem? NextExchange()=>ExchangePolicy.Next(exchangeCatalog.Items,config.Exchange,exchangeCurrency??0,exchangeLedger.Completed,ExchangeObserved);
     private void ResetExchange(){exchangeSession.Stop();exchangeShop.Reset();exchangeDataWait=-1;}
     private readonly ScoreSession scores=new();
@@ -85,7 +107,7 @@ public sealed class Plugin : IDalamudPlugin
     private long activitySample;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IClientState client, IPlayerState playerState, ITextureProvider textures, IAddonLifecycle addonLifecycle, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects)
+        IClientState client, IPlayerState playerState, ITextureProvider textures, IAddonLifecycle addonLifecycle, IDataManager data, IGameGui gui, IPluginLog log, IGameLifecycle lifecycle, ICondition condition, IObjectTable objects, IGameInventory gameInventory)
     {
         this.pi = pi; this.commands = commands; this.framework = framework;
         this.client = client;this.playerState=playerState;this.textures=textures; this.data = data; this.log = log;this.condition=condition;this.objects=objects;loopUi=new LoopGameUi(gui,data,objects,pi);
@@ -103,6 +125,7 @@ public sealed class Plugin : IDalamudPlugin
         scoreReader=new ScoreReader(gui);
         exchangeCatalog=new(data);exchangeShop=new(gui,objects,pi,exchangeCatalog);
         exchangeHoldings=new(data,exchangeCatalog.Items);this.addonLifecycle=addonLifecycle;
+        holdingsRefresh=new(exchangeCatalog.Items.Select(i=>i.Id));this.gameInventory=gameInventory;
         addonLifecycle.RegisterListener(Dalamud.Game.Addon.Lifecycle.AddonEvent.PreFinalize,["MiragePrismPrismBox","Cabinet","CabinetWithdraw"],StorageClosed);
         exchangeLedger=new(Path.Combine(pi.GetPluginConfigDirectory(),"exchanges"));
         scoreHistory=new ScoreHistory(Path.Combine(pi.GetPluginConfigDirectory(),"scores"));
@@ -123,6 +146,7 @@ public sealed class Plugin : IDalamudPlugin
         pi.UiBuilder.OpenMainUi += Open;
         pi.UiBuilder.OpenConfigUi += Open;
         client.Logout += Logout;
+        gameInventory.InventoryChangedRaw += InventoryChanged;
         shutdown = lifecycle.GameShuttingDownToken.Register(Stop);
         unload = lifecycle.DalamudUnloadingToken.Register(Stop);
     }
@@ -300,6 +324,8 @@ public sealed class Plugin : IDalamudPlugin
                 id=>ExchangeCatalog.Observe(exchangeCatalog.Items.Single(i=>i.Id==id)),exchangeShop.Approach,exchangeShop.Matches,
                 item=>exchangeShop.Select(item,exchangeLedger.Current?.Pending?.Quantity??0),
                 item=>exchangeShop.Confirm(item,exchangeLedger.Current?.Pending?.Quantity??0),()=>exchangeShop.DialogOpen,exchangeShop.Close,batch,exchangeShop.Prepare);
+            if(previousStep is ExchangeStep.Confirm or ExchangeStep.Acknowledge && exchangeSession.Step==ExchangeStep.Commit)
+                RefreshHoldings(false);
             if(exchangeSession.Deferred && exchangeDeferredRound!=loop.Completed)
             {exchangeDeferredRound=loop.Completed;log.Warning("Exchange deferred before purchase at {Step}: {Shop}",previousStep,exchangeShop.Describe());}
             if(exchangeSession.Step==ExchangeStep.Failed){log.Warning("Exchange stopped at {Step}: {Shop}; ledger={Ledger}",previousStep,exchangeShop.Describe(),exchangeLedger.Error??"ok");exchangeShop.Suspend();loop.Stop(true);open=true;return;}
@@ -330,10 +356,10 @@ public sealed class Plugin : IDalamudPlugin
         exchangeLedger.Poll();
         var id=client.IsLoggedIn?playerState.ContentId:0;
         if(id!=exchangeCharacter)
-        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeHoldings.Select(id);exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;initialHoldingsPending=true;}
-        if(initialHoldingsPending && id!=0 && !Loading && objects.LocalPlayer!=null && ExchangeHoldings.InventoryReady)
+        {ResetExchange();exchangeLedger.Select(0);exchangeCharacter=id;exchangeHoldings.Select(id);exchangeObservations.Clear();exchangeCurrency=null;exchangeSample=0;holdingsRefresh.Reset();captureHoldingsStorage=true;}
+        if(holdingsRefresh.Pending && holdingsRefresh.Due(now,id!=0 && !Loading && objects.LocalPlayer!=null && ExchangeHoldings.InventoryReady))
         {
-            RefreshHoldings();initialHoldingsPending=false;
+            RefreshHoldings(false);
             foreach(var item in exchangeCatalog.Items)exchangeObservations[item.Id]=ExchangeCatalog.Observe(item);
         }
         if(!config.Exchange.Enabled && !exchangeSession.Active)return;
@@ -489,6 +515,7 @@ public sealed class Plugin : IDalamudPlugin
         if (disposed) return;
         disposed = true; Stop();
         addonLifecycle.UnregisterListener(StorageClosed);
+        gameInventory.InventoryChangedRaw -= InventoryChanged;
         framework.Update -= Update; pi.UiBuilder.Draw -= Draw;
         pi.UiBuilder.OpenMainUi -= Open; pi.UiBuilder.OpenConfigUi -= Open;
         client.Logout -= Logout; commands.RemoveHandler(Command);

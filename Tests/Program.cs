@@ -1,7 +1,7 @@
 using KeyboundPilot;
 var checks = 0;
 void Check(bool value, string what) { checks++; if (!value) throw new Exception(what); }
-ObstructionTests.Run(Check);FinishRoundTests.Run(Check);
+ObstructionTests.Run(Check);FinishRoundTests.Run(Check);HoldingsRefreshTests.Run(Check);
 ScoreTests.Run(Check);ScoreRecordingTests.Run(Check);ExitDelayTests.Run(Check);
 RematchTests.Run(Check);InputProfileTests.Run(Check);
 var samples = new List<(int, int)>();

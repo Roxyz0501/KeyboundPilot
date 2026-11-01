@@ -1,3 +1,11 @@
+## 2026-11-01 - 1.0.17.5 inventory-driven owned counts
+
+- Subscribe to Dalamud InventoryChangedRaw and unsubscribe on disposal. Raw additions/removals preserve both sides of moves; item replacement checks old and new IDs. Watch only catalog items in four player bags, equipped items and armoury containers; ignore unrelated items/containers and repair/spiritbond-only changes.
+- Coalesce changes within a 250ms refresh interval and process on framework updates even when automatic exchange is disabled or the window is hidden. Retain pending changes during loading; reset on character change. No recurring inventory scan occurs after a completed snapshot until another notification or existing explicit boundary refresh.
+- Successful exchange acknowledgment explicitly refreshes owned totals. Existing plugin-load, loop-start, exchange-start and loop-end snapshots remain. Inventory-triggered updates reuse current-login dresser/armoire caches, avoiding storage rescans; storage close captures storage and invalidates totals. Unknown storage remains unknown, never inferred empty.
+- 713 offline checks pass, including watched containers, unrelated data, burst coalescing, loading and character changes. Release build zero warnings/errors. Event handling reviewed against installed Dalamud source; actual live inventory events have not been exercised in game. No UI/localization/README changes.
+- Cost model: unchanged frames 0 inventory-count/storage scans from this feature, inventory notification burst at most one 20-item totals refresh per 250ms (plus existing observation updates); no storage scan on that path. Exchange acknowledgment adds one totals snapshot. No new network calls, history/config writes or persistent caches. These are bounded fixture/design measurements, not live profiling.
+
 ## 2026-11-01 - 1.0.17.4 exchange confirmation
 
 - Read-only live inspection identified SelectYesno (22 values), rather than ShopExchangeCurrencyDialog. Captured item 52261, icon 26014, displayed item name and currency cost 430; no game input, purchase or memory writes were issued. Only bounded exchange UI metadata was read; raw capture stays local.

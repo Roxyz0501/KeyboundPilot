@@ -63,9 +63,9 @@ internal sealed unsafe class ExchangeHoldings
         if(ui!=null && ui->Cabinet.IsCabinetLoaded())
             armoire=cabinet.ToDictionary(p=>p.Key,p=>ui->Cabinet.IsItemInCabinet(p.Value)?1:0);
     }
-    public void Refresh(ulong id,IReadOnlyList<ExchangeItem> items)
+    public void Refresh(ulong id,IReadOnlyList<ExchangeItem> items,bool captureStorage=true)
     {
-        CaptureStorage(id);totals.Clear();if(id==0)return;
+        Select(id);if(captureStorage)CaptureStorage(id);totals.Clear();if(id==0)return;
         var inventory=InventoryManager.Instance();if(inventory==null)return;
         foreach(var item in items)
         {
