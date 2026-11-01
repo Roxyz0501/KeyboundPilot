@@ -1,3 +1,12 @@
+## 2026-11-01 - Keybound Pilot 1.0.17.4 exchange Yes/No confirmation
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.4
+- Source/tag 281f3123d0df84d8e5f41624a137c168eab92a61; distribution index 63c71459277a289fca3fb1dac03bdf4f5a9f1c38.
+- Read-only live capture identified item-bearing SelectYesno with 22 values. Add exact item ID/icon/name, currency and total-price validation before the Yes button event; reserved quantity is validated through positive unit cost and total price. Wait for dialog readiness within the existing deadline; never repeat a dispatched confirmation. Unknown prior purchases remain available for manual reconciliation.
+- 688 offline checks and native confirmation/category/input/HP/score/activity/capacity/UI fixtures pass; clean Release zero warnings/errors. 191 keys/seven languages and four-font 1175-glyph coverage pass. Live updated purchase has not been executed; capture was read-only.
+- No additional runtime network calls or persistence writes. Dialog reads are bounded and occur only during confirmation. README unchanged.
+- Anonymous public repository/icon/ZIP/source README/main and pinned indices verified at 1.0.17.4. ZIP 248547 bytes; SHA-256 7664ff79d82b348d07ae3ce18b10fe1df450c2372dd58e48b36d9aabe3f685b1. Release notes contain update contents only.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.3 category selection and automatic unsent recovery
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.3
