@@ -6,7 +6,7 @@
 - Shop validation now allows empty rows and filtered subsets while retaining item, currency, cost and index checks. Failure warnings include the stopped stage and bounded numeric shop data. The reported live stop has not been reproduced; root cause remains unconfirmed without a captured stage. No blind retry was added.
 - Clean Release zero warnings/errors; 681 checks, native drag/drop/shop/capacity/HP/score/input/activity fixtures pass; 191 localization keys, seven languages, four font faces cover 1177 characters. Live exchange/storage capture remain unverified.
 - README English then Japanese verified with yomiyasu; update-only Release notes. yomiyasu-check: executed via=verify run=20261101T052059Z-1c11f48b attempt=1 final=sha256:4ea44f255506 mode=rewrite checks=lint,diff meaning_risk=1 replay=skipped
-- Anonymous repository/icon/ZIP/pinned index and source README verified. ZIP 244080 bytes, SHA-256 4306f00fa9f096a916fb670ef51854aa67464b8c5e3f2e7c236ea8cab2b1c738. Main branch connector confirms 1.0.17.1; anonymous main raw cache propagation is being rechecked.
+- Anonymous repository/icon/ZIP/pinned index and source README verified. ZIP 244080 bytes, SHA-256 4306f00fa9f096a916fb670ef51854aa67464b8c5e3f2e7c236ea8cab2b1c738. Anonymous refs/heads/main and pinned index both confirm 1.0.17.1; the canonical /main URL still returns 1.0.17.0 from its CDN cache as of verification. Source branch and assets are updated; updater propagation may lag.
 
 ## 2026-11-01 - Keybound Pilot 1.0.17.0 automatic item exchange
 
