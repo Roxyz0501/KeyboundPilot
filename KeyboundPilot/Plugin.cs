@@ -12,6 +12,8 @@ namespace KeyboundPilot;
 
 public sealed class Plugin : IDalamudPlugin
 {
+    private readonly StandardPluginInfo dependencyInfo = new(new PluginDependency("vnavmesh", "vnavmesh", false,
+        new InfoText("Automatic movement to reception and exchange NPCs.", "参加受付・交換NPCへの自動移動。", "Automatischer Weg zu Anmeldung und Tausch-NPCs.", "Déplacement automatique vers les PNJ d’inscription et d’échange.", "참가 접수 및 교환 NPC로 자동 이동.", "自动移动至参加接待及兑换NPC。", "自動移動至參加接待及兌換NPC。")));
     private const string Command = "/keyboundpilot";
     private readonly IDalamudPluginInterface pi;
     private readonly ICommandManager commands;
@@ -418,7 +420,7 @@ public sealed class Plugin : IDalamudPlugin
     {
         uiCaptures = ImGui.GetIO().WantTextInput || ImGui.IsAnyItemActive();
         if (stopping || !open) return;
-        fonts.Ensure(reader.Words.Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(config.Exchange.Enabled?exchangeCatalog.Items.Select(i=>i.Name):[]));
+        fonts.Ensure(reader.Words.Append(DependencyFontText.Value).Append(typing.CurrentWord).Concat(scorePanel.Names).Concat(config.Exchange.Enabled?exchangeCatalog.Items.Select(i=>i.Name):[]));
         exchangeVisible=false;
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(780, 940), ImGuiCond.FirstUseEver);
@@ -480,7 +482,7 @@ public sealed class Plugin : IDalamudPlugin
                 if(ImGui.BeginTabItem(T("ScoreHistory")+"###ScoreHistory")){scorePanel.Draw(T,scoreFailures>=3,()=>scoreFailures=0);ImGui.EndTabItem();}
                 StandardPluginTabs.DrawStandardTrailingTabs(T("Settings"), "Settings", DrawSettings,
                     T("Language"), DrawLanguage, T("Support"), () =>
-                    StandardPluginTabs.DrawSupportContent(T("Support"), T("SupportText"), T("Recipient"), T("Donate")));
+                    StandardPluginTabs.DrawSupportContent(T("Support"), T("SupportText"), T("Recipient"), T("Donate")), StandardPluginInfo.Title(config.Language ?? "en"), () => dependencyInfo.Draw(pi, config.Language ?? "en"));
                 ImGui.EndTabBar();
             }
         }

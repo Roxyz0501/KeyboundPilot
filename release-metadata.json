@@ -1,8 +1,8 @@
 {
-  "version": "1.0.17.8",
-  "asset": "KeyboundPilot-1.0.17.8.zip",
-  "bytes": 251603,
-  "sha256": "004932f8826ba4ba0cb57001fed0dee7725280ed4be4dac5aa10147561515ca6",
+  "version": "1.0.17.9",
+  "asset": "KeyboundPilot-1.0.17.9.zip",
+  "bytes": 258766,
+  "sha256": "22006f5c941fbbac37fc527da0f9fdb60a9758d2866d65ce3d6b4a5f1669ea48",
   "RepoUrl": "https://github.com/Roxyz0501/KeyboundPilot",
   "IconUrl": "https://raw.githubusercontent.com/Roxyz0501/KeyboundPilot/main/KeyboundPilot/images/icon.png",
   "prerelease": true,

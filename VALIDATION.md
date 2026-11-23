@@ -1,3 +1,7 @@
+## 2026-11-23 - Shared Information tab
+
+- Canonical information and trailing-tab sources copied unchanged. One feature dependency: vnavmesh for reception/exchange NPC navigation. Tab order settings, information, language, support. Status reads only on initial display/refresh; installer opens only on explicit click. Existing gameplay/settings preserved. Shared text included in glyph coverage. No new runtime network or persistence writes.
+
 ## 2026-11-01 - 1.0.17.8 equipment ownership scope
 
 - Per user request, equipment display totals count only player bags and armoury. Exclude equipped gear, dresser and armoire; known equipment totals no longer depend on storage completeness. Catalog observation uses matching explicit equipped=false/armoury=true flags for weapon, armour and accessory tabs, keeping eligibility and acknowledgment counts aligned.
