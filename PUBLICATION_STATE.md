@@ -1,3 +1,11 @@
+## 2026-11-23 - Keybound Pilot 1.0.17.9 shared Information tab
+
+- Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.9
+- Source 2f69675bef2a4e335fb41d0f749a6975021f85fd; index 00c03a5eeeab921e520096db2c5a9353eeeccb13.
+- Canonical Information and trailing-tab sources copied unchanged; optional vnavmesh dependency for NPC navigation. Settings, Information, Language, Support order. Initial/explicit refresh only; installer actions click-only. Shared strings included in dynamic glyph coverage.
+- Clean Release, 720 checks pass. No live UI click test. No new persistence/network activity. Public repository/icon/ZIP/main and pinned index verified. ZIP 258766 bytes, SHA256 22006f5c941fbbac37fc527da0f9fdb60a9758d2866d65ce3d6b4a5f1669ea48.
+- Connector ref writes failed; index updated via contents API with fresh blob SHA, preserving other entries.
+
 ## 2026-11-01 - Keybound Pilot 1.0.17.8 equipment ownership scope
 
 - Release: https://github.com/Roxyz0501/KeyboundPilot/releases/tag/v1.0.17.8
